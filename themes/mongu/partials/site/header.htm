@@ -1,0 +1,220 @@
+##
+[collection categories]
+handle = "Categories"
+==
+<header
+    class="header {{ headerType ? 'header_' ~ headerType : 'header_default' }}"
+>
+    <div class="header__container container container_wide">
+        <div class="header__logo">
+            <a href="{{ 'index'|page }}" class="logo" aria-label="На главную">
+                <svg
+                    class="logo__full"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 100 28"
+                >
+                    <path
+                        fill="#6bbbea"
+                        d="m7.5 9.7 4-9.7L15 9.5l-1.6-1.2-2.3 5-1.8-4.9z"
+                    />
+                    <path
+                        fill="currentColor"
+                        d="M93 23.2a7 7 0 0 1-5.1-1.8Q86 19.5 86 16V7h3v9q0 2.3 1 3.5a4 4 0 0 0 3 1.1q2 0 3-1.1t1-3.6V7h3v9q0 3.5-1.9 5.3a7 7 0 0 1-5 1.9m-17 0q-1.9 0-3.5-.6a8 8 0 0 1-5.1-7.6q0-1.7.6-3.3a8 8 0 0 1 4.5-4.3q1.8-.6 3.5-.6 2 0 3.6.7 1.5.6 2.8 1.9l-1.9 1.8a6 6 0 0 0-4.4-1.8q-1.2 0-2.3.4a5.4 5.4 0 0 0-3.3 6.2 6 6 0 0 0 1.4 3q.9.7 1.9 1.2 1 .3 2.3.4 1.2 0 2.3-.4 1.2-.4 2-1.3l1.8 2.3q-1.4 1-3 1.5-1.5.5-3.3.5m6.3-2-2.8-.4v-6h2.8zM50 23V7h2.5l10 12.3h-1.2V7h3v16h-2.5l-10-12.3H53V23zm-11.7.2q-1.8 0-3.4-.6a8 8 0 0 1-5.2-7.6q0-1.8.7-3.3t1.8-2.5T35 7.4a10 10 0 0 1 6.8 0q3.1 1.3 4.6 4.3.6 1.6.6 3.3 0 1.8-.6 3.3a8 8 0 0 1-4.6 4.3q-1.6.6-3.4.6m0-2.6a6 6 0 0 0 2.2-.4 5 5 0 0 0 3-3q.4-1 .4-2.2a6 6 0 0 0-3.4-5.2q-1-.4-2.2-.4a5.5 5.5 0 0 0-5.6 5.6q0 1.2.4 2.2a5 5 0 0 0 3 3q1.1.4 2.2.4"
+                    />
+                    <path
+                        fill="currentColor"
+                        d="m28.6 9.5 20 9.4-.7 1.7-20-9.4zM6.9 11l1.9-1.4.8 2.4L0 28zm5.4 1.2 1.3-2.9 1.8 1.6 2.6 7.3 5.4-6.2 6.7 16-7.2-11-5.5 8.3z"
+                    />
+                </svg>
+
+                <svg
+                    class="logo__short"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 31 28"
+                >
+                    <path
+                        fill="#6bbbea"
+                        d="m7.5 9.7 4-9.7L15 9.5l-1.6-1.2-2.3 5-1.8-4.9z"
+                    />
+                    <path
+                        fill="currentColor"
+                        d="m6.9 11 1.9-1.4.8 2.4L0 28zm5.4 1.2 1.3-2.9 1.8 1.6 2.6 7.3 5.4-6.2 6.7 16-7.2-11-5.5 8.3z"
+                    />
+                </svg>
+            </a>
+        </div>
+        <nav class="header__nav" aria-label="Основная навигация">
+            <ul class="header__nav-list">
+                <li class="header__nav-item">
+                    <a href="{{ 'categories'|page }}" class="header__nav-link"
+                        >Tours</a
+                    >
+                    <ul class="header__nav-sublist">
+                      {% for cat in categories %}
+                        <li class="header__nav-subitem">
+                            <a
+                                href="{{ 'category' | page({ slug: cat.slug }) }}"
+                                class="header__nav-sublink"
+                                >{{cat.title}}</a
+                            >
+                        </li>
+                      {% endfor %}
+                    </ul>
+                </li>
+                <li class="header__nav-item">
+                    <a href="#" class="header__nav-link">Private tours</a>
+                </li>
+                <li class="header__nav-item">
+                    <a href="/accommodations.html" class="header__nav-link"
+                        >Accommodations</a
+                    >
+                    <ul class="header__nav-sublist">
+                        <li class="header__nav-subitem">
+                            <a href="/hotel.html" class="header__nav-sublink"
+                                >Mongu Hotel</a
+                            >
+                        </li>
+                        <li class="header__nav-subitem">
+                            <a href="/lodge.html" class="header__nav-sublink"
+                                >Sokmo Lodge</a
+                            >
+                        </li>
+                    </ul>
+                </li>
+                <li class="header__nav-item">
+                    <a href="/destination.html" class="header__nav-link"
+                        >Destination</a
+                    >
+                    <ul
+                        class="header__nav-sublist header__nav-sublist_full-width"
+                    >
+                        <li class="header__nav-subitem">
+                            <a href="#" class="header__nav-sublink"
+                                ><svg class="icon">
+                                    <use href="/maps.svg#ik"></use></svg
+                                ><span>Issyk-Kul</span></a
+                            >
+                        </li>
+                        <li class="header__nav-subitem">
+                            <a href="#" class="header__nav-sublink"
+                                ><svg class="icon">
+                                    <use href="/maps.svg#nr"></use></svg
+                                ><span>Naryn</span></a
+                            >
+                        </li>
+                        <li class="header__nav-subitem">
+                            <a href="#" class="header__nav-sublink"
+                                ><svg class="icon">
+                                    <use href="/maps.svg#chui"></use></svg
+                                ><span>Chuy</span></a
+                            >
+                        </li>
+                        <li class="header__nav-subitem">
+                            <a href="#" class="header__nav-sublink"
+                                ><svg class="icon">
+                                    <use href="/maps.svg#tl"></use></svg
+                                ><span>Talas</span></a
+                            >
+                        </li>
+                        <li class="header__nav-subitem">
+                            <a href="#" class="header__nav-sublink"
+                                ><svg class="icon">
+                                    <use href="/maps.svg#dj"></use></svg
+                                ><span>Jalal-Abad</span></a
+                            >
+                        </li>
+                        <li class="header__nav-subitem">
+                            <a href="#" class="header__nav-sublink"
+                                ><svg class="icon">
+                                    <use href="/maps.svg#osh"></use></svg
+                                ><span>Osh</span></a
+                            >
+                        </li>
+                        <li class="header__nav-subitem">
+                            <a href="#" class="header__nav-sublink"
+                                ><svg class="icon">
+                                    <use href="/maps.svg#bt"></use></svg
+                                ><span>Batken</span></a
+                            >
+                        </li>
+                        <li class="header__nav-subitem">
+                            <a href="#" class="header__nav-sublink"
+                                ><svg class="icon">
+                                    <use href="/maps.svg#tj"></use></svg
+                                ><span>Tajikistan</span></a
+                            >
+                        </li>
+                        <li class="header__nav-subitem">
+                            <a href="#" class="header__nav-sublink"
+                                ><svg class="icon">
+                                    <use href="/maps.svg#kz"></use></svg
+                                ><span>Kazakhstan</span></a
+                            >
+                        </li>
+                    </ul>
+                </li>
+                <li class="header__nav-item">
+                    <a href="/about.html" class="header__nav-link">About us</a>
+                </li>
+                <li class="header__nav-item">
+                    <a href="/travel-guide.html" class="header__nav-link"
+                        >Travel guide</a
+                    >
+                </li>
+                <li class="header__nav-item">
+                    <a href="{{ 'contacts'|page }}" class="header__nav-link"
+                        >Contacts</a
+                    >
+                </li>
+            </ul>
+        </nav>
+        <div class="header__controls">
+            <a href="/booking.html" type="button" class="header__btn"
+                >Book now</a
+            >
+            <div class="header__callback">
+                <div class="header__callback-wrap">
+                    <svg class="icon icon_headphones">
+                        <use href="#headphone"></use>
+                    </svg>
+                    <svg class="icon icon_angle"><use href="#angle"></use></svg>
+                </div>
+                <ul class="header__callback-list">
+                    <li class="header__callback-item">
+                        {% set clean_phone = global.whatsapp_number | replace({'
+                        ': '', '+': '', '-': ''}) %}
+                        <a
+                            class="header__callback-link"
+                            href="https://wa.me/{{ clean_phone }}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <svg class="icon">
+                                <use href="/icons.svg#whatsapp"></use></svg
+                            >Chat on WhatsApp
+                        </a>
+                    </li>
+                    <li class="header__callback-item">
+                        <a
+                            class="header__callback-link"
+                            href="mailto:{{global.email_address}}"
+                        >
+                            <svg class="icon">
+                                <use href="/icons.svg#envelope"></use></svg
+                            >Email a Trip Specialist
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <button
+                type="button"
+                aria-label="Mobile menu"
+                class="hamburger js-hamburger"
+            >
+                <svg class="icon"><use href="#hamburger"></use></svg>
+            </button>
+        </div>
+    </div>
+</header>

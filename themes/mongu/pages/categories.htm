@@ -1,0 +1,82 @@
+##
+url = "/categories"
+layout = "default"
+title = "Categories"
+page_js = "categories.js"
+page_css_file = "categories.css"
+heroType = "inside"
+heroImgBase = "horseback-hero"
+heroTitle = "Tours"
+[collection categories]
+handle = "Categories"
+==
+<main class="main-content ">
+
+      <div class="breadcrumbs">
+        <div class="container">
+          <nav aria-label="Хлебные крошки">
+            <ul class="breadcrumbs__list">
+              <li class="breadcrumbs__item">
+                <a class="breadcrumbs__link" href="/">Home</a>
+              </li>
+              <li class="breadcrumbs__item" aria-current="page">Tours</li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <section class="section-padding-bottom categories">
+        <div class="container">
+          <div class="title-wrap">
+            <h2 class="title">Explore Categories</h2>
+          </div>
+          <ul class="categories__flex-wrap">
+           
+            
+            {% for cat in categories %}
+            <li class="categories__item">
+              <div class="categories__img">
+     
+                <picture>
+                
+                  {% if cat.preview %}
+                  <source
+                    type="image/avif"
+                    sizes="(min-width: 1024px) 435px, (min-width: 768px) 335px, calc(100vw - 32px)"
+                    srcset="{{ cat.preview[0].path | resize(450, null, { extension: 'avif' }) }} 450w, {{ cat.preview[0].path | resize(700, null, { extension: 'avif' }) }} 700w, {{ cat.preview[0].path | resize(900, null, { extension: 'avif' }) }} 900w" />
+                  <source
+                    type="image/webp"
+                    sizes="(min-width: 1024px) 435px, (min-width: 768px) 335px, calc(100vw - 32px)"
+                    srcset="{{ cat.preview[0].path | resize(450, null, { extension: 'webp' }) }} 450w, {{ cat.preview[0].path | resize(700, null, { extension: 'webp' }) }} 700w, {{ cat.preview[0].path | resize(900, null, { extension: 'webp' }) }} 900w" />
+                  <img
+                    src="{{ cat.preview[0].path | resize(700) }}"
+                    alt="{{ cat.preview_caption }}"
+                    width="1920"
+                    height="1080"
+                    loading="eager"
+                    fetchpriority="high" />
+                  {% endif %}
+                </picture>
+              </div>
+              <div class="categories__desc">
+                <h3 class="categories__title">{{ cat.title }}</h3>
+              </div>
+              <a href="{{ 'category' | page({ slug: cat.slug }) }}" aria-label="View tours: {{ cat.title }}" class="categories__link"></a>
+            </li>
+            {% endfor %}
+            
+
+          </ul>
+        </div>
+      </section>
+
+      {% partial 'blocks/promo-highlight' 
+          path='/assets/images/lodge/promo/promo-highlight' 
+          alt='Sokmo Lodge'
+          title='Sokmo Lodge'
+          text='Retreat to our mountain lodge, <br> where authentic alpine comfort <br> meets the serenity of rugged <br> high-altitude landscapes.'
+          btn_link='/booking'
+          btn_text='Book your stay'
+      %}
+
+    </main>

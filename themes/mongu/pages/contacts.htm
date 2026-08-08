@@ -1,0 +1,66 @@
+##
+url = "/contacts"
+layout = "default"
+title = "Contacts"
+page_js = "contacts.js"
+page_css_file = "contacts.css"
+schema_json = "{\"@context\":\"https://schema.org\",\"@type\":\"TravelAgency\",\"name\":\"Mongu\",\"description\":\"Индивидуальные и авторские джип-туры, конные прогулки и экспедиции по Кыргызстану.\",\"url\":\"https://mongu.kg/\"}"
+heroType = "inside"
+heroTitle = "Contacts"
+==
+<main class="main-content contacts">
+      <div class="breadcrumbs">
+        <div class="container">
+          <nav aria-label="Хлебные крошки">
+            <ul class="breadcrumbs__list">
+              <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/">Home</a></li>
+              <li class="breadcrumbs__item" aria-current="page">{{this.page.title}}</li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <section class="section-padding-bottom">
+        <div class="container">
+          <div class="contacts__grid">
+            <div class="contacts__map">
+              <iframe
+                src="{{global.map_url}}"
+                width="100%"
+                height="100%"
+                style="border: 0"
+                allowfullscreen=""
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                title="MONGU Locations">
+              </iframe>
+            </div>
+
+        
+            <div class="contacts__info">
+              <div class="contacts__panel">
+                <h2 class="contacts__panel-title contacts__panel-title_bordered">Our Contacts & location</h2>
+                <div class="contacts__details">
+                  <div class="contacts__item">
+                    <span class="contacts__label">Whatsapp</span>
+                    {% set clean_phone = global.whatsapp_number | replace({' ': '', '+': '', '-': ''}) %}
+                    <a href="https://wa.me/{{ clean_phone }}" class="contacts__value">{{global.whatsapp_number}}</a>
+                  </div>
+
+                  <div class="contacts__item">
+                    <span class="contacts__label">Office / Mongu hotel</span>
+                    <span class="contacts__value">
+                      {{global.address}}
+                    </span>
+                  </div>
+                  <div class="contacts__item contacts__item_full">
+                    <span class="contacts__label">E-mail</span>
+                    <a href="mailto:{{global.email_address}}" class="contacts__value">{{global.email_address}}</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>

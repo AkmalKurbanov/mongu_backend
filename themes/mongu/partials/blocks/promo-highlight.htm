@@ -1,0 +1,43 @@
+<section class="promo-highlight">
+  <div class="promo-highlight__img">
+    <picture class="{{ class | default('') }}">
+      {% if path %}
+        {% set widths = [360, 480, 600, 750, 900, 1200, 1800] %}
+
+        {% for format in ['avif', 'webp'] %}
+            <source
+                type="image/{{ format }}"
+                sizes="{{ sizes | default('(min-width: 768px) 50vw, 100vw') }}"
+                srcset="{% for w in widths %}{{ (path ~ '-' ~ w ~ '.' ~ format) | theme }} {{ w }}w{% if not loop.last %}, {% endif %}{% endfor %}" />
+        {% endfor %}
+
+        <img
+            src="{{ (path ~ '-1200.jpg') | theme }}"
+            alt="{{ alt | default('') }}"
+            width="{{ width | default('1200') }}"
+            height="{{ height | default('675') }}"
+            loading="lazy"
+            decoding="async" />
+      {% endif %}
+    </picture>
+  </div>
+  
+  <div class="promo-highlight__desc">
+    <div>
+      <h2 class="title title_light">{{ title | default('') }}</h2>
+      
+      {% if text %}
+        <p>{{ text | raw }}</p>
+      {% endif %}
+
+      {% if btn_text %}
+        <a href="{{ btn_link | default('#') }}" class="btn btn_light more-btn">
+          {{ btn_text }}
+          <svg class="icon">
+            <use href="#arrow"></use>
+          </svg>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>

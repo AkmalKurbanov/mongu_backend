@@ -1,0 +1,200 @@
+uuid: b6f022f4-5e98-4d30-9a43-97eda417d330
+handle: Tours
+type: stream
+name: Туры
+drafts: true
+
+
+primaryNavigation:
+    label: Каталог туров
+    icon: icon-compass
+    order: 130
+
+navigation:
+    label: Все туры
+    icon: icon-flag
+    order: 10
+
+fields:
+    category:
+        label: Категория тура
+        type: entries
+        source: Categories
+        span: left
+        maxItems: 1
+        tab: Основное
+
+    is_featured:
+        label: Популярный / Горячий тур
+        type: switch
+        span: right
+        tab: Основное
+        comment: Включите, чтобы тур отображался в блоке популярных на главной
+
+    # --- Основное (Общие данные) ---
+    preview:
+        label: Превью
+        type: fileupload
+        mode: image
+        span: left
+        tab: Основное
+
+    preview_caption:
+        label: Подпись превью (оптимизации под SEO)
+        type: text
+        span: right    
+        tab: Основное
+
+    short_desc:
+        label: Короткое описание
+        type: richeditor
+        size: tiny
+        span: left
+        tab: Основное
+
+    season:  
+        label: Сезон
+        type: text
+        span: right
+        tab: Основное
+
+    physical_difficulty_lvl:
+        label: Физическая сложность тура
+        type: dropdown
+        span: left
+        tab: Основное
+        options:
+            Basic: Базовая
+            Intermediate: Средняя
+            Advanced: Продвинутая
+            Expert: Экспертная
+
+    technical_difficulty_lvl:
+        label: Техническая сложность тура
+        type: dropdown
+        span: right
+        tab: Основное
+        options:
+            Basic: Базовая
+            Intermediate: Средняя
+            Advanced: Продвинутая
+            Expert: Экспертная
+
+    tour_duration: 
+        label: Продолительность тура
+        type: text
+        span: left
+        tab: Основное
+
+    program_price: 
+        label: Цена программы на одного человека
+        type: text
+        span: right
+        tab: Основное
+    
+    height: 
+        label: Высота над уровнем моря
+        type: text
+        span: full
+        tab: Основное
+
+
+    # --- Галерея ---
+    gallery_items:
+        label: Галерея (максимум 5)
+        type: repeater
+        maxItems: 5
+        span: full
+        prompt: Добавить картинку
+        tab: Галерея
+        form:
+            fields:
+                image:
+                    label: Картинка
+                    type: mediafinder
+                    mode: image
+                    span: left
+                caption:
+                    label: Подпись (оптимизации под SEO)
+                    type: text
+                    span: right  
+
+
+    # --- Вкладка: Описание и Таймлайн ---
+    description_text:
+        label: Описание (Главный текст)
+        type: richeditor
+        span: full
+        tab: Описание и дни
+
+    itinerary_days:
+        label: Таймлайн маршрута (Дни)
+        type: repeater
+        span: full
+        prompt: Добавить день
+        tab: Описание и дни
+        form:
+            fields:
+                day_title:
+                    label: Заголовок дня (например, Day 1. Bishkek – Karkyra)
+                    type: text
+                    span: left
+                day_content:
+                    label: Описание дня
+                    type: richeditor
+                    span: right
+
+
+    # --- Вкладка: Цены и условия ---
+    prices_content:
+        label: Цены и условия (Всё, что входит/не входит)
+        type: richeditor
+        span: full
+        tab: Цены и условия
+
+
+    # --- Вкладка: Даты ---
+    tour_dates:
+        label: Доступные даты выездов
+        type: repeater
+        span: full
+        prompt: Добавить дату
+        tab: Даты
+        form:
+            fields:
+                date_str:
+                    label: Дата (например, July 18, 2026)
+                    type: text
+                    span: left
+                price_str:
+                    label: Цена (например, $1300)
+                    type: text
+                    span: right
+
+
+    # --- Вкладка: Доп. информация ---
+    additional_accordions:
+        label: Аккордеоны с дополнительной информацией
+        type: repeater
+        span: full
+        prompt: Добавить блок информации
+        tab: Доп. информация
+        form:
+            fields:
+                acc_title:
+                    label: Заголовок аккордеона
+                    type: text
+                    span: full
+                acc_content:
+                    label: Содержимое блока
+                    type: richeditor
+                    span: full
+
+
+    # --- Вкладка: Карта ---
+    tour_map_image:
+        label: Карта маршрута
+        type: mediafinder
+        mode: image
+        span: full
+        tab: Карта

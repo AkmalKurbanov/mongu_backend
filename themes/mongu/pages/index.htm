@@ -1,0 +1,372 @@
+##
+url = "/"
+layout = "default"
+title = "Home"
+meta_title = "Tours in Kyrgyzstan | Mongu"
+meta_description = "Individual and group tours, jeep tours, horseback rides, and expeditions across Kyrgyzstan."
+page_js = "index.js"
+page_css_file = "index.css"
+schema_json = "{\"@context\":\"https://schema.org\",\"@type\":\"TravelAgency\",\"name\":\"Mongu\",\"description\":\"Индивидуальные и авторские джип-туры, конные прогулки и экспедиции по Кыргызстану.\",\"url\":\"https://mongu.kg/\"}"
+heroType = "index"
+
+[collection categories]
+handle = "Categories"
+==
+<main class="main-content">
+      <section class="about section-padding">
+        <div class="container">
+          <div class="about__grid">
+            <h2 class="about__title title title_centered">We are MONGU</h2>
+
+            <ul class="features about__features">
+              <li class="features__item about__features-item">
+                <svg class="icon">
+                  <use href="{{ 'assets/sprites/icons.svg#safety'|theme }}"></use>
+                </svg>
+                <h3 class="about__features-title">SAFE & SECURE</h3>
+                <p>24/7 Support</p>
+              </li>
+              <li class="features__item about__features-item">
+                <svg class="icon">
+                  <use href="{{ 'assets/sprites/icons.svg#nomadic2'|theme }}"></use>
+                </svg>
+                <h3 class="about__features-title">CULTURAL</h3>
+                <p>Real nomadic life</p>
+              </li>
+              <li class="features__item about__features-item">
+                <svg class="icon">
+                  <use href="{{ 'assets/sprites/icons.svg#sustainable'|theme }}"></use>
+                </svg>
+                <h3 class="about__features-title">Sustainable</h3>
+                <p>Tourism</p>
+              </li>
+              <li class="features__item about__features-item">
+                <svg class="icon">
+                  <use href="{{ 'assets/sprites/icons.svg#guide'|theme }}"></use>
+                </svg>
+                <h3 class="about__features-title">Local</h3>
+                <p>Expert guides</p>
+              </li>
+              <li class="features__item about__features-item">
+                <svg class="icon">
+                  <use href="{{ 'assets/sprites/icons.svg#smile'|theme }}"></use>
+                </svg>
+                <h3 class="about__features-title">1000+</h3>
+                <p>Happy travelers</p>
+              </li>
+              <!-- <li class="features__item about__features-item">
+                <svg class="icon">
+                  <use href="{{ 'assets/sprites/icons.svg#award'|theme }}"></use>
+                </svg>
+                <h3 class="about__features-title">10+</h3>
+                <p>Years experience</p>
+              </li> -->
+              <li class="features__item about__features-item">
+                <svg class="icon">
+                  <use href="{{ 'assets/sprites/icons.svg#tent'|theme }}"></use>
+                </svg>
+                <h3 class="about__features-title">Our</h3>
+                <p>own camp</p>
+              </li>
+            </ul>
+            <div class="about__desc">
+              <p>
+                Lorem ipsum dolor sit amet consectetur adipisicing elit. Nostrum ut beatae molestias ad ducimus iusto
+                voluptatem eos mollitia quibusdam omnis?
+              </p>
+            </div>
+            <a href="{{ 'about'|page }}" class="about__link more-btn"
+              >about us
+              <svg class="icon">
+                <use href="#arrow"></use>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="teaser-cat section-padding section-bg">
+        <div class="container">
+          <div class="title-wrap">
+            <h2 class="title title_centered">Choose your ideal tour</h2>
+          </div>
+
+          <div class="js-slider slider">
+            <div class="teaser-cat__flex-wrap js-slider-viewport">
+              
+              {% for cat in categories %}
+                <div class="teaser-cat__item js-slide" data-index="{{ loop.index0 }}">
+                <div class="teaser-cat__img teaser-cat__img_pos-r">
+                  <picture>
+                    {% if cat.preview[0] %}
+                    <source
+                        type="image/avif"
+                        sizes="(min-width: 1440px) 576px, (min-width: 1024px) 436px, (min-width: 768px) 336px, calc(100vw - 32px)"
+                        srcset="{{ cat.preview[0].path | resize(340, null, { extension: 'avif', quality: 75 }) }} 340w, 
+                                {{ cat.preview[0].path | resize(440, null, { extension: 'avif', quality: 75 }) }} 440w, 
+                                {{ cat.preview[0].path | resize(580, null, { extension: 'avif', quality: 75 }) }} 580w, 
+                                {{ cat.preview[0].path | resize(740, null, { extension: 'avif', quality: 75 }) }} 740w, 
+                                {{ cat.preview[0].path | resize(880, null, { extension: 'avif', quality: 75 }) }} 880w, 
+                                {{ cat.preview[0].path | resize(1152, null, { extension: 'avif', quality: 75 }) }} 1152w" />
+                    <source
+                        type="image/webp"
+                        sizes="(min-width: 1440px) 576px, (min-width: 1024px) 436px, (min-width: 768px) 336px, calc(100vw - 32px)"
+                        srcset="{{ cat.preview[0].path | resize(340, null, { extension: 'webp', quality: 75 }) }} 340w, 
+                                {{ cat.preview[0].path | resize(440, null, { extension: 'webp', quality: 75 }) }} 440w, 
+                                {{ cat.preview[0].path | resize(580, null, { extension: 'webp', quality: 75 }) }} 580w, 
+                                {{ cat.preview[0].path | resize(740, null, { extension: 'webp', quality: 75 }) }} 740w, 
+                                {{ cat.preview[0].path | resize(880, null, { extension: 'webp', quality: 75 }) }} 880w, 
+                                {{ cat.preview[0].path | resize(1152, null, { extension: 'webp', quality: 75 }) }} 1152w" />
+                    <img
+                        class="card__img"
+                        src="{{ cat.preview[0].path | resize(1152, null, { quality: 75 }) }}"
+                        alt="{{ cat.preview_caption }}"
+                        width="576"
+                        height="536"
+                        loading="lazy"
+                        decoding="async" />
+                    {% endif %}
+                </picture>
+                </div>
+                <div class="teaser-cat__desc-wrap">
+                  {% if cat.icon_id %}
+                  <svg class="teaser-cat__icon">
+                    <use href="{{ ('assets/sprites/icons.svg#' ~ cat.icon_id) | theme }}"></use>
+                  </svg>
+                  {% endif %}
+                  <h3 class="teaser-cat__title">
+                    {{ cat.title }}
+                  </h3>
+                  {% if cat.preview_caption %}
+                  <p class="teaser-cat__desc">
+                    {{ cat.description }}
+                  </p>
+                  {% endif %}
+                </div>
+                <a
+                  href="{{ 'category' | page({ slug: cat.slug }) }}"
+                  href="/category/{{cat.slug}}"
+                  class="teaser-cat__link"
+                  aria-label="View tours: {{ cat.title }}"></a>
+              </div>
+
+              {% endfor %}
+
+            </div>
+
+            <div class="slider__pagination js-pagination">
+              {% for cat in categories %}
+              <div class="pagination-dot" data-index="{{ loop.index0 }}"></div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {% partial 'blocks/whatsapp-btn.htm' %}
+
+
+      {% partial 'blocks/promo-highlight' 
+          path='/assets/images/lodge/promo/promo-highlight' 
+          alt='Sokmo Lodge'
+          title='Sokmo Lodge'
+          text='Retreat to our mountain lodge, <br> where authentic alpine comfort <br> meets the serenity of rugged <br> high-altitude landscapes.'
+          btn_link='/booking'
+          btn_text='Book your stay'
+      %}
+
+
+      {% partial 'blocks/popular-tours.htm' %}
+      
+
+      {% partial 'blocks/promo-highlight' 
+          path='/assets/images/hotel/promo-highlight' 
+          alt='Mongu Hotel'
+          title='Mongu Hotel'
+          text='A welcoming hotel offering modern comfort <br> and a great starting point <br> for all your journeys.'
+          btn_link='/booking'
+          btn_text='Book your stay'
+      %}
+
+    
+
+      <section class="reviews section-padding">
+        <div class="container">
+          <div class="title-wrap">
+            <h2 class="title title_centered">What our travelers say</h2>
+          </div>
+          <div class="reviews__slider slider js-slider">
+            <div class="js-slider-viewport">
+              <div class="reviews__slide js-slide" data-index="0">
+                <figure class="reviews__item">
+                  <div class="reviews__photo">
+                    <picture>
+                      <source
+                        type="image/avif"
+                        sizes="50px"
+                        srcset="/assets/images/reviews/user-50.avif 50w, /assets/images/reviews/user-100.avif 100w, /assets/images/reviews/user-150.avif 150w" />
+                      <source
+                        type="image/webp"
+                        sizes="50px"
+                        srcset="/assets/images/reviews/user-50.webp 50w, /assets/images/reviews/user-100.webp 100w, /assets/images/reviews/user-150.webp 150w" />
+                      <img
+                        src="/assets/images/reviews/user-100.jpg"
+                        alt="John Doe"
+                        width="50"
+                        height="50"
+                        loading="lazy"
+                        decoding="async" />
+                    </picture>
+                  </div>
+                  <div class="reviews__text">
+                    <blockquote>
+                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
+                    </blockquote>
+                    <figcaption>John Doe, USA</figcaption>
+                  </div>
+                </figure>
+              </div>
+
+              <div class="reviews__slide js-slide" data-index="1">
+                <figure class="reviews__item">
+                  <div class="reviews__photo">
+                    <picture>
+                      <source
+                        type="image/avif"
+                        sizes="50px"
+                        srcset="/assets/images/reviews/user-50.avif 50w, /assets/images/reviews/user-100.avif 100w, /assets/images/reviews/user-150.avif 150w" />
+                      <source
+                        type="image/webp"
+                        sizes="50px"
+                        srcset="/assets/images/reviews/user-50.webp 50w, /assets/images/reviews/user-100.webp 100w, /assets/images/reviews/user-150.webp 150w" />
+                      <img
+                        src="/assets/images/reviews/user-100.jpg"
+                        alt="John Doe"
+                        width="50"
+                        height="50"
+                        loading="lazy"
+                        decoding="async" />
+                    </picture>
+                  </div>
+                  <div class="reviews__text">
+                    <blockquote>
+                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
+                    </blockquote>
+                    <figcaption>John Doe, USA</figcaption>
+                  </div>
+                </figure>
+              </div>
+
+              <div class="reviews__slide js-slide" data-index="2">
+                <figure class="reviews__item">
+                  <div class="reviews__photo">
+                    <picture>
+                      <source
+                        type="image/avif"
+                        sizes="50px"
+                        srcset="/assets/images/reviews/user-50.avif 50w, /assets/images/reviews/user-100.avif 100w, /assets/images/reviews/user-150.avif 150w" />
+                      <source
+                        type="image/webp"
+                        sizes="50px"
+                        srcset="/assets/images/reviews/user-50.webp 50w, /assets/images/reviews/user-100.webp 100w, /assets/images/reviews/user-150.webp 150w" />
+                      <img
+                        src="/assets/images/reviews/user-100.jpg"
+                        alt="John Doe"
+                        width="50"
+                        height="50"
+                        loading="lazy"
+                        decoding="async" />
+                    </picture>
+                  </div>
+                  <div class="reviews__text">
+                    <blockquote>
+                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
+                    </blockquote>
+                    <figcaption>John Doe, USA</figcaption>
+                  </div>
+                </figure>
+              </div>
+
+              <div class="reviews__slide js-slide" data-index="3">
+                <figure class="reviews__item">
+                  <div class="reviews__photo">
+                    <picture>
+                      <source
+                        type="image/avif"
+                        sizes="50px"
+                        srcset="/assets/images/reviews/user-50.avif 50w, /assets/images/reviews/user-100.avif 100w, /assets/images/reviews/user-150.avif 150w" />
+                      <source
+                        type="image/webp"
+                        sizes="50px"
+                        srcset="/assets/images/reviews/user-50.webp 50w, /assets/images/reviews/user-100.webp 100w, /assets/images/reviews/user-150.webp 150w" />
+                      <img
+                        src="/assets/images/reviews/user-100.jpg"
+                        alt="John Doe"
+                        width="50"
+                        height="50"
+                        loading="lazy"
+                        decoding="async" />
+                    </picture>
+                  </div>
+                  <div class="reviews__text">
+                    <blockquote>
+                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
+                    </blockquote>
+                    <figcaption>John Doe, USA</figcaption>
+                  </div>
+                </figure>
+              </div>
+
+              <div class="reviews__slide js-slide" data-index="4">
+                <figure class="reviews__item">
+                  <div class="reviews__photo">
+                    <picture>
+                      <source
+                        type="image/avif"
+                        sizes="50px"
+                        srcset="/assets/images/reviews/user-50.avif 50w, /assets/images/reviews/user-100.avif 100w, /assets/images/reviews/user-150.avif 150w" />
+                      <source
+                        type="image/webp"
+                        sizes="50px"
+                        srcset="/assets/images/reviews/user-50.webp 50w, /assets/images/reviews/user-100.webp 100w, /assets/images/reviews/user-150.webp 150w" />
+                      <img
+                        src="/assets/images/reviews/user-100.jpg"
+                        alt="John Doe"
+                        width="50"
+                        height="50"
+                        loading="lazy"
+                        decoding="async" />
+                    </picture>
+                  </div>
+                  <div class="reviews__text">
+                    <blockquote>
+                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
+                    </blockquote>
+                    <figcaption>John Doe, USA</figcaption>
+                  </div>
+                </figure>
+              </div>
+            </div>
+            <div class="slider__nav">
+              <div class="slider__btn slider__btn_prev js-slider-prev" aria-label="Previous slide">
+                <svg class="icon">
+                  <use href="#angle"></use>
+                </svg>
+              </div>
+              <div class="slider__btn slider__btn_next js-slider-next" aria-label="Next slide">
+                <svg class="icon">
+                  <use href="#angle"></use>
+                </svg>
+              </div>
+            </div>
+            <div class="slider__pagination js-pagination">
+              <div class="pagination-dot" data-index="0"></div>
+              <div class="pagination-dot" data-index="1"></div>
+              <div class="pagination-dot" data-index="2"></div>
+              <div class="pagination-dot" data-index="3"></div>
+              <div class="pagination-dot" data-index="4"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>

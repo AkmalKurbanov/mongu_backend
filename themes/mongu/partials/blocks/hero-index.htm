@@ -1,0 +1,40 @@
+<section class="hero">
+    <div class="hero__media">
+        <div class="hero__poster hero__poster_bottom-right-bg">
+            <picture>
+                {% set sources = [
+                    { media: '(min-width: 1440px)', w: '1920', h: '1080', base: 'hero-large' },
+                    { media: '(min-width: 1024px), (orientation: landscape)', w: '1440', h: '900', base: 'hero-desktop' },
+                    { media: '(min-width: 768px)', w: '800', h: '1100', base: 'hero-tablet' },
+                    { media: null, w: '450', h: '950', base: 'hero-mobile' }
+                ] %}
+
+                {% for src in sources %}
+                    <source type="image/avif" 
+                            {% if src.media %}media="{{ src.media }}"{% endif %} 
+                            sizes="100vw" width="{{ src.w }}" height="{{ src.h }}" 
+                            srcset="{{ ('assets/images/hero/index/' ~ src.base ~ '.avif') | theme }} {{ src.w }}w{% if src.base != 'hero-mobile' %}, {{ ('assets/images/hero/index' ~ src.base ~ '-2x.avif') | theme }} {{ src.w * 2 }}w{% endif %}" />
+                    <source type="image/webp" 
+                            {% if src.media %}media="{{ src.media }}"{% endif %} 
+                            sizes="100vw" width="{{ src.w }}" height="{{ src.h }}" 
+                            srcset="{{ ('assets/images/hero/index/' ~ src.base ~ '.webp') | theme }} {{ src.w }}w{% if src.base != 'hero-mobile' %}, {{ ('assets/images/hero/index' ~ src.base ~ '-2x.webp') | theme }} {{ src.w * 2 }}w{% endif %}" />
+                {% endfor %}
+
+                <img src="{{ 'assets/images/hero/index/hero-mobile.jpg' | theme }}" alt="Discover Kyrgyzstan" class="hero__poster-img" width="450" height="950" fetchpriority="high" loading="eager" />
+            </picture>
+        </div>
+    </div>
+
+    <div class="hero__content">
+        <div class="container container_wide">
+            <h1 class="hero__title">
+                Discover <br />Kyrgyzstan <br /><span class="hero__title-accent">Beyond the Ordinary</span>
+            </h1>
+            <p class="hero__subtitle">Authentic adventures. Local guides. unforgettable memories.</p>
+            <div class="hero__btn-links">
+                <a href="{{ 'lodge'|page }}" class="hero__btn hero__btn_light btn btn_light more-btn">Stay at Sokmo lodge <svg class="icon"><use href="#arrow"></use></svg></a>
+                <a href="{{ 'categories'|page }}" class="hero__btn hero__btn_accent btn more-btn">Explore tours <svg class="icon"><use href="#arrow"></use></svg></a>
+            </div>
+        </div>
+    </div>
+</section>

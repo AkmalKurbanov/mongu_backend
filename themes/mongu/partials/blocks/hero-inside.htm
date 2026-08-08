@@ -1,0 +1,39 @@
+<section class="hero hero_inside">
+    <div class="hero__media">
+        <div class="hero__poster">
+            <picture>
+                
+                {% set imgBase = heroImgBase | default('default-hero') %}
+                {% set folder = 'assets/images/hero/' ~ imgBase ~ '/' ~ imgBase %}
+                
+                {% set sources = [
+                    { media: '(min-width: 1440px)', w1: '1920', w2: '3840', s1: '3840', s2: '3840' },
+                    { media: '(min-width: 1024px)', w1: '1440', w2: '2880', s1: '1440', s2: '2880' },
+                    { media: '(min-width: 768px)',  w1: '800',  w2: '1600', s1: '800',  s2: '1600' },
+                    { media: null,                  w1: '450',  w2: '900',  s1: '450',  s2: '900' }
+                ] %}
+
+                {% for src in sources %}
+                    <source type="image/avif" 
+                            {% if src.media %}media="{{ src.media }}"{% endif %} 
+                            sizes="100vw" width="{{ src.w1 }}" height="400" 
+                            srcset="{{ (folder ~ '-' ~ src.s1 ~ '.avif') | theme }} {{ src.w1 }}w, 
+                                    {{ (folder ~ '-' ~ src.s2 ~ '.avif') | theme }} {{ src.w2 }}w" />
+                    
+                    <source type="image/webp" 
+                            {% if src.media %}media="{{ src.media }}"{% endif %} 
+                            sizes="100vw" width="{{ src.w1 }}" height="400" 
+                            srcset="{{ (folder ~ '-' ~ src.s1 ~ '.webp') | theme }} {{ src.w1 }}w, 
+                                    {{ (folder ~ '-' ~ src.s2 ~ '.webp') | theme }} {{ src.w2 }}w" />
+                {% endfor %}
+
+                <img src="{{ (folder ~ '-1440.jpg') | theme }}" alt="{{ heroTitle }}" class="hero__poster-img" width="450" height="400" fetchpriority="high" loading="eager" />
+            </picture>
+        </div>
+    </div>
+    <div class="hero__content">
+        <div class="container">
+            <h1 class="hero__title">{{ heroTitle }}</h1>
+        </div>
+    </div>
+</section>

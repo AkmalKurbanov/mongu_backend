@@ -1,0 +1,145 @@
+##
+url = "/category/:slug"
+layout = "default"
+title = "Category"
+heroType = 'inside'
+heroImgBase = "horseback-hero"
+page_js = "category.js"
+page_css_file = "category.css"
+
+[collection categories]
+handle = "Categories"
+
+[collection tours]
+handle = "Tours"
+==
+{# 1. Находим текущую категорию #}
+{% set current_category = categories.where('slug', this.param.slug).first %}
+
+{% if not current_category %}
+    {% do abort(404) %}
+{% endif %}
+
+{# 2. Обязательно добавляем .get() в конце запроса whereRelation #}
+{% set filtered_tours = tours.whereRelation('category', 'id', current_category.id).get() %}
+<main class="main-content">
+  <div class="breadcrumbs">
+    <div class="container">
+      <nav aria-label="Хлебные крошки">
+        <ul class="breadcrumbs__list">
+          <li class="breadcrumbs__item">
+            <a class="breadcrumbs__link" href="/">Home</a>
+          </li>
+          <li class="breadcrumbs__item">
+            <a class="breadcrumbs__link" href="{{'categories' | page}}">Tours</a>
+          </li>
+          <li class="breadcrumbs__item" aria-current="page">{{ current_category.title }}</li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  
+
+  <section class="section-padding section-padding_sm-interval">
+    <div class="container">
+      <div class="card-grid">
+        {% for tour in filtered_tours %}
+        
+          <article class="card">
+              <div class="card__head">
+                <div class="card__img">
+                  <picture>
+                    {% if tour.preview %}
+                      <source
+                        type="image/avif"
+                        sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
+                        srcset="
+                          {{ tour.preview[0].path | resize(400, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 400w,
+                          {{ tour.preview[0].path | resize(600, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 600w,
+                          {{ tour.preview[0].path | resize(800, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 800w,
+                          {{ tour.preview[0].path | resize(1200, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 1200w
+                        " />
+                      <source
+                        type="image/webp"
+                        sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
+                        srcset="
+                          {{ tour.preview[0].path | resize(400, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 400w,
+                          {{ tour.preview[0].path | resize(600, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 600w,
+                          {{ tour.preview[0].path | resize(800, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 800w,
+                          {{ tour.preview[0].path | resize(1200, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 1200w
+                        " />
+                      <img
+                        src="{{ tour.preview[0].path | resize(800, null, { mode: 'crop', quality: 75 }) }}"
+                        alt="{{ tour.title }}"
+                        width="1920"
+                        height="1080"
+                        loading="lazy"
+                        decoding="async" />
+                    {% endif %}
+                  </picture>
+                </div>
+                <ul class="badges">
+                  {% if tour.height %}
+                    <li class="badges__badge badges__badge_peak">
+                      <svg class="icon">
+                        <use href="{{'assets/sprites/icons.svg#mountains'|theme}}"></use>
+                      </svg>
+                      <span>{{tour.height}}</span>
+                    </li>
+                  {% else %}
+                  {% endif %}
+                  {% if tour.program_price %}
+                    <li class="badges__badge badges__badge_price">From {{tour.program_price}}</li>
+                  {% else %}
+                  {% endif %}
+                </ul>
+              </div>
+
+              <div class="card__body">
+                <h3 class="card__title">{{tour.title}}</h3>
+
+                <p class="card__desc">
+                  {% set desc = tour.short_desc | striptags %}
+                  {{ desc | length > 92 ? desc | slice(0, 92) ~ '...' : desc }}
+                </p>
+
+                <ul class="card__features feature">
+                  <li class="card__feature" title="Difficulty">
+                    <svg class="icon">
+                      <use href="{{'assets/sprites//icons.svg#peak' | theme}}"></use>
+                    </svg>
+                    <span class="feature__label">Difficulty</span>
+                    <span class="feature__value">{{tour.technical_difficulty_lvl}}</span>
+                  </li>
+                  <li class="card__feature" title="Season">
+                    <svg class="icon">
+                      <use href="{{'assets/sprites/icons.svg#calendar' | theme}}"></use>
+                    </svg>
+                    <span class="feature__label">Season</span>
+                    <span class="feature__value">{{tour.season}}</span>
+                  </li>
+                  <li class="card__feature" title="Duration">
+                    <svg class="icon">
+                      <use href="{{'assets/sprites/icons.svg#clock' | theme}}"></use>
+                    </svg>
+                    <span class="feature__label">Duration</span>
+                    <span class="feature__value">{{tour.tour_duration}}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="card__footer">
+                <span class="card__btn btn">View tour</span>
+              </div>
+              <a href="{{ 'tour' | page({ slug: tour.slug }) }}" class="card__link" aria-label="tour name"></a>
+            </article>
+                
+            {% else %}
+                <p>В этой категории пока нет туров.</p>
+            {% endfor %}
+        
+      </div>
+    </div>
+  </section>
+</main>

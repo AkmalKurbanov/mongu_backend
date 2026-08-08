@@ -1,0 +1,43 @@
+uuid: cd1f33f1-c61b-430e-9a8a-01acff956edd
+handle: MyGlobal
+type: global
+
+primaryNavigation:
+    label: Settings
+    icon: icon-magic
+    order: 150
+
+fields:
+    website_name:
+        label: Название компании
+        tab: General
+
+    whatsapp_number:
+        label: Номер телефона
+        placeholder: "+996 123 456 789"
+        tab: General
+
+    instagram_nickname:
+        label: Instagram nickname
+        placeholder: "@monguhotel"
+        tab: General
+
+    instagram_url:
+        label: Instagram URL
+        placeholder: "https://..."
+        tab: General
+    
+    email_address:
+        label: Email адрес
+        placeholder: "mongu.karakol@gmail.com"
+        tab: General
+    
+    address:
+        label: Адрес
+        placeholder: "Kyrgyzstan, Karakol city, Jusaev st., 83"
+        tab: General
+    
+    map_url:
+        label: Карта
+        placeholder: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2942.32196781541!2d78.39862287611574!3d42.48470727118156!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x38865bbb4b216527%3A0xc8138a1d9c5e8bea!2sMONGU%20mini%20hotel!5e0!3m2!1sru!2skg!4v1785822850558!5m2!1sru!2skg"
+        tab: General

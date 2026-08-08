@@ -1,0 +1,78 @@
+##
+[global]
+handle = "MyGlobal"
+==
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>{{ this.page.meta_title | default('Tours in Kyrgyzstan | Mongu') }}</title>
+    <meta name="description" content="{{ this.page.meta_description | default('Individual and group tours, jeep tours, horseback rides, and expeditions across Kyrgyzstan.') }}" />
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="{{ this.page.og_title | default(this.page.meta_title) }}" />
+    <meta property="og:description" content="{{ this.page.og_description | default(this.page.meta_description) }}" />
+    <meta property="og:url" content="{{ '' | page }}" />
+    <meta property="og:image" content="{{ this.page.og_image | default('https://mongu.kg/assets/images/open-graph/og-image.jpg') }}" />
+
+    <meta name="theme-color" content="#6c613e" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#3F3F25" media="(prefers-color-scheme: dark)" />
+    
+    <link rel="manifest" href="{{ 'assets/images/site.webmanifest'|theme }}" />
+    <link rel="canonical" href="https://mongu.kg{{ '' | page }}" />
+
+    <link rel="icon" type="image/svg+xml" href="{{ 'assets/images/favicon.svg'|theme }}" />
+    <link rel="icon" type="image/x-icon" href="{{ 'assets/images/favicon.ico'|theme }}" />
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ 'assets/images/apple-touch-icon.png'|theme }}" />
+
+    <!-- JSON-LD -->
+    {% if this.page.schema_json %}
+    <script type="application/ld+json">
+      {{ this.page.schema_json | raw }}
+    </script>
+    {% endif %}
+
+    <!-- Уникальный скрипт страницы -->
+    {% if this.page.page_js %}
+    <script type="module" src="{{ ('assets/js/' ~ this.page.page_js) | theme }}"></script>
+    {% endif %}
+
+    <!-- Основные стили страницы (асинхронно) -->
+    {% set cssFile = this.page.page_css_file | default('index.css') %}
+    <link rel="preload" href="{{ ('assets/css/' ~ cssFile) | theme }}" as="style" onload="this.onload=null;this.rel='stylesheet';document.body.classList.add('content-loaded')">
+    
+    <noscript><link rel="stylesheet" href="{{ ('assets/css/' ~ cssFile) | theme }}"></noscript>
+
+    <!-- Критические стили -->
+    {% if this.page.id == 'contacts' %}
+      {% partial 'blocks/critical-contacts.htm' %}
+    {% else %}
+      {% partial 'blocks/critical-base.htm' %}
+    {% endif %}
+
+</head>
+  <body>
+  
+    
+
+    {% partial 'blocks/whatsapp-btn.htm' %}
+    
+    {% partial 'site/header' headerType=this.page.headerType %}
+
+    {% if this.page.heroType == 'index' %}
+        {% partial 'blocks/hero-index' %}
+    {% elseif this.page.heroType == 'inside' %}
+        {% partial 'blocks/hero-inside' heroTitle=this.page.heroTitle heroImgBase=this.page.heroImgBase %}
+    {% endif %}
+
+    {% page %}
+    {% partial 'site/footer' %}
+    {% partial 'blocks/mobile-menu' %}
+    {% partial 'blocks/inline-sprite' %}
+   
+
+  </body>
+</html>

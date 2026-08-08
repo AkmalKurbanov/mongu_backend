@@ -1,0 +1,43 @@
+uuid: 4aba879f-8ee1-40fc-b24d-a43d53217ffd
+handle: Categories
+type: structure
+name: Категории
+drafts: true
+
+navigation:
+    label: Категории
+    icon: icon-sitemap
+    parent: MyStream # Указываем handle туров
+    order: 20
+
+fields:
+    
+    preview:
+        label: Превью
+        type: fileupload
+        mode: image
+        span: left
+
+    preview_caption:
+        label: Подпись превью (оптимизации под SEO)
+        type: text
+        span: right
+
+    description:
+        label: Краткое описание
+        type: textarea
+        span: full
+        size: tiny
+
+    icon_id:
+        label: Иконка
+        type: dropdown
+        span: full
+        options:
+            '': '-- Без иконки --'
+            trekking: Trekking adventures
+            horse: Horseback expedition
+            car: Overland & jeep journeys
+            nomadic: Nomadic heritage
+            map: Custom expedition
+            tent: Camp & Infrastructure
