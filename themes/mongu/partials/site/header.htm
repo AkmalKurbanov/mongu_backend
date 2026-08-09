@@ -1,6 +1,9 @@
 ##
 [collection categories]
 handle = "Categories"
+
+[collection destination]
+handle = "Destinations"
 ==
 <header
     class="header {{ headerType ? 'header_' ~ headerType : 'header_default' }}"
@@ -84,75 +87,23 @@ handle = "Categories"
                     </ul>
                 </li>
                 <li class="header__nav-item">
-                    <a href="/destination.html" class="header__nav-link"
+                    <a href="{{'destinations'| page}}" class="header__nav-link"
                         >Destination</a
                     >
                     <ul
                         class="header__nav-sublist header__nav-sublist_full-width"
                     >
+                      {% for record in destination %}
+
                         <li class="header__nav-subitem">
                             <a href="#" class="header__nav-sublink"
                                 ><svg class="icon">
-                                    <use href="/maps.svg#ik"></use></svg
-                                ><span>Issyk-Kul</span></a
+                                    <use href="{{ ('assets/sprites/maps.svg#' ~ record.icon_id) | theme }}"></use>
+                                    <span>{{record.title}}</span></a
                             >
                         </li>
-                        <li class="header__nav-subitem">
-                            <a href="#" class="header__nav-sublink"
-                                ><svg class="icon">
-                                    <use href="/maps.svg#nr"></use></svg
-                                ><span>Naryn</span></a
-                            >
-                        </li>
-                        <li class="header__nav-subitem">
-                            <a href="#" class="header__nav-sublink"
-                                ><svg class="icon">
-                                    <use href="/maps.svg#chui"></use></svg
-                                ><span>Chuy</span></a
-                            >
-                        </li>
-                        <li class="header__nav-subitem">
-                            <a href="#" class="header__nav-sublink"
-                                ><svg class="icon">
-                                    <use href="/maps.svg#tl"></use></svg
-                                ><span>Talas</span></a
-                            >
-                        </li>
-                        <li class="header__nav-subitem">
-                            <a href="#" class="header__nav-sublink"
-                                ><svg class="icon">
-                                    <use href="/maps.svg#dj"></use></svg
-                                ><span>Jalal-Abad</span></a
-                            >
-                        </li>
-                        <li class="header__nav-subitem">
-                            <a href="#" class="header__nav-sublink"
-                                ><svg class="icon">
-                                    <use href="/maps.svg#osh"></use></svg
-                                ><span>Osh</span></a
-                            >
-                        </li>
-                        <li class="header__nav-subitem">
-                            <a href="#" class="header__nav-sublink"
-                                ><svg class="icon">
-                                    <use href="/maps.svg#bt"></use></svg
-                                ><span>Batken</span></a
-                            >
-                        </li>
-                        <li class="header__nav-subitem">
-                            <a href="#" class="header__nav-sublink"
-                                ><svg class="icon">
-                                    <use href="/maps.svg#tj"></use></svg
-                                ><span>Tajikistan</span></a
-                            >
-                        </li>
-                        <li class="header__nav-subitem">
-                            <a href="#" class="header__nav-sublink"
-                                ><svg class="icon">
-                                    <use href="/maps.svg#kz"></use></svg
-                                ><span>Kazakhstan</span></a
-                            >
-                        </li>
+
+                      {% endfor %}
                     </ul>
                 </li>
                 <li class="header__nav-item">
@@ -192,7 +143,7 @@ handle = "Categories"
                             rel="noopener noreferrer"
                         >
                             <svg class="icon">
-                                <use href="/icons.svg#whatsapp"></use></svg
+                                <use href="{{'assets/sprites/icons.svg#whatsapp'|theme}}"></use></svg
                             >Chat on WhatsApp
                         </a>
                     </li>
@@ -202,7 +153,7 @@ handle = "Categories"
                             href="mailto:{{global.email_address}}"
                         >
                             <svg class="icon">
-                                <use href="/icons.svg#envelope"></use></svg
+                                <use href="{{'assets/sprites/icons.svg#envelope'|theme}}"></use></svg
                             >Email a Trip Specialist
                         </a>
                     </li>

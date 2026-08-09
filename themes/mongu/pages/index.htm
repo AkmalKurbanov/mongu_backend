@@ -11,6 +11,10 @@ heroType = "index"
 
 [collection categories]
 handle = "Categories"
+
+[section]
+handle = "Destinations"
+identifier = "slug"
 ==
 <main class="main-content">
       <section class="about section-padding">
@@ -98,34 +102,38 @@ handle = "Categories"
                 <div class="teaser-cat__item js-slide" data-index="{{ loop.index0 }}">
                 <div class="teaser-cat__img teaser-cat__img_pos-r">
                   <picture>
-                    {% if cat.preview[0] %}
-                    <source
-                        type="image/avif"
-                        sizes="(min-width: 1440px) 576px, (min-width: 1024px) 436px, (min-width: 768px) 336px, calc(100vw - 32px)"
-                        srcset="{{ cat.preview[0].path | resize(340, null, { extension: 'avif', quality: 75 }) }} 340w, 
-                                {{ cat.preview[0].path | resize(440, null, { extension: 'avif', quality: 75 }) }} 440w, 
-                                {{ cat.preview[0].path | resize(580, null, { extension: 'avif', quality: 75 }) }} 580w, 
-                                {{ cat.preview[0].path | resize(740, null, { extension: 'avif', quality: 75 }) }} 740w, 
-                                {{ cat.preview[0].path | resize(880, null, { extension: 'avif', quality: 75 }) }} 880w, 
-                                {{ cat.preview[0].path | resize(1152, null, { extension: 'avif', quality: 75 }) }} 1152w" />
-                    <source
-                        type="image/webp"
-                        sizes="(min-width: 1440px) 576px, (min-width: 1024px) 436px, (min-width: 768px) 336px, calc(100vw - 32px)"
-                        srcset="{{ cat.preview[0].path | resize(340, null, { extension: 'webp', quality: 75 }) }} 340w, 
-                                {{ cat.preview[0].path | resize(440, null, { extension: 'webp', quality: 75 }) }} 440w, 
-                                {{ cat.preview[0].path | resize(580, null, { extension: 'webp', quality: 75 }) }} 580w, 
-                                {{ cat.preview[0].path | resize(740, null, { extension: 'webp', quality: 75 }) }} 740w, 
-                                {{ cat.preview[0].path | resize(880, null, { extension: 'webp', quality: 75 }) }} 880w, 
-                                {{ cat.preview[0].path | resize(1152, null, { extension: 'webp', quality: 75 }) }} 1152w" />
-                    <img
-                        class="card__img"
-                        src="{{ cat.preview[0].path | resize(1152, null, { quality: 75 }) }}"
-                        alt="{{ cat.preview_caption }}"
-                        width="576"
-                        height="536"
-                        loading="lazy"
-                        decoding="async" />
-                    {% endif %}
+                   {% if cat.preview %}
+                    {% for img in cat.preview %}
+                    <picture>
+                        <source
+                            type="image/avif"
+                            sizes="(min-width: 1440px) 576px, (min-width: 1024px) 436px, (min-width: 768px) 336px, calc(100vw - 32px)"
+                            srcset="{{ img.path | resize(340, null, { extension: 'avif', quality: 75 }) }} 340w, 
+                                    {{ img.path | resize(440, null, { extension: 'avif', quality: 75 }) }} 440w, 
+                                    {{ img.path | resize(580, null, { extension: 'avif', quality: 75 }) }} 580w, 
+                                    {{ img.path | resize(740, null, { extension: 'avif', quality: 75 }) }} 740w, 
+                                    {{ img.path | resize(880, null, { extension: 'avif', quality: 75 }) }} 880w, 
+                                    {{ img.path | resize(1152, null, { extension: 'avif', quality: 75 }) }} 1152w" />
+                        <source
+                            type="image/webp"
+                            sizes="(min-width: 1440px) 576px, (min-width: 1024px) 436px, (min-width: 768px) 336px, calc(100vw - 32px)"
+                            srcset="{{ img.path | resize(340, null, { extension: 'webp', quality: 75 }) }} 340w, 
+                                    {{ img.path | resize(440, null, { extension: 'webp', quality: 75 }) }} 440w, 
+                                    {{ img.path | resize(580, null, { extension: 'webp', quality: 75 }) }} 580w, 
+                                    {{ img.path | resize(740, null, { extension: 'webp', quality: 75 }) }} 740w, 
+                                    {{ img.path | resize(880, null, { extension: 'webp', quality: 75 }) }} 880w, 
+                                    {{ img.path | resize(1152, null, { extension: 'webp', quality: 75 }) }} 1152w" />
+                        <img
+                            class="card__img"
+                            src="{{ img.path | resize(1152, null, { quality: 75 }) }}"
+                            alt="{{ cat.preview_caption }}"
+                            width="576"
+                            height="536"
+                            loading="lazy"
+                            decoding="async" />
+                    </picture>
+                    {% endfor %}
+                {% endif %}
                 </picture>
                 </div>
                 <div class="teaser-cat__desc-wrap">

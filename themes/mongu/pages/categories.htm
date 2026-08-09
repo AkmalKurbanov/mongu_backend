@@ -34,35 +34,39 @@ handle = "Categories"
            
             
             {% for cat in categories %}
-            <li class="categories__item">
-              <div class="categories__img">
-     
-                <picture>
-                
+              <li class="categories__item">
+                <div class="categories__img">
                   {% if cat.preview %}
-                  <source
-                    type="image/avif"
-                    sizes="(min-width: 1024px) 435px, (min-width: 768px) 335px, calc(100vw - 32px)"
-                    srcset="{{ cat.preview[0].path | resize(450, null, { extension: 'avif' }) }} 450w, {{ cat.preview[0].path | resize(700, null, { extension: 'avif' }) }} 700w, {{ cat.preview[0].path | resize(900, null, { extension: 'avif' }) }} 900w" />
-                  <source
-                    type="image/webp"
-                    sizes="(min-width: 1024px) 435px, (min-width: 768px) 335px, calc(100vw - 32px)"
-                    srcset="{{ cat.preview[0].path | resize(450, null, { extension: 'webp' }) }} 450w, {{ cat.preview[0].path | resize(700, null, { extension: 'webp' }) }} 700w, {{ cat.preview[0].path | resize(900, null, { extension: 'webp' }) }} 900w" />
-                  <img
-                    src="{{ cat.preview[0].path | resize(700) }}"
-                    alt="{{ cat.preview_caption }}"
-                    width="1920"
-                    height="1080"
-                    loading="eager"
-                    fetchpriority="high" />
+                      {% for img in cat.preview %}
+                      <picture>
+                          <source
+                              type="image/avif"
+                              sizes="(min-width: 1024px) 435px, (min-width: 768px) 335px, calc(100vw - 32px)"
+                              srcset="{{ img.path | resize(450, null, { extension: 'avif', quality: 75 }) }} 450w, 
+                                      {{ img.path | resize(700, null, { extension: 'avif', quality: 75 }) }} 700w, 
+                                      {{ img.path | resize(900, null, { extension: 'avif', quality: 75 }) }} 900w" />
+                          <source
+                              type="image/webp"
+                              sizes="(min-width: 1024px) 435px, (min-width: 768px) 335px, calc(100vw - 32px)"
+                              srcset="{{ img.path | resize(450, null, { extension: 'webp', quality: 75 }) }} 450w, 
+                                      {{ img.path | resize(700, null, { extension: 'webp', quality: 75 }) }} 700w, 
+                                      {{ img.path | resize(900, null, { extension: 'webp', quality: 75 }) }} 900w" />
+                          <img
+                              src="{{ img.path | resize(700, null, { quality: 75 }) }}"
+                              alt="{{ cat.preview_caption }}"
+                              width="435"
+                              height="320"
+                              loading="eager"
+                              fetchpriority="high" />
+                      </picture>
+                      {% endfor %}
                   {% endif %}
-                </picture>
-              </div>
-              <div class="categories__desc">
-                <h3 class="categories__title">{{ cat.title }}</h3>
-              </div>
-              <a href="{{ 'category' | page({ slug: cat.slug }) }}" aria-label="View tours: {{ cat.title }}" class="categories__link"></a>
-            </li>
+                </div>
+                <div class="categories__desc">
+                  <h3 class="categories__title">{{ cat.title }}</h3>
+                </div>
+                <a href="{{ 'category' | page({ slug: cat.slug }) }}" aria-label="View tours: {{ cat.title }}" class="categories__link"></a>
+              </li>
             {% endfor %}
             
 

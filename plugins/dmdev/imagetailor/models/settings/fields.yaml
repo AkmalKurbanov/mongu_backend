@@ -1,0 +1,22 @@
+fields:
+
+  enabled:
+    label: Включён
+    comment: 'Если выключен — изображения загружаются без обработки.'
+    type: switch
+    span: auto
+    default: 1
+
+  default_max_width:
+    label: Макс. ширина (px)
+    comment: 'Применяется если blueprint не задаёт ограничение по ширине.'
+    type: number
+    span: auto
+    default: 1200
+
+  default_max_height:
+    label: Макс. высота (px)
+    comment: 'Применяется если blueprint не задаёт ограничение по высоте.'
+    type: number
+    span: auto
+    default: 1200

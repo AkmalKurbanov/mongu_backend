@@ -44,40 +44,43 @@ handle = "Tours"
   <section class="section-padding section-padding_sm-interval">
     <div class="container">
       <div class="card-grid">
+
         {% for tour in filtered_tours %}
-        
-          <article class="card">
+          {% if tour.is_active %}  
+            <article class="card">
               <div class="card__head">
                 <div class="card__img">
                   <picture>
                     {% if tour.preview %}
-                      <source
-                        type="image/avif"
-                        sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
-                        srcset="
-                          {{ tour.preview[0].path | resize(400, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 400w,
-                          {{ tour.preview[0].path | resize(600, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 600w,
-                          {{ tour.preview[0].path | resize(800, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 800w,
-                          {{ tour.preview[0].path | resize(1200, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 1200w
-                        " />
-                      <source
-                        type="image/webp"
-                        sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
-                        srcset="
-                          {{ tour.preview[0].path | resize(400, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 400w,
-                          {{ tour.preview[0].path | resize(600, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 600w,
-                          {{ tour.preview[0].path | resize(800, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 800w,
-                          {{ tour.preview[0].path | resize(1200, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 1200w
-                        " />
-                      <img
-                        src="{{ tour.preview[0].path | resize(800, null, { mode: 'crop', quality: 75 }) }}"
-                        alt="{{ tour.title }}"
-                        width="1920"
-                        height="1080"
-                        loading="lazy"
-                        decoding="async" />
+                        {% for img in tour.preview %}
+                            <source
+                                type="image/avif"
+                                sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
+                                srcset="
+                                    {{ img.path | resize(400, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 400w,
+                                    {{ img.path | resize(600, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 600w,
+                                    {{ img.path | resize(800, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 800w,
+                                    {{ img.path | resize(1200, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 1200w
+                                " />
+                            <source
+                                type="image/webp"
+                                sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
+                                srcset="
+                                    {{ img.path | resize(400, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 400w,
+                                    {{ img.path | resize(600, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 600w,
+                                    {{ img.path | resize(800, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 800w,
+                                    {{ img.path | resize(1200, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 1200w
+                                " />
+                            <img
+                                src="{{ img.path | resize(800, null, { mode: 'crop', quality: 75 }) }}"
+                                alt="{{ tour.title }}"
+                                width="376"
+                                height="282"
+                                loading="lazy"
+                                decoding="async" />
+                        {% endfor %}
                     {% endif %}
-                  </picture>
+                </picture>
                 </div>
                 <ul class="badges">
                   {% if tour.height %}
@@ -134,12 +137,14 @@ handle = "Tours"
               </div>
               <a href="{{ 'tour' | page({ slug: tour.slug }) }}" class="card__link" aria-label="tour name"></a>
             </article>
+          {% endif %}
                 
-            {% else %}
-                <p>В этой категории пока нет туров.</p>
-            {% endfor %}
+          {% else %}
+            <p>В этой категории пока нет туров.</p>
+        {% endfor %}
         
-      </div>
+     
+     </div>
     </div>
   </section>
 </main>

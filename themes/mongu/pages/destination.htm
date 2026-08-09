@@ -1,0 +1,252 @@
+##
+url = "/destination/:slug"
+layout = "default"
+title = "Destination"
+page_js = "destination.js"
+page_css_file = "destination.css"
+schema_json = "{\"@context\":\"https://schema.org\",\"@type\":\"TravelAgency\",\"name\":\"Mongu\",\"description\":\"Индивидуальные и авторские джип-туры, конные прогулки и экспедиции по Кыргызстану.\",\"url\":\"https://mongu.kg/\"}"
+heroType = "inside"
+heroImgBase = "horseback-hero"
+heroTitle = "Destination"
+
+[collection destination]
+handle = "Destinations"
+
+[collection tours]
+handle = "Tours"
+==
+{# 1. Находим текущий регион по аналогии с категориями #}
+{% set record = destination.where('slug', this.param.slug).first %}
+
+{% if not record %}
+    {% do abort(404) %}
+{% endif %}
+
+{# 2. Фильтруем туры по связи destination #}
+{% set filtered_tours = tours.whereRelation('destination', 'id', record.id).get() %}
+
+<main class="main-content">
+  <div class="container">
+    <nav aria-label="Хлебные крошки" class="breadcrumbs">
+      <ul class="breadcrumbs__list">
+        <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'index' | page}}">Home</a></li>
+        <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'destinations' | page}}">Destinations</a></li>
+        <li class="breadcrumbs__item" aria-current="page">{{ record.title }}</li>
+      </ul>
+    </nav>
+  </div>
+
+  <!-- Детальное описание региона -->
+  <section class="destination-story">
+    <div class="container">
+      <div class="destination-story__grid">
+        
+        <!-- Левая часть: Текст и факты -->
+        <div class="destination-story__content">
+          <div class="title-wrap">
+            <h2 class="title">{{ record.title_detail ?: record.title }}</h2>
+          </div>
+          
+          <div class="content-block">
+            {# Выводим детальное описание, если его нет — короткое #}
+            {{ record.desc_detail ? (record.desc_detail | raw) : (record.short_desc | raw) }}
+          </div>
+
+          <!-- Микро-факты из репитера -->
+          {% if record.stat_items %}
+            <div class="destination-story__stats">
+              {% for stat in record.stat_items %}
+                <div class="stat-item">
+                  <span class="stat-item__num">{{ stat.value }}{% if stat.unit %}<small>{{ stat.unit }}</small>{% endif %}</span>
+                  <span class="stat-item__label">{{ stat.title }}</span>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Правая часть: Асимметричный коллаж из детальных фото -->
+        <div class="destination-story__gallery">
+          <div class="destination-story__img destination-story__img_main">
+  {# 1. Определяем главное изображение и его подпись #}
+  {% set main_img = record.img_detail1 ? record.img_detail1[0] : (record.preview ? record.preview[0] : null) %}
+  {% set main_alt = record.img_detail1 ? record.img_detail_caption1 : (record.title ~ ' landscape') %}
+  
+  {% if main_img %}
+    <picture>
+      <source
+        type="image/avif"
+        sizes="(min-width: 1440px) 549px, (min-width: 1024px) 409px, (min-width: 768px) 480px, 100vw"
+        srcset="
+          {{ main_img.path | resize(400, null, { extension: 'avif', quality: 75 }) }} 400w,
+          {{ main_img.path | resize(550, null, { extension: 'avif', quality: 75 }) }} 550w,
+          {{ main_img.path | resize(800, null, { extension: 'avif', quality: 75 }) }} 800w,
+          {{ main_img.path | resize(1200, null, { extension: 'avif', quality: 75 }) }} 1200w
+        " />
+      <source
+        type="image/webp"
+        sizes="(min-width: 1440px) 549px, (min-width: 1024px) 409px, (min-width: 768px) 480px, 100vw"
+        srcset="
+          {{ main_img.path | resize(400, null, { extension: 'webp', quality: 75 }) }} 400w,
+          {{ main_img.path | resize(550, null, { extension: 'webp', quality: 75 }) }} 550w,
+          {{ main_img.path | resize(800, null, { extension: 'webp', quality: 75 }) }} 800w,
+          {{ main_img.path | resize(1200, null, { extension: 'webp', quality: 75 }) }} 1200w
+        " />
+      <img
+        src="{{ main_img.path | resize(550, null, { quality: 75 }) }}"
+        alt="{{ main_alt }}"
+        width="549"
+        height="686" 
+        loading="lazy"
+        decoding="async" />
+    </picture>
+  {% endif %}
+</div>
+
+<div class="destination-story__img destination-story__img_float">
+  
+  {% set float_img = record.img_detail2 ? record.img_detail2[0] : (record.preview ? record.preview[0] : null) %}
+  {% set float_alt = record.img_detail2 ? record.img_detail_caption2 : (record.title ~ ' detail') %}
+  
+  {% if float_img %}
+    <picture>
+      <source
+        type="image/avif"
+        sizes="(min-width: 1440px) 300px, (min-width: 1024px) 220px, (min-width: 768px) 259px, 433px"
+        srcset="
+          {{ float_img.path | resize(250, null, { extension: 'avif', quality: 75 }) }} 250w,
+          {{ float_img.path | resize(450, null, { extension: 'avif', quality: 75 }) }} 450w,
+          {{ float_img.path | resize(600, null, { extension: 'avif', quality: 75 }) }} 600w,
+          {{ float_img.path | resize(900, null, { extension: 'avif', quality: 75 }) }} 900w
+        " />
+      <source
+        type="image/webp"
+        sizes="(min-width: 1440px) 300px, (min-width: 1024px) 220px, (min-width: 768px) 259px, 433px"
+        srcset="
+          {{ float_img.path | resize(250, null, { extension: 'webp', quality: 75 }) }} 250w,
+          {{ float_img.path | resize(450, null, { extension: 'webp', quality: 75 }) }} 450w,
+          {{ float_img.path | resize(600, null, { extension: 'webp', quality: 75 }) }} 600w,
+          {{ float_img.path | resize(900, null, { extension: 'webp', quality: 75 }) }} 900w
+        " />
+      <img
+        src="{{ float_img.path | resize(300, null, { quality: 75 }) }}"
+        alt="{{ float_alt }}"
+        width="300"
+        height="300"
+        loading="lazy"
+        decoding="async" />
+    </picture>
+  {% endif %}
+</div>
+
+          <svg class="destination-story__decor" aria-hidden="true"><use href="{{'assets/sprites/icons.svg#compass-decor' | theme}}"></use></svg>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Список туров региона -->
+  <section class="section-padding-bottom">
+    <div class="container">
+      <div class="title-wrap">
+        <h2 class="title">Tours in {{ record.title }}</h2>
+      </div>
+      
+      <div class="card-grid">
+        {% for tour in filtered_tours %}
+          <article class="card">
+              <div class="card__head">
+                <div class="card__img">
+                  <picture>
+                    {% if tour.preview %}
+                      <source
+                        type="image/avif"
+                        sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
+                        srcset="
+                          {{ tour.preview[0].path | resize(400, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 400w,
+                          {{ tour.preview[0].path | resize(600, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 600w,
+                          {{ tour.preview[0].path | resize(800, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 800w,
+                          {{ tour.preview[0].path | resize(1200, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 1200w
+                        " />
+                      <source
+                        type="image/webp"
+                        sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
+                        srcset="
+                          {{ tour.preview[0].path | resize(400, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 400w,
+                          {{ tour.preview[0].path | resize(600, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 600w,
+                          {{ tour.preview[0].path | resize(800, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 800w,
+                          {{ tour.preview[0].path | resize(1200, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 1200w
+                        " />
+                      <img
+                        src="{{ tour.preview[0].path | resize(800, null, { mode: 'crop', quality: 75 }) }}"
+                        alt="{{ tour.title }}"
+                        width="1920"
+                        height="1080"
+                        loading="lazy"
+                        decoding="async" />
+                    {% endif %}
+                  </picture>
+                </div>
+                <ul class="badges">
+                  {% if tour.height %}
+                    <li class="badges__badge badges__badge_peak">
+                      <svg class="icon">
+                        <use href="{{'assets/sprites/icons.svg#mountains'|theme}}"></use>
+                      </svg>
+                      <span>{{tour.height}}</span>
+                    </li>
+                  {% endif %}
+                  {% if tour.program_price %}
+                    <li class="badges__badge badges__badge_price">From {{tour.program_price}}</li>
+                  {% endif %}
+                </ul>
+              </div>
+
+              <div class="card__body">
+                <h3 class="card__title">{{tour.title}}</h3>
+
+                <p class="card__desc">
+                  {% set clean_desc = tour.short_desc | replace({'</p>': ' ', '<br>': ' ', '<br/>': ' ', '<br />': ' '}) | striptags | trim %}
+
+                  {{ clean_desc | length > 92 ? clean_desc | slice(0, 92) ~ '...' : clean_desc }}
+                </p>
+
+                <ul class="card__features feature">
+                  <li class="card__feature" title="Difficulty">
+                    <svg class="icon">
+                      <use href="{{'assets/sprites/icons.svg#peak' | theme}}"></use>
+                    </svg>
+                    <span class="feature__label">Difficulty</span>
+                    <span class="feature__value">{{tour.technical_difficulty_lvl}}</span>
+                  </li>
+                  <li class="card__feature" title="Season">
+                    <svg class="icon">
+                      <use href="{{'assets/sprites/icons.svg#calendar' | theme}}"></use>
+                    </svg>
+                    <span class="feature__label">Season</span>
+                    <span class="feature__value">{{tour.season}}</span>
+                  </li>
+                  <li class="card__feature" title="Duration">
+                    <svg class="icon">
+                      <use href="{{'assets/sprites/icons.svg#clock' | theme}}"></use>
+                    </svg>
+                    <span class="feature__label">Duration</span>
+                    <span class="feature__value">{{tour.tour_duration}}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="card__footer">
+                <span class="card__btn btn">View tour</span>
+              </div>
+              <a href="{{ 'tour' | page({ slug: tour.slug }) }}" class="card__link" aria-label="tour name"></a>
+          </article>
+        {% else %}
+            <p class="empty-state">No tours available in this region yet.</p>
+        {% endfor %}
+      </div>
+      
+    </div>
+  </section>
+</main>

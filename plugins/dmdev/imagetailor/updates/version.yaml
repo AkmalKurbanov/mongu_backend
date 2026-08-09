@@ -1,0 +1,3 @@
+v1.0.0: Initial release. Auto-resize and WebP conversion for uploaded images in Tailor entries.
+v1.0.1: Use SettingModel base class, add category to settings, improve temp file cleanup.
+v1.0.2: Align plugin code and author code with Marketplace author code DMdev.

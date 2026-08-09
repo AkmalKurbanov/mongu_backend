@@ -16,6 +16,20 @@ navigation:
     order: 10
 
 fields:
+    is_featured:
+        label: Обычный / Популярный
+        type: switch
+        span: left
+        tab: Статус и видимость
+        comment: Выключите/Включите, чтобы тур отображался в блоке популярных на главной
+    
+    is_active:
+        label: Активный / Неактивный
+        type: switch
+        span: right
+        tab: Статус и видимость
+        comment: Выключите/Включите, чтобы тур отображался на сайте   
+        
     category:
         label: Категория тура
         type: entries
@@ -24,14 +38,14 @@ fields:
         maxItems: 1
         tab: Основное
 
-    is_featured:
-        label: Популярный / Горячий тур
-        type: switch
+    destination:
+        label: Дестинация
+        type: entries
+        source: Destinations
         span: right
+        maxItems: 1    
         tab: Основное
-        comment: Включите, чтобы тур отображался в блоке популярных на главной
 
-    # --- Основное (Общие данные) ---
     preview:
         label: Превью
         type: fileupload
@@ -40,7 +54,7 @@ fields:
         tab: Основное
 
     preview_caption:
-        label: Подпись превью (оптимизации под SEO)
+        label: Подпись превью (оптимизация под SEO)
         type: text
         span: right    
         tab: Основное
@@ -98,6 +112,8 @@ fields:
         span: full
         tab: Основное
 
+     
+
 
     # --- Галерея ---
     gallery_items:
@@ -115,7 +131,7 @@ fields:
                     mode: image
                     span: left
                 caption:
-                    label: Подпись (оптимизации под SEO)
+                    label: Подпись (оптимизация под SEO)
                     type: text
                     span: right  
 
@@ -164,8 +180,12 @@ fields:
             fields:
                 date_str:
                     label: Дата (например, July 18, 2026)
-                    type: text
+                    type: datepicker
+                    mode: date
+                    format: 'F j, Y'
+                    minDate: today
                     span: left
+
                 price_str:
                     label: Цена (например, $1300)
                     type: text
@@ -193,8 +213,35 @@ fields:
 
     # --- Вкладка: Карта ---
     tour_map_image:
-        label: Карта маршрута
+        label: Карта маршрута(изображение)
         type: mediafinder
+        mode: image
+        span: left
+        tab: Карта
+
+    tour_map_frame:
+        label: Интерактивная карта маршрута
+        prompt: Добавить блок информации
+        type: text
+        span: right
+        tab: Карта
+
+    is_tour_map_image:
+        label: Скрыть / Показать карту
+        type: switch
+        span: left
+        tab: Карта
+
+    is_tour_map_frame:
+        label: Скрыть / Показать карту
+        type: switch
+        span: right
+        tab: Карта    
+        
+
+    tour_map_seo:    
+        label: Подпись (оптимизация под SEO)
+        type: text
         mode: image
         span: full
         tab: Карта

@@ -1,0 +1,109 @@
+uuid: 6568d6f1-e715-4caa-96fe-c839d5c5ed38
+handle: Destinations
+type: structure
+name: Дестинация
+drafts: true
+
+primaryNavigation:
+    label: Дестинация
+    icon: icon-map-marker
+    order: 120
+
+fields:
+
+    preview:
+        label: Изображение
+        type: fileupload
+        mode: image
+        span: left
+        tab: Превью
+    
+    preview_caption:
+        label: Подпись превью (оптимизации под SEO)
+        type: text
+        span: right
+        tab: Превью
+
+    short_desc:
+        label: Краткое описание
+        type: richeditor
+        size: tiny
+        span: left
+        tab: Превью
+
+    icon_id:
+        label: Иконка региона на карте
+        type: dropdown
+        span: right
+        tab: Превью
+        options:
+            '': '-- Без иконки --'
+            ik: Иссык-Куль
+            nr: Нарын
+            chui: Чуй
+            tl: Талас
+            dj: Джалал-Абад
+            osh: Ош
+            bt: Баткен
+            tj: Таджикистан
+            kz: Казахстан
+    
+    img_detail1:   
+        label: Изображение1
+        type: fileupload
+        mode: image
+        span: left
+        tab: Детальная 
+    
+    img_detail_caption1:
+        label: Подпись изображения1 (оптимизации под SEO)
+        type: text
+        span: right
+        tab: Детальная
+
+    img_detail2:   
+        label: Изображение2
+        type: fileupload
+        mode: image
+        span: left
+        tab: Детальная 
+    
+    img_detail_caption2:
+        label: Подпись изображения2 (оптимизации под SEO)
+        type: text
+        span: right
+        tab: Детальная
+
+    title_detail:
+        label: Заголовок
+        type: text
+        span: left
+        tab: Детальная
+    
+    desc_detail:
+        label: Описание
+        type: richeditor
+        span: right
+        tab: Детальная
+
+    stat_items:
+        label: Микро-факты (максимум 3)
+        type: repeater
+        maxItems: 3
+        span: full
+        prompt: Добавить факт
+        tab: Детальная
+        form:
+            fields:
+                value:
+                    label: "Основное значение (например: 170 или 5k+)"
+                    type: text
+                    span: left
+                unit:
+                    label: "Ед. измерения в <small> (например: km или m)"
+                    type: text
+                    span: right
+                title:
+                    label: "Текст подписи (например: Lake Length)"
+                    type: text
+                    span: full

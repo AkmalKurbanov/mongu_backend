@@ -2,100 +2,148 @@
 [collection]
 handle = "Tours"
 ==
-{% set records = collection %}
-<section class="cards section-padding section-bg">
-  <div class="container">
-    <div class="title-wrap">
-      <h2 class="title title_centered">Popular tours</h2>
-    </div>
-
-
-    <div class="card-slider card-slider_per-4 js-slider">
+<section class="section-padding section-bg">
+    <div class="container">
+      <div class="title-wrap">
+        <h2 class="title title_centered">Popular tours</h2>
+      </div>
       
-      <div class="card-slider__viewport slider js-slider-viewport">
         
-        {% for record in records %}
-
-          {% if record.is_featured %}
-           
-            <article class="card js-slide" data-index="0">
-              <div class="card__head">
-                <div class="card__img card__img_aspect-4-3">
-                  <picture>
-                    <source
-                      type="image/avif"
-                      sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
-                      srcset="/assets/images/tour-card/tour-card1-400.avif 400w, /assets/images/tour-card/tour-card1-600.avif 600w, /assets/images/tour-card/tour-card1-800.avif 800w, /assets/images/tour-card/tour-card1-1200.avif 1200w" />
-                    <source
-                      type="image/webp"
-                      sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
-                      srcset="/assets/images/tour-card/tour-card1-400.webp 400w, /assets/images/tour-card/tour-card1-600.webp 600w, /assets/images/tour-card/tour-card1-800.webp 800w, /assets/images/tour-card/tour-card1-1200.webp 1200w" />
-                    <img
-                      src="/assets/images/tour-card/tour-card1-800.jpg"
-                      alt="Description"
-                      width="1920"
-                      height="1080"
-                      loading="lazy"
-                      decoding="async" />
-                  </picture>
-                </div>
-              </div>
-
-              <div class="card__body">
-                <ul class="badges">
-                {% for cat in record.category %}
-                  <li class="badges__badge badges__badge_category">
-                      <a href="{{ 'category' | page({ slug: cat.slug }) }}">{{ cat.title }}</a>
-                  </li>
-                {% endfor %}
-                  <li class="badges__badge badges__badge_duration">{{record.tour_duration}}</li>
-                </ul>
-
-                <h3 class="card__title">{{record.title}}</h3>
-                
-                <p class="card__desc">
-                  {{record.short_desc}}
-                </p>
-                <span class="card__more-btn more-btn">
-                  more
-                  <svg class="icon">
-                    <use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use>
-                  </svg>
-                </span>
-              </div>
-              <a href="{{ 'tour' | page({ slug: record.slug }) }}" class="card__link" aria-label="tour name"></a>
-            </article>
-
-          {% else %}
           
-          {% endif %}
-        
-        {% else %}
-            <span class="no-data">Records not found</ы>
-        {% endfor %}
+           {% set records = collection %}
+           
+            <div class="card-slider card-slider_per-3 js-slider">
+              <div class="card-slider__viewport slider js-slider-viewport">
+                  {% for record in records %}
+                   
+              {% if record.is_featured and record.is_active %}
+                <article class="card js-slide" data-index="{{ loop.index0 }}">
+                  <div class="card__head">
+                    <div class="card__img">
+                      <picture>
+                        {% if record.preview %}
+                            {% for img in record.preview %}
+                                <source
+                                    type="image/avif"
+                                    sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
+                                    srcset="
+                                        {{ img.path | resize(400, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 400w,
+                                        {{ img.path | resize(600, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 600w,
+                                        {{ img.path | resize(800, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 800w,
+                                        {{ img.path | resize(1200, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 1200w
+                                    " />
+                                <source
+                                    type="image/webp"
+                                    sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
+                                    srcset="
+                                        {{ img.path | resize(400, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 400w,
+                                        {{ img.path | resize(600, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 600w,
+                                        {{ img.path | resize(800, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 800w,
+                                        {{ img.path | resize(1200, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 1200w
+                                    " />
+                                <img
+                                    src="{{ img.path | resize(800, null, { mode: 'crop', quality: 75 }) }}"
+                                    alt="{{ record.preview_caption }}"
+                                    width="376"
+                                    height="282"
+                                    loading="lazy"
+                                    decoding="async" />
+                            {% endfor %}
+                        {% endif %}
+                    </picture>
+                    </div>
+                    <ul class="badges">
+                      {% if record.height %}
+                        <li class="badges__badge badges__badge_peak">
+                          <svg class="icon">
+                            <use href="{{'assets/sprites/icons.svg#mountains'|theme}}"></use>
+                          </svg>
+                          <span>{{record.height}}</span>
+                        </li>
+                      {% else %}
+                      {% endif %}
+                      {% if record.program_price %}
+                        <li class="badges__badge badges__badge_price">From {{record.program_price}}</li>
+                      {% else %}
+                      {% endif %}
+                    </ul>
+                  </div>
 
-        
+                  <div class="card__body">
+                    <h3 class="card__title">{{record.title}}</h3>
 
-      </div>
-      <div class="slider__nav">
-        <div class="slider__btn slider__btn_prev js-slider-prev" aria-label="Previous slide">
-          <svg class="icon">
-            <use href="#angle"></use>
-          </svg>
-        </div>
-        <div class="slider__btn slider__btn_next js-slider-next" aria-label="Next slide">
-          <svg class="icon">
-            <use href="#angle"></use>
-          </svg>
-        </div>
-      </div>
-      <div class="slider__pagination js-pagination">
-        <div class="pagination-dot" data-index="0"></div>
-      </div>
+                    <p class="card__desc">
+                      {% set desc = record.short_desc | striptags %}
+                      {{ desc | length > 92 ? desc | slice(0, 92) ~ '...' : desc }}
+                    </p>
+
+                    <ul class="card__features feature">
+                      <li class="card__feature" title="Difficulty">
+                        <svg class="icon">
+                          <use href="{{'assets/sprites//icons.svg#peak' | theme}}"></use>
+                        </svg>
+                        <span class="feature__label">Difficulty</span>
+                        <span class="feature__value">{{record.technical_difficulty_lvl}}</span>
+                      </li>
+                      <li class="card__feature" title="Season">
+                        <svg class="icon">
+                          <use href="{{'assets/sprites/icons.svg#calendar' | theme}}"></use>
+                        </svg>
+                        <span class="feature__label">Season</span>
+                        <span class="feature__value">{{record.season}}</span>
+                      </li>
+                      <li class="card__feature" title="Duration">
+                        <svg class="icon">
+                          <use href="{{'assets/sprites/icons.svg#clock' | theme}}"></use>
+                        </svg>
+                        <span class="feature__label">Duration</span>
+                        <span class="feature__value">{{record.tour_duration}}</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div class="card__footer">
+                    <span class="card__btn btn">View tour</span>
+                  </div>
+                  <a href="{{ 'tour' | page({ slug: record.slug }) }}" class="card__link" aria-label="tour name"></a>
+                </article>
+              {% endif %}
+
+
+              {% else %}
+                <span class="no-data">Records not found</span>
+            {% endfor %}
+              </div>
+              <div class="slider__nav">
+              <div class="slider__btn slider__btn_prev js-slider-prev" aria-label="Previous slide">
+                <svg class="icon">
+                  <use href="#angle"></use>
+                </svg>
+              </div>
+              <div class="slider__btn slider__btn_next js-slider-next" aria-label="Next slide">
+                <svg class="icon">
+                  <use href="#angle"></use>
+                </svg>
+              </div>
+            </div>
+            <div class="slider__pagination js-pagination">
+
+              {% for record in records %}
+                {% if record.is_featured and record.is_active %}
+                  <div class="pagination-dot" data-index="{{ loop.index0 }}"></div>
+                {% endif %}
+                {% else %}
+                <span class="no-data">Records not found</span>
+              {% endfor %}
+              
+
+            </div>
+            </div>
+            
+           
+           
+          
+            
+      
     </div>
-
-    <div class="teaser-cat__btn-wrap btn-wrap btn-wrap_centered">
-      <a href="#" class="btn">View all tours</a>
-    </div>
-  </div>
-</section>
+  </section>

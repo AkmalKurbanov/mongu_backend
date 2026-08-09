@@ -17,8 +17,8 @@ heroImgBase = "horseback-hero"
         <div class="container">
           <nav aria-label="Хлебные крошки">
             <ul class="breadcrumbs__list">
-              <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/">Home</a></li>
-              <li class="breadcrumbs__item" aria-current="page">About Us</li>
+              <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'index' | page}}">Home</a></li>
+              <li class="breadcrumbs__item" aria-current="page">{{this.page.title}}</li>
             </ul>
           </nav>
         </div>

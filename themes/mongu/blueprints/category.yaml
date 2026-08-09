@@ -7,7 +7,7 @@ drafts: true
 navigation:
     label: Категории
     icon: icon-sitemap
-    parent: MyStream # Указываем handle туров
+    parent: Tours
     order: 20
 
 fields:
@@ -16,6 +16,7 @@ fields:
         label: Превью
         type: fileupload
         mode: image
+        imageWidth: 1200
         span: left
 
     preview_caption:

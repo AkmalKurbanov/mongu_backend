@@ -1,0 +1,131 @@
+##
+url = "/destinations"
+layout = "default"
+title = "Destinations"
+page_js = "destinations.js"
+page_css_file = "destinations.css"
+schema_json = "{\"@context\":\"https://schema.org\",\"@type\":\"TravelAgency\",\"name\":\"Mongu\",\"description\":\"Индивидуальные и авторские джип-туры, конные прогулки и экспедиции по Кыргызстану.\",\"url\":\"https://mongu.kg/\"}"
+heroType = "inside"
+heroImgBase = "horseback-hero"
+heroTitle = "Destination"
+
+[collection destination]
+handle = "Destinations"
+==
+<main class="main-content">
+      <div class="container">
+        <nav aria-label="Хлебные крошки" class="breadcrumbs">
+          <ul class="breadcrumbs__list">
+            <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'index' | page}}">Home</a></li>
+            <li class="breadcrumbs__item" aria-current="page">{{this.page.title}}</li>
+          </ul>
+        </nav>
+      </div>
+
+      <section class="section-padding-bottom">
+        <div class="container">
+          <div class="title-wrap">
+            <h2 class="title title_centered">Explore Central Asian Ranges</h2>
+            <p class="subtitle">From high-altitude alpine lakes to wild gorges and ancient nomadic paths</p>
+          </div>
+
+          <div class="dest-mosaic">
+            {% set destinations = destination %}
+
+            {% for item in destinations %}
+                {# 1. Определяем тип карточки по её номеру в цикле #}
+                {% set is_large = loop.index in [1, 5, 9] %}
+                {% set is_tall = loop.index in [3] %} {# Третья карточка — наша высокая шпала #}
+
+                {# 2. Назначаем модификатор класса для CSS #}
+                {% set item_class = '' %}
+                {% if is_large %}
+                    {% set item_class = 'dest-mosaic__item_large' %}
+                {% elseif is_tall %}
+                    {% set item_class = 'dest-mosaic__item_tall' %}
+                {% endif %}
+
+                {# 3. Рассчитываем пропорции под тег <img> (fallback) #}
+                {% set img_width = is_large ? 1200 : (is_tall ? 600 : 800) %}
+                {% set img_height = is_large ? 800 : (is_tall ? 1200 : 600) %}
+
+                {# 4. Атрибут sizes для корректного выбора разрешения браузером #}
+                {% set img_sizes = is_large 
+                    ? "(min-width: 1440px) 579px, (min-width: 1024px) 439px, (min-width: 768px) 339px, 100vw" 
+                    : "(min-width: 1440px) 285px, (min-width: 1024px) 215px, (min-width: 768px) 339px, 100vw" 
+                %}
+
+                <article class="dest-mosaic__item {{ item_class }}" data-index="{{ loop.index0 }}">
+                    <div class="dest-mosaic__bg">
+                        {% if item.preview %}
+                            {% set img = item.preview %}
+                            <picture>
+                              
+                                <source
+                                    type="image/avif"
+                                    sizes="{{ img_sizes }}"
+                                    srcset="
+                                        {{ img|media|resize(400, null, { extension: 'avif', quality: 75 }) }} 400w,
+                                        {{ img|media|resize(600, null, { extension: 'avif', quality: 75 }) }} 600w,
+                                        {{ img|media|resize(800, null, { extension: 'avif', quality: 75 }) }} 800w,
+                                        {{ img|media|resize(1200, null, { extension: 'avif', quality: 75 }) }} 1200w,
+                                        {{ img|media|resize(1600, null, { extension: 'avif', quality: 75 }) }} 1600w
+                                    " />
+
+                                
+                                <source
+                                    type="image/webp"
+                                    sizes="{{ img_sizes }}"
+                                    srcset="
+                                        {{ img|media|resize(400, null, { extension: 'webp', quality: 75 }) }} 400w,
+                                        {{ img|media|resize(600, null, { extension: 'webp', quality: 75 }) }} 600w,
+                                        {{ img|media|resize(800, null, { extension: 'webp', quality: 75 }) }} 800w,
+                                        {{ img|media|resize(1200, null, { extension: 'webp', quality: 75 }) }} 1200w,
+                                        {{ img|media|resize(1600, null, { extension: 'webp', quality: 75 }) }} 1600w
+                                    " />
+
+                             
+                                <img
+                                    src="{{ img|media|resize(img_width, img_height, { quality: 75 }) }}"
+                                    alt="{{ item.preview_caption ?: (item.title ~ ' region landscape') }}"
+                                    width="{{ img_width }}"
+                                    height="{{ img_height }}"
+                                    loading="lazy"
+                                    decoding="async"
+                                />
+                            </picture>
+                        {% endif %}
+                    </div>
+
+                    <div class="dest-mosaic__content">
+                        {% if item.icon_id %}
+                            <svg class="dest-mosaic__icon">
+                                <use href="{{ ('assets/sprites/maps.svg#' ~ item.icon_id) | theme }}"></use>
+                            </svg>
+                        {% endif %}
+                        
+                        <h3 class="dest-mosaic__title">{{ item.title }}</h3>
+                        
+                        <div class="dest-mosaic__reveal">
+                            <div class="dest-mosaic__reveal-inner">
+                                <div class="dest-mosaic__text">
+                                    {{ item.short_desc | replace({'</p>': ' ', '<br>': ' '}) | striptags | trim | length > 90 ? item.short_desc | replace({'</p>': ' ', '<br>': ' '}) | striptags | trim | slice(0, 90) ~ '...' : item.short_desc | replace({'</p>': ' ', '<br>': ' '}) | striptags | trim }}
+                                </div>
+                                <span class="dest-mosaic__btn">
+                                    Explore Region 
+                                    <svg class="icon" aria-hidden="true">
+                                        <use href="{{ 'assets/sprites/icons.svg#arrow' | theme }}"></use>
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{{ 'destination' | page({ slug: item.slug }) }}" class="dest-mosaic__link" aria-label="Explore {{ item.title }}"></a>
+                </article>
+            {% endfor %}
+        </div>
+          
+        </div>
+      </section>
+    </main>
