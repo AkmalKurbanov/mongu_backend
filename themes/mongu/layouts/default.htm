@@ -49,6 +49,8 @@ handle = "MyGlobal"
     <!-- Критические стили -->
     {% if this.page.id == 'contacts' %}
       {% partial 'blocks/critical-contacts.htm' %}
+    {% elseif this.page.id == 'about' %}
+      {% partial 'blocks/critical-about.htm' %}
     {% else %}
       {% partial 'blocks/critical-base.htm' %}
     {% endif %}
@@ -65,7 +67,18 @@ handle = "MyGlobal"
     {% if this.page.heroType == 'index' %}
         {% partial 'blocks/hero-index' %}
     {% elseif this.page.heroType == 'inside' %}
-        {% partial 'blocks/hero-inside' heroTitle=this.page.heroTitle heroImgBase=this.page.heroImgBase %}
+        
+        {% set finalHeroTitle = this.page.dynamicHeroTitle | default(this.page.heroTitle) %}
+        {% set finalHeroPosition = this.page.dynamicHeroPosition | default('center-bg') %}
+        
+        {% partial 'blocks/hero-inside' 
+            heroTitle=finalHeroTitle 
+            heroImgBase=this.page.heroImgBase 
+            heroImageObj=this.page.dynamicHeroImage 
+            heroPosition=finalHeroPosition
+            heroImageAlt=this.page.dynamicHeroAlt
+        %}
+        
     {% endif %}
 
     {% page %}

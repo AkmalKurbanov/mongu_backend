@@ -12,18 +12,98 @@ navigation:
 
 fields:
     
+    # --- БАННЕР (HERO) ---
+    hero:
+        label: Баннер страницы категории
+        type: fileupload
+        mode: image
+        imageWidth: 3840
+        span: left
+        comment: Размер загружаемой картинки должен быть минимум 3840px
+
+    hero_position:
+        label: Позиция кадрирования фона (Hero)
+        type: dropdown
+        default: center-bg
+        span: right
+        options:
+            center-bg: По центру (Центр)
+            top-bg: Верх по центру
+            bottom-bg: Низ по центру
+            left-bg: Лево по центру
+            right-bg: Право по центру
+            top-left-bg: Верхний левый угол
+            top-right-bg: Правый верхний угол
+            bottom-left-bg: Нижний левый угол
+            bottom-right-bg: Правый нижний угол    
+
+    hero_caption:
+        label: Подпись баннера (SEO)
+        comment: Опишите баннер по теме
+        type: text
+        span: full
+
+
+    # --- ПРЕВЬЮ КАТЕГОРИИ ---
     preview:
-        label: Превью
+        label: Превью карточки
         type: fileupload
         mode: image
         imageWidth: 1200
         span: left
 
-    preview_caption:
-        label: Подпись превью (оптимизации под SEO)
-        type: text
+    preview_position:
+        label: Позиция кадрирования превью
+        type: dropdown
+        default: center-bg
         span: right
+        options:
+            center-bg: По центру (Центр)
+            top-bg: Верх по центру
+            bottom-bg: Низ по центру
+            left-bg: Лево по центру
+            right-bg: Право по центру
+            top-left-bg: Верхний левый угол
+            top-right-bg: Правый верхний угол
+            bottom-left-bg: Нижний левый угол
+            bottom-right-bg: Правый нижний угол    
 
+    preview_caption:
+        label: Подпись превью (SEO)
+        comment: Опишите превью по теме
+        type: text
+        span: full
+
+
+    # --- НАСТРОЙКИ СЕТКИ ---
+    is_large:
+        label: Большая карточка в сетке (2x2)
+        type: switch
+        span: left
+        default: false
+        comment: Растянуть карточку на блок большего размера
+
+    is_right:
+        label: Сместить карточку вправо (_right)
+        type: switch
+        span: right
+        default: false
+        comment: Принудительный сдвиг карточки на правую колонку
+
+    is_wide:
+        label: Широкая карточка в сетке (2x1)
+        type: switch
+        span: auto
+        default: false
+
+    is_tall:
+        label: Высокая карточка в сетке (1x2)
+        type: switch
+        span: auto
+        default: false    
+
+
+    # --- ТЕКСТЫ И ИКОНКИ ---
     description:
         label: Краткое описание
         type: textarea

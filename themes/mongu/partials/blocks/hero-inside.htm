@@ -2,38 +2,53 @@
     <div class="hero__media">
         <div class="hero__poster">
             <picture>
-                
-                {% set imgBase = heroImgBase | default('default-hero') %}
-                {% set folder = 'assets/images/hero/' ~ imgBase ~ '/' ~ imgBase %}
-                
-                {% set sources = [
-                    { media: '(min-width: 1440px)', w1: '1920', w2: '3840', s1: '3840', s2: '3840' },
-                    { media: '(min-width: 1024px)', w1: '1440', w2: '2880', s1: '1440', s2: '2880' },
-                    { media: '(min-width: 768px)',  w1: '800',  w2: '1600', s1: '800',  s2: '1600' },
-                    { media: null,                  w1: '450',  w2: '900',  s1: '450',  s2: '900' }
-                ] %}
+                {% if heroImageObj %}
+                    <!-- 1440px+ -->
+                    <source type="image/avif" media="(min-width: 1440px)" sizes="100vw" width="1920" height="400" 
+                            srcset="{{ heroImageObj | smart_crop(1920, 400, heroPosition, 75, 'avif') }} 1920w, 
+                                    {{ heroImageObj | smart_crop(3840, 800, heroPosition, 50, 'avif') }} 3840w" />
+                    <source type="image/webp" media="(min-width: 1440px)" sizes="100vw" width="1920" height="400" 
+                            srcset="{{ heroImageObj | smart_crop(1920, 400, heroPosition, 75, 'webp') }} 1920w, 
+                                    {{ heroImageObj | smart_crop(3840, 800, heroPosition, 50, 'webp') }} 3840w" />
 
-                {% for src in sources %}
-                    <source type="image/avif" 
-                            {% if src.media %}media="{{ src.media }}"{% endif %} 
-                            sizes="100vw" width="{{ src.w1 }}" height="400" 
-                            srcset="{{ (folder ~ '-' ~ src.s1 ~ '.avif') | theme }} {{ src.w1 }}w, 
-                                    {{ (folder ~ '-' ~ src.s2 ~ '.avif') | theme }} {{ src.w2 }}w" />
-                    
-                    <source type="image/webp" 
-                            {% if src.media %}media="{{ src.media }}"{% endif %} 
-                            sizes="100vw" width="{{ src.w1 }}" height="400" 
-                            srcset="{{ (folder ~ '-' ~ src.s1 ~ '.webp') | theme }} {{ src.w1 }}w, 
-                                    {{ (folder ~ '-' ~ src.s2 ~ '.webp') | theme }} {{ src.w2 }}w" />
-                {% endfor %}
+                    <!-- 1024px+ -->
+                    <source type="image/avif" media="(min-width: 1024px)" sizes="100vw" width="1440" height="400" 
+                            srcset="{{ heroImageObj | smart_crop(1440, 400, heroPosition, 75, 'avif') }} 1440w, 
+                                    {{ heroImageObj | smart_crop(2880, 800, heroPosition, 50, 'avif') }} 2880w" />
+                    <source type="image/webp" media="(min-width: 1024px)" sizes="100vw" width="1440" height="400" 
+                            srcset="{{ heroImageObj | smart_crop(1440, 400, heroPosition, 75, 'webp') }} 1440w, 
+                                    {{ heroImageObj | smart_crop(2880, 800, heroPosition, 50, 'webp') }} 2880w" />
 
-                <img src="{{ (folder ~ '-1440.jpg') | theme }}" alt="{{ heroTitle }}" class="hero__poster-img" width="450" height="400" fetchpriority="high" loading="eager" />
+                    <!-- 768px+ -->
+                    <source type="image/avif" media="(min-width: 768px)" sizes="100vw" width="800" height="400" 
+                            srcset="{{ heroImageObj | smart_crop(800, 400, heroPosition, 75, 'avif') }} 800w, 
+                                    {{ heroImageObj | smart_crop(1600, 800, heroPosition, 50, 'avif') }} 1600w" />
+                    <source type="image/webp" media="(min-width: 768px)" sizes="100vw" width="800" height="400" 
+                            srcset="{{ heroImageObj | smart_crop(800, 400, heroPosition, 75, 'webp') }} 800w, 
+                                    {{ heroImageObj | smart_crop(1600, 800, heroPosition, 50, 'webp') }} 1600w" />
+
+                    <!-- Mobile -->
+                    <source type="image/avif" sizes="100vw" width="450" height="400" 
+                            srcset="{{ heroImageObj | smart_crop(450, 400, heroPosition, 75, 'avif') }} 450w, 
+                                    {{ heroImageObj | smart_crop(900, 800, heroPosition, 50, 'avif') }} 900w" />
+                    <source type="image/webp" sizes="100vw" width="450" height="400" 
+                            srcset="{{ heroImageObj | smart_crop(450, 400, heroPosition, 75, 'webp') }} 450w, 
+                                    {{ heroImageObj | smart_crop(900, 800, heroPosition, 50, 'webp') }} 900w" />
+
+                    <img src="{{ heroImageObj | smart_crop(1440, 400, heroPosition, 75, 'webp') }}" 
+                         alt="{{ heroImageAlt | default(heroTitle | default('Category')) }}" 
+                         class="hero__poster-img" 
+                         width="450" height="400" 
+                         fetchpriority="high" 
+                         loading="eager" />
+                {% endif %}
             </picture>
         </div>
     </div>
+
     <div class="hero__content">
         <div class="container">
-            <h1 class="hero__title">{{ heroTitle }}</h1>
+            <h1 class="hero__title">{{ heroTitle | default('Trekking adventures') }}</h1>
         </div>
     </div>
 </section>

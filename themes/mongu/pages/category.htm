@@ -1,9 +1,7 @@
-##
 url = "/category/:slug"
 layout = "default"
 title = "Category"
 heroType = 'inside'
-heroImgBase = "horseback-hero"
 page_js = "category.js"
 page_css_file = "category.css"
 
@@ -13,14 +11,33 @@ handle = "Categories"
 [collection tours]
 handle = "Tours"
 ==
-{# 1. Находим текущую категорию #}
+function onEnd() {
+    $category = \Tailor\Models\EntryRecord::inSection('Categories')->where('slug', $this->param('slug'))->first();
+
+    if ($category) {
+        $this->page['dynamicHeroTitle'] = $category->title;
+        
+        // Передаем разные настройки для разных мест
+        $this->page['dynamicHeroPosition'] = $category->hero_position ?: 'center';
+        $this->page['dynamicCardPosition'] = $category->card_crop_mode ?: 'center';
+        
+        if ($category->hero && $category->hero->count() > 0) {
+            $this->page['dynamicHeroImage'] = $category->hero->first();
+        }
+        
+        // Передаем SEO-подпись баннера для альта
+        $this->page['dynamicHeroAlt'] = $category->hero_caption;
+    }
+}
+==
+{# Твоя логика: находим категорию для локального использования #}
 {% set current_category = categories.where('slug', this.param.slug).first %}
 
 {% if not current_category %}
     {% do abort(404) %}
 {% endif %}
 
-{# 2. Обязательно добавляем .get() в конце запроса whereRelation #}
+{# Фильтруем туры #}
 {% set filtered_tours = tours.whereRelation('category', 'id', current_category.id).get() %}
 <main class="main-content">
   <div class="breadcrumbs">

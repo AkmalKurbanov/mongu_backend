@@ -89,83 +89,122 @@ identifier = "slug"
         </div>
       </section>
 
-      <section class="teaser-cat section-padding section-bg">
+      <section class="section-padding">
         <div class="container">
           <div class="title-wrap">
             <h2 class="title title_centered">Choose your ideal tour</h2>
+            <p class="subtitle">From high-altitude alpine lakes to wild gorges and ancient nomadic paths</p>
           </div>
-
-          <div class="js-slider slider">
-            <div class="teaser-cat__flex-wrap js-slider-viewport">
+          
+          <div class="js-slider">
+            <div class="dest-mosaic js-slider-viewport">
               
               {% for cat in categories %}
-                <div class="teaser-cat__item js-slide" data-index="{{ loop.index0 }}">
-                <div class="teaser-cat__img teaser-cat__img_pos-r">
-                  <picture>
-                   {% if cat.preview %}
-                    {% for img in cat.preview %}
-                    <picture>
-                        <source
-                            type="image/avif"
-                            sizes="(min-width: 1440px) 576px, (min-width: 1024px) 436px, (min-width: 768px) 336px, calc(100vw - 32px)"
-                            srcset="{{ img.path | resize(340, null, { extension: 'avif', quality: 75 }) }} 340w, 
-                                    {{ img.path | resize(440, null, { extension: 'avif', quality: 75 }) }} 440w, 
-                                    {{ img.path | resize(580, null, { extension: 'avif', quality: 75 }) }} 580w, 
-                                    {{ img.path | resize(740, null, { extension: 'avif', quality: 75 }) }} 740w, 
-                                    {{ img.path | resize(880, null, { extension: 'avif', quality: 75 }) }} 880w, 
-                                    {{ img.path | resize(1152, null, { extension: 'avif', quality: 75 }) }} 1152w" />
-                        <source
-                            type="image/webp"
-                            sizes="(min-width: 1440px) 576px, (min-width: 1024px) 436px, (min-width: 768px) 336px, calc(100vw - 32px)"
-                            srcset="{{ img.path | resize(340, null, { extension: 'webp', quality: 75 }) }} 340w, 
-                                    {{ img.path | resize(440, null, { extension: 'webp', quality: 75 }) }} 440w, 
-                                    {{ img.path | resize(580, null, { extension: 'webp', quality: 75 }) }} 580w, 
-                                    {{ img.path | resize(740, null, { extension: 'webp', quality: 75 }) }} 740w, 
-                                    {{ img.path | resize(880, null, { extension: 'webp', quality: 75 }) }} 880w, 
-                                    {{ img.path | resize(1152, null, { extension: 'webp', quality: 75 }) }} 1152w" />
-                        <img
-                            class="card__img"
-                            src="{{ img.path | resize(1152, null, { quality: 75 }) }}"
-                            alt="{{ cat.preview_caption }}"
-                            width="576"
-                            height="536"
-                            loading="lazy"
-                            decoding="async" />
-                    </picture>
-                    {% endfor %}
-                {% endif %}
-                </picture>
-                </div>
-                <div class="teaser-cat__desc-wrap">
-                  {% if cat.icon_id %}
-                  <svg class="teaser-cat__icon">
-                    <use href="{{ ('assets/sprites/icons.svg#' ~ cat.icon_id) | theme }}"></use>
-                  </svg>
-                  {% endif %}
-                  <h3 class="teaser-cat__title">
-                    {{ cat.title }}
-                  </h3>
-                  {% if cat.preview_caption %}
-                  <p class="teaser-cat__desc">
-                    {{ cat.description }}
-                  </p>
-                  {% endif %}
-                </div>
-                <a
-                  href="{{ 'category' | page({ slug: cat.slug }) }}"
-                  href="/category/{{cat.slug}}"
-                  class="teaser-cat__link"
-                  aria-label="View tours: {{ cat.title }}"></a>
-              </div>
+                {# 1. Читаем параметры из админки #}
+                {% set isBig = cat.is_large %}
+                {% set isWide = cat.is_wide %}
+                {% set isTall = cat.is_tall %}
+                
+                {% set pos = cat.preview_position | default('center-bg') %}
 
+                {# 2. Базовые размеры карточек (Обычная 1x1) #}
+                {% set desk_w = 280 %} {% set desk_h = 280 %}
+                {% set lap_w = 210 %}  {% set lap_h = 280 %}
+                
+                {# 3. Переопределяем размеры для Десктопа и Ноутбука, если включен модификатор #}
+                {% if isBig %}
+                  {% set desk_w = 576 %} {% set desk_h = 576 %}
+                  {% set lap_w = 436 %}  {% set lap_h = 576 %}
+                {% elseif isWide %}
+                  {% set desk_w = 576 %} {% set desk_h = 280 %}
+                  {% set lap_w = 436 %}  {% set lap_h = 280 %}
+                {% elseif isTall %}
+                  {% set desk_w = 280 %} {% set desk_h = 576 %}
+                  {% set lap_w = 210 %}  {% set lap_h = 576 %}
+                {% endif %}
+
+                {# 4. Размеры для Планшета (строго 4/3, 2 колонки) и Мобилки (строго 4/3, 1 колонка) #}
+                {% set tab_w = 336 %} {% set tab_h = 252 %}
+                {% set mob_w = 735 %} {% set mob_h = 551 %}
+
+                {# 5. Формируем классы сетки #}
+                {% set itemClasses = [
+                  'dest-mosaic__item show-info',
+                  isBig ? 'dest-mosaic__item_big' : '',
+                  isWide ? 'dest-mosaic__item_wide' : '',
+                  isTall ? 'dest-mosaic__item_tall' : '',
+                  'js-slide'
+                ] | filter(v => v) | join(' ') %}
+
+                <article class="{{ itemClasses }}" data-index="{{ loop.index0 }}">
+                  
+                  <div class="dest-mosaic__bg">
+                    {% if cat.preview %}
+                      {% for img in cat.preview %}
+                        <picture>
+                          <!-- Desktop (1440px+) -->
+                          <source type="image/avif" media="(min-width: 1440px)" srcset="{{ img | smart_crop(desk_w, desk_h, pos, 75, 'avif') }}" />
+                          <source type="image/webp" media="(min-width: 1440px)" srcset="{{ img | smart_crop(desk_w, desk_h, pos, 75, 'webp') }}" />
+                          
+                          <!-- Laptop (1024px - 1439px) -->
+                          <source type="image/avif" media="(min-width: 1024px)" srcset="{{ img | smart_crop(lap_w, lap_h, pos, 75, 'avif') }}" />
+                          <source type="image/webp" media="(min-width: 1024px)" srcset="{{ img | smart_crop(lap_w, lap_h, pos, 75, 'webp') }}" />
+                          
+                          <!-- Tablet (768px - 1023px) -->
+                          <source type="image/avif" media="(min-width: 768px)" srcset="{{ img | smart_crop(tab_w, tab_h, pos, 75, 'avif') }}" />
+                          <source type="image/webp" media="(min-width: 768px)" srcset="{{ img | smart_crop(tab_w, tab_h, pos, 75, 'webp') }}" />
+                          
+                          <!-- Mobile (0 - 767px) -->
+                          <source type="image/avif" srcset="{{ img | smart_crop(mob_w, mob_h, pos, 75, 'avif') }}" />
+                          <source type="image/webp" srcset="{{ img | smart_crop(mob_w, mob_h, pos, 75, 'webp') }}" />
+                          
+                          <img 
+                            src="{{ img | smart_crop(desk_w, desk_h, pos, 75, 'jpg') }}" 
+                            alt="{{ cat.preview_caption | default(cat.title) }}" 
+                            width="{{ desk_w }}" 
+                            height="{{ desk_h }}" 
+                            loading="lazy" 
+                            decoding="async" />
+                        </picture>
+                      {% endfor %}
+                    {% endif %}
+                  </div>
+                  
+                  <div class="dest-mosaic__content">
+                    {% if cat.icon_id %}
+                      <div class="dest-mosaic__icon-wrap">
+                          <svg class="icon icon_cat-icon">
+                            <use href="{{ ('assets/sprites/icons.svg#' ~ cat.icon_id) | theme }}"></use>
+                          </svg>
+                      </div>
+                    {% endif %}
+                    
+                    <h3 class="dest-mosaic__title">{{ cat.title|raw }}</h3>
+                    
+                    <div class="dest-mosaic__reveal">
+                      <div class="dest-mosaic__reveal-inner">
+                        {% if cat.description %}
+                          <p>{{ cat.description }}</p>
+                        {% endif %}
+                        <span class="dest-mosaic__btn">
+                          Explore 
+                          <svg class="icon"><use href="#arrow"></use></svg>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <a href="{{ 'category' | page({ slug: cat.slug }) }}" class="dest-mosaic__link" aria-label="Explore {{ cat.title }}"></a>
+                </article>
+                
               {% endfor %}
 
             </div>
-
+            
             <div class="slider__pagination js-pagination">
-              {% for cat in categories %}
+            {% for cat in categories %}
               <div class="pagination-dot" data-index="{{ loop.index0 }}"></div>
-              {% endfor %}
+            {% endfor %}  
             </div>
           </div>
         </div>
