@@ -7,35 +7,78 @@ drafts: true
 primaryNavigation:
     label: Дестинация
     icon: icon-map-marker
-    order: 120
+    order: 24
 
 fields:
 
     preview:
-        label: Изображение
+        label: Превью карточки
         type: fileupload
         mode: image
+        comment: 'Размер загружаемой картинки должен быть минимум 1200px. Перед загрузкой изображения ЖЕЛАТЕЛЬНО провести его предварительную оптимизацию с помощью сервиса <a href="https://squoosh.app/" target="_blank" rel="noopener">Squoosh</a>.'
+        commentHtml: true
         span: left
-        tab: Превью
+        tab: Тизер карточка
+
+    preview_position:
+        label: Позиция кадрирования превью
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Тизер карточка
+        options:
+            center-bg: По центру (Центр)
+            top-bg: Верх по центру
+            bottom-bg: Низ по центру
+            left-bg: Лево по центру
+            right-bg: Право по центру
+            top-left-bg: Верхний левый угол
+            top-right-bg: Правый верхний угол
+            bottom-left-bg: Нижний левый угол
+            bottom-right-bg: Правый нижний угол      
     
     preview_caption:
-        label: Подпись превью (оптимизации под SEO)
+        label: Подпись превью (SEO)
+        comment: Опишите превью по теме
         type: text
         span: right
-        tab: Превью
+        tab: Тизер карточка
 
-    short_desc:
-        label: Краткое описание
-        type: richeditor
-        size: tiny
+
+    # --- НАСТРОЙКИ СЕТКИ ---
+    card_size:
+        label: Размер карточки в сетке
+        type: dropdown
         span: left
-        tab: Превью
+        default: normal
+        tab: Тизер карточка
+        options:
+            normal: Стандартная (1x1)
+            large: Большая (2x2)
+            wide: Широкая (2x1)
+            tall: Высокая (1x2)
+
+    is_right:
+        label: Сместить карточку вправо
+        type: switch
+        span: right
+        default: false
+        comment: Принудительный сдвиг карточки на правую колонку
+        tab: Тизер карточка
+
+    description:
+        label: Краткое описание
+        type: textarea
+        span: left
+        size: tiny
+        tab: Тизер карточка
 
     icon_id:
         label: Иконка региона на карте
         type: dropdown
         span: right
-        tab: Превью
+        tab: Тизер карточка
+        
         options:
             '': '-- Без иконки --'
             ik: Иссык-Куль
@@ -48,12 +91,64 @@ fields:
             tj: Таджикистан
             kz: Казахстан
     
+    hero:
+        label: Баннер страницы дестинации
+        type: fileupload
+        mode: image
+        comment: 'Размер загружаемой картинки должен быть минимум 3840px. Перед загрузкой изображения ЖЕЛАТЕЛЬНО провести его предварительную оптимизацию с помощью сервиса <a href="https://squoosh.app/" target="_blank" rel="noopener">Squoosh</a>.'
+        commentHtml: true
+        span: left
+        tab: Детальная 
+
+    hero_position:
+        label: Позиция кадрирования фона (Hero)
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Детальная 
+        options:
+            center-bg: По центру (Центр)
+            top-bg: Верх по центру
+            bottom-bg: Низ по центру
+            left-bg: Лево по центру
+            right-bg: Право по центру
+            top-left-bg: Верхний левый угол
+            top-right-bg: Правый верхний угол
+            bottom-left-bg: Нижний левый угол
+            bottom-right-bg: Правый нижний угол    
+
+    hero_caption:
+        label: Подпись баннера (SEO)
+        comment: Опишите баннер по теме
+        type: text
+        span: right
+        tab: Детальная
+
     img_detail1:   
         label: Изображение1
         type: fileupload
         mode: image
+        comment: 'Размер загружаемой картинки должен быть минимум 1430px. Перед загрузкой изображения ЖЕЛАТЕЛЬНО провести его предварительную оптимизацию с помощью сервиса <a href="https://squoosh.app/" target="_blank" rel="noopener">Squoosh</a>.'
+        commentHtml: true
         span: left
         tab: Детальная 
+
+    img_detail1_position:
+        label: Позиция кадрирования Изображение1
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Детальная 
+        options:
+            center-bg: По центру (Центр)
+            top-bg: Верх по центру
+            bottom-bg: Низ по центру
+            left-bg: Лево по центру
+            right-bg: Право по центру
+            top-left-bg: Верхний левый угол
+            top-right-bg: Правый верхний угол
+            bottom-left-bg: Нижний левый угол
+            bottom-right-bg: Правый нижний угол    
     
     img_detail_caption1:
         label: Подпись изображения1 (оптимизации под SEO)
@@ -65,8 +160,27 @@ fields:
         label: Изображение2
         type: fileupload
         mode: image
+        comment: 'Размер загружаемой картинки должен быть минимум 866px. Перед загрузкой изображения ЖЕЛАТЕЛЬНО провести его предварительную оптимизацию с помощью сервиса <a href="https://squoosh.app/" target="_blank" rel="noopener">Squoosh</a>.'
+        commentHtml: true
         span: left
         tab: Детальная 
+
+    img_detail2_position:
+        label: Позиция кадрирования Изображение2
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Детальная 
+        options:
+            center-bg: По центру (Центр)
+            top-bg: Верх по центру
+            bottom-bg: Низ по центру
+            left-bg: Лево по центру
+            right-bg: Право по центру
+            top-left-bg: Верхний левый угол
+            top-right-bg: Правый верхний угол
+            bottom-left-bg: Нижний левый угол
+            bottom-right-bg: Правый нижний угол     
     
     img_detail_caption2:
         label: Подпись изображения2 (оптимизации под SEO)
@@ -83,6 +197,7 @@ fields:
     desc_detail:
         label: Описание
         type: richeditor
+        size: tiny
         span: right
         tab: Детальная
 
@@ -107,3 +222,40 @@ fields:
                     label: "Текст подписи (например: Lake Length)"
                     type: text
                     span: full
+
+    # --- SEO ---
+    meta_title:
+        label: Meta Title (Google / Yandex)
+        type: text
+        span: left
+        tab: SEO (Поиск)
+
+    meta_description:
+        label: Meta Description (Google / Yandex)
+        type: textarea
+        size: tiny
+        span: right
+        tab: SEO (Поиск)
+
+    # --- Соцсети (Open Graph) ---
+    og_title:
+        label: OG Title (Telegram / WhatsApp)
+        type: text
+        span: left
+        tab: Соцсети (OG)
+
+    og_description:
+        label: OG Description (Telegram / WhatsApp)
+        type: textarea
+        size: tiny
+        span: right
+        tab: Соцсети (OG)
+
+    og_image:
+        label: Open Graph Image (1200x630)
+        type: fileupload
+        mode: image
+        imageWidth: 1200
+        imageHeight: 630
+        span: full
+        tab: Соцсети (OG)

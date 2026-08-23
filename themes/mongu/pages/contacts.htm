@@ -2,16 +2,12 @@
 url = "/contacts"
 layout = "default"
 title = "Contacts"
-page_js = "contacts.js"
-page_css_file = "contacts.css"
-schema_json = "{\"@context\":\"https://schema.org\",\"@type\":\"TravelAgency\",\"name\":\"Mongu\",\"description\":\"Индивидуальные и авторские джип-туры, конные прогулки и экспедиции по Кыргызстану.\",\"url\":\"https://mongu.kg/\"}"
-heroType = "inside"
-heroTitle = "Contacts"
+page_js = "core.js"
 ==
 <main class="main-content contacts">
       <div class="breadcrumbs">
         <div class="container">
-          <nav aria-label="Хлебные крошки">
+          <nav aria-label="breadcrumbs">
             <ul class="breadcrumbs__list">
               <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'index' | page}}">Home</a></li>
               <li class="breadcrumbs__item" aria-current="page">{{this.page.title}}</li>
@@ -25,7 +21,7 @@ heroTitle = "Contacts"
           <div class="contacts__grid">
             <div class="contacts__map">
               <iframe
-                src="{{global.map_url}}"
+                src="{{globalSettings.map_url}}"
                 width="100%"
                 height="100%"
                 style="border: 0"
@@ -43,19 +39,19 @@ heroTitle = "Contacts"
                 <div class="contacts__details">
                   <div class="contacts__item">
                     <span class="contacts__label">Whatsapp</span>
-                    {% set clean_phone = global.whatsapp_number | replace({' ': '', '+': '', '-': ''}) %}
-                    <a href="https://wa.me/{{ clean_phone }}" class="contacts__value">{{global.whatsapp_number}}</a>
+                    {% set clean_phone = globalSettings.whatsapp_number | replace({' ': '', '+': '', '-': ''}) %}
+                    <a href="https://wa.me/{{ clean_phone }}" class="contacts__value">{{globalSettings.whatsapp_number}}</a>
                   </div>
 
                   <div class="contacts__item">
                     <span class="contacts__label">Office / Mongu hotel</span>
                     <span class="contacts__value">
-                      {{global.address}}
+                      {{globalSettings.address}}
                     </span>
                   </div>
                   <div class="contacts__item contacts__item_full">
                     <span class="contacts__label">E-mail</span>
-                    <a href="mailto:{{global.email_address}}" class="contacts__value">{{global.email_address}}</a>
+                    <a href="mailto:{{globalSettings.email_address}}" class="contacts__value">{{globalSettings.email_address}}</a>
                   </div>
                 </div>
               </div>

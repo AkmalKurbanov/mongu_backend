@@ -4,11 +4,10 @@ type: stream
 name: Туры
 drafts: true
 
-
 primaryNavigation:
     label: Каталог туров
     icon: icon-compass
-    order: 130
+    order: 22
 
 navigation:
     label: Все туры
@@ -16,183 +15,201 @@ navigation:
     order: 10
 
 fields:
-    is_featured:
-        label: Обычный / Популярный
-        type: switch
-        span: left
-        tab: Статус и видимость
-        comment: Выключите/Включите, чтобы тур отображался в блоке популярных на главной
-    
+    # --- СТАТУС ---
     is_active:
-        label: Активный / Неактивный
+        label: Опубликован
         type: switch
+        default: true
+        span: left
+        tab: Статус
+
+    is_featured:
+        label: Популярный тур (выводить на главной)
+        type: switch
+        default: false
         span: right
-        tab: Статус и видимость
-        comment: Выключите/Включите, чтобы тур отображался на сайте   
-        
+        tab: Статус
+
+    # --- ТИЗЕР КАРТОЧКА ---
+    preview:
+        label: Превью карточки
+        type: fileupload
+        mode: image
+        imageWidth: 800
+        span: left
+        tab: Тизер карточка
+
+    preview_position:
+        label: Позиция кадрирования превью
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Тизер карточка
+        options: &bg_positions
+            center-bg: По центру (Центр)
+            top-bg: Верх по центру
+            bottom-bg: Низ по центру
+            left-bg: Лево по центру
+            right-bg: Право по центру
+            top-left-bg: Верхний левый угол
+            top-right-bg: Правый верхний угол
+            bottom-left-bg: Нижний левый угол
+            bottom-right-bg: Правый нижний угол
+
+    preview_caption:
+        label: Подпись превью (SEO alt)
+        type: text
+        span: right
+        tab: Тизер карточка
+
+    # --- СВЯЗИ И ПАРАМЕТРЫ ---
     category:
-        label: Категория тура
+        label: Категория
         type: entries
         source: Categories
-        span: left
         maxItems: 1
-        tab: Основное
+        span: left
+        tab: Параметры
 
     destination:
         label: Дестинация
         type: entries
         source: Destinations
+        maxItems: 1
         span: right
-        maxItems: 1    
-        tab: Основное
+        tab: Параметры
 
-    preview:
-        label: Превью
-        type: fileupload
-        mode: image
-        span: left
-        tab: Основное
-
-    preview_caption:
-        label: Подпись превью (оптимизация под SEO)
-        type: text
-        span: right    
-        tab: Основное
-
-    short_desc:
-        label: Короткое описание
-        type: richeditor
+    description:
+        label: Краткое описание (для карточки)
+        type: textarea
         size: tiny
-        span: left
-        tab: Основное
+        span: full
+        tab: Параметры
 
-    season:  
-        label: Сезон
+    program_price:
+        label: "Цена (например: $1200)"
+        type: text
+        span: left
+        tab: Параметры
+
+    tour_duration:
+        label: "Продолжительность (например: 7 days / 6 nights)"
         type: text
         span: right
-        tab: Основное
+        tab: Параметры
 
-    physical_difficulty_lvl:
-        label: Физическая сложность тура
-        type: dropdown
+    season:
+        label: "Сезон (например: June – September)"
+        type: text
         span: left
-        tab: Основное
-        options:
-            Basic: Базовая
-            Intermediate: Средняя
-            Advanced: Продвинутая
-            Expert: Экспертная
+        tab: Параметры
+
+    height:
+        label: "Максимальная высота (например: 3800m)"
+        type: text
+        span: right
+        tab: Параметры
 
     technical_difficulty_lvl:
-        label: Техническая сложность тура
+        label: Техническая сложность
+        type: dropdown
+        span: left
+        tab: Параметры
+        options:
+            Basic: Базовый
+            Intermediate: Средний
+            Advanced: Продвинутый
+            Expert: Экспертный
+
+    physical_difficulty_lvl:
+        label: Физическая сложность
         type: dropdown
         span: right
-        tab: Основное
+        tab: Параметры
         options:
-            Basic: Базовая
-            Intermediate: Средняя
-            Advanced: Продвинутая
-            Expert: Экспертная
+            Basic: Базовый
+            Intermediate: Средний
+            Advanced: Продвинутый
+            Expert: Экспертный
 
-    tour_duration: 
-        label: Продолительность тура
-        type: text
-        span: left
-        tab: Основное
-
-    program_price: 
-        label: Цена программы на одного человека
-        type: text
-        span: right
-        tab: Основное
-    
-    height: 
-        label: Высота над уровнем моря
-        type: text
-        span: full
-        tab: Основное
-
-     
-
-
-    # --- Галерея ---
+    # --- ГАЛЕРЕЯ ---
     gallery_items:
-        label: Галерея (максимум 5)
+        label: Галерея тура
         type: repeater
         maxItems: 5
         span: full
-        prompt: Добавить картинку
+        prompt: Добавить фото
         tab: Галерея
         form:
             fields:
                 image:
-                    label: Картинка
-                    type: mediafinder
+                    label: Фотография
+                    type: fileupload
                     mode: image
+                    imageWidth: 1920
                     span: left
                 caption:
-                    label: Подпись (оптимизация под SEO)
+                    label: Подпись к фото (SEO alt)
                     type: text
-                    span: right  
+                    span: right
 
-
-    # --- Вкладка: Описание и Таймлайн ---
-    description_text:
-        label: Описание (Главный текст)
+    # --- ПРОГРАММА И ОПИСАНИЕ ---
+    content:
+        label: Полное описание тура
         type: richeditor
         span: full
-        tab: Описание и дни
+        tab: Программа
 
     itinerary_days:
-        label: Таймлайн маршрута (Дни)
+        label: Маршрут по дням
         type: repeater
         span: full
         prompt: Добавить день
-        tab: Описание и дни
+        tab: Программа
         form:
             fields:
                 day_title:
-                    label: Заголовок дня (например, Day 1. Bishkek – Karkyra)
+                    label: "День и маршрут (напр: Day 1. Bishkek – Karakol)"
                     type: text
-                    span: left
+                    span: full
                 day_content:
-                    label: Описание дня
+                    label: Детали дня
                     type: richeditor
-                    span: right
+                    size: tiny
+                    span: full
 
-
-    # --- Вкладка: Цены и условия ---
     prices_content:
-        label: Цены и условия (Всё, что входит/не входит)
+        label: Что включено / Не включено в стоимость
         type: richeditor
         span: full
-        tab: Цены и условия
+        tab: Условия и цены
 
-
-    # --- Вкладка: Даты ---
+    # --- ДАТЫ ВЫЕЗДОВ ---
     tour_dates:
-        label: Доступные даты выездов
+        label: График заездов
         type: repeater
         span: full
         prompt: Добавить дату
         tab: Даты
         form:
             fields:
-                date_str:
-                    label: Дата (например, July 18, 2026)
+                date_start:
+                    label: Дата начала
                     type: datepicker
                     mode: date
-                    format: 'F j, Y'
-                    minDate: today
+                    format: "F j, Y"
                     span: left
-
-                price_str:
-                    label: Цена (например, $1300)
-                    type: text
+                date_end:
+                    label: Дата окончания
+                    type: datepicker
+                    mode: date
+                    format: "F j, Y"
                     span: right
+                price:
+                    label: Цена на эту дату
+                    type: text
+                    span: full
 
-
-    # --- Вкладка: Доп. информация ---
     additional_accordions:
         label: Аккордеоны с дополнительной информацией
         type: repeater
@@ -204,44 +221,81 @@ fields:
                 acc_title:
                     label: Заголовок аккордеона
                     type: text
-                    span: full
+                    span: left
                 acc_content:
                     label: Содержимое блока
                     type: richeditor
-                    span: full
+                    size: tiny
+                    span: right
 
-
-    # --- Вкладка: Карта ---
-    tour_map_image:
-        label: Карта маршрута(изображение)
-        type: mediafinder
-        mode: image
+    # --- КАРТА ---
+    map_type:
+        label: Тип карты
+        type: dropdown
+        default: image
         span: left
         tab: Карта
+        options:
+            none: Без карты
+            image: Изображение
+            iframe: Интерактивная карта (Google Maps embed)
+
+    tour_map_image:
+        label: Файл карты (изображение)
+        type: fileupload
+        mode: image
+        imageWidth: 1920
+        span: right
+        tab: Карта
+        trigger:
+            action: show
+            field: map_type
+            condition: value[image]
 
     tour_map_frame:
-        label: Интерактивная карта маршрута
-        prompt: Добавить блок информации
-        type: text
+        label: Интерактивный код (Google My Maps iframe src)
+        type: textarea
+        size: tiny
         span: right
         tab: Карта
+        trigger:
+            action: show
+            field: map_type
+            condition: value[iframe]
 
-    is_tour_map_image:
-        label: Скрыть / Показать карту
-        type: switch
+    # --- SEO ---
+    meta_title:
+        label: Meta Title (Google / Yandex)
+        type: text
         span: left
-        tab: Карта
+        tab: SEO (Поиск)
 
-    is_tour_map_frame:
-        label: Скрыть / Показать карту
-        type: switch
+    meta_description:
+        label: Meta Description (Google / Yandex)
+        type: textarea
+        size: tiny
         span: right
-        tab: Карта    
-        
+        tab: SEO (Поиск)
 
-    tour_map_seo:    
-        label: Подпись (оптимизация под SEO)
+    # --- Соцсети (Open Graph) ---
+    og_title:
+        label: OG Title (Telegram / WhatsApp)
         type: text
+        span: left
+        tab: Соцсети (OG)
+
+    og_description:
+        label: OG Description (Telegram / WhatsApp)
+        type: textarea
+        size: tiny
+        span: right
+        tab: Соцсети (OG)
+
+    og_image:
+        label: Open Graph Image (1200x630)
+        type: fileupload
         mode: image
+        imageWidth: 1200
+        imageHeight: 630
         span: full
-        tab: Карта
+        tab: Соцсети (OG)

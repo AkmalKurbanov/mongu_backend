@@ -1,0 +1,172 @@
+##
+url = "/article/:slug"
+layout = "default"
+title = "Article"
+page_js = "core.js"
+headerType = "inside"
+
+[collection guide]
+handle = "Guide"
+==
+<?php
+function onStart() {
+    
+    $record = \Tailor\Models\EntryRecord::inSection('guide')
+        ->where('slug', $this->param('slug'))
+        ->first();
+    
+    if (!$record) {
+        return \Response::make($this->controller->run('404'), 404);
+    }
+
+    $this['record'] = $record;
+
+    // Убрали обращение к старому полю description, чтобы не ломать PHP[cite: 10]
+    $this->page['meta_title'] = $record->meta_title ?: $record->title . ' | Mongu';
+    $this->page['meta_description'] = $record->meta_description ?: '';
+
+    $this->page['og_title'] = $record->og_title ?: null;
+    $this->page['og_description'] = $record->og_description ?: null;
+    
+    if ($record->og_image) {
+        $this->page['og_image'] = $record->og_image;
+    } elseif ($record->preview && $record->preview->count() > 0) {
+        $this->page['og_image'] = $record->preview->first()->path;
+    }
+
+    $this->page['dynamicHeroTitle'] = $record->title;
+    $this->page['dynamicHeroPosition'] = $record->hero_position ?: 'center-bg';
+    $this->page['dynamicHeroImage'] = $record->hero?->first() ?: $record->preview?->first();
+    $this->page['dynamicHeroAlt'] = $record->hero_caption ?: $record->title;
+}
+?>
+==
+
+<main class="main-content main-content_inner-page">
+  <div class="container">
+    <nav aria-label="Хлебные крошки" class="breadcrumbs">
+      <ul class="breadcrumbs__list">
+        <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{ 'index' | page }}">Home</a></li>
+        <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{ 'guide' | page }}">Travel guide</a></li>
+        <li class="breadcrumbs__item" aria-current="page">{{ record.title }}</li>
+      </ul>
+    </nav>
+  </div>
+
+  <article class="article section-padding-bottom">
+    <div class="container">
+      <header class="article__header">
+        <h1 class="article__title">{{ record.title }}</h1>
+      </header>
+
+      {% set heroImg = record.hero.first() %}
+      {% if heroImg %}
+        <figure class="article__hero">
+          <picture>
+            <source type="image/avif" media="(min-width: 1024px)" 
+                    srcset="{{ heroImg | smart_crop(1168, 584, record.hero_position | default('center-bg'), 75, 'avif') }} 1168w, 
+                            {{ heroImg | smart_crop(2336, 1168, record.hero_position | default('center-bg'), 50, 'avif') }} 2336w" sizes="1168px" />
+            <source type="image/webp" media="(min-width: 1024px)" 
+                    srcset="{{ heroImg | smart_crop(1168, 584, record.hero_position | default('center-bg'), 75, 'webp') }} 1168w, 
+                            {{ heroImg | smart_crop(2336, 1168, record.hero_position | default('center-bg'), 50, 'webp') }} 2336w" sizes="1168px" />
+
+            <source type="image/avif" 
+                    srcset="{{ heroImg | smart_crop(768, 400, record.hero_position | default('center-bg'), 75, 'avif') }} 768w, 
+                            {{ heroImg | smart_crop(1536, 800, record.hero_position | default('center-bg'), 50, 'avif') }} 1536w" sizes="100vw" />
+            <source type="image/webp" 
+                    srcset="{{ heroImg | smart_crop(768, 400, record.hero_position | default('center-bg'), 75, 'webp') }} 768w, 
+                            {{ heroImg | smart_crop(1536, 800, record.hero_position | default('center-bg'), 50, 'webp') }} 1536w" sizes="100vw" />
+
+            <img 
+              src="{{ heroImg | smart_crop(1168, 584, record.hero_position | default('center-bg'), 75, 'webp') }}" 
+              alt="{{ record.hero_caption | default(record.title) }}" 
+              class="article__hero-img" 
+              width="1168"
+              height="584"
+              loading="eager" 
+              decoding="async"
+            >
+          </picture>
+          {% if record.hero_caption %}
+            <figcaption class="article__hero-caption">{{ record.hero_caption }}</figcaption>
+          {% endif %}
+        </figure>
+      {% endif %}
+
+      <div class="article__body">
+        {% for block in record.content_blocks %}
+          
+          {# 1. Текстовый блок #}
+          {% if block.content_group == 'text_block' %}
+            <div class="article__text-content">
+              {{ block.text | raw }}
+            </div>
+          
+          {# 2. Широкое фото (Full-width) с адаптивным srcset #}
+          {% elseif block.content_group == 'image_wide' %}
+            {% set img = block.image.first() %}
+            {% if img %}
+              <figure class="article-media-wide">
+                <div class="article-media-wide__wrapper">
+                  <picture>
+                    {# Пример генерации ресайзов через встроенный фильтр resize (ширина 800px для мобилок, 1450px для десктопа) #}
+                    <source 
+                      media="(max-width: 768px)" 
+                      srcset="{{ img.path | resize(800, null, { mode: 'auto', quality: 85 }) }}" 
+                    />
+                    <img 
+                      src="{{ img.path }}" 
+                      srcset="{{ img.path | resize(800, null, { mode: 'auto', quality: 85 }) }} 800w, 
+                              {{ img.path }} 1450w"
+                      sizes="100vw"
+                      alt="{{ block.caption | default('Иллюстрация к статье') }}" 
+                      class="article-media-wide__img" 
+                      width="1450"
+                      height="800"
+                      loading="lazy" 
+                      decoding="async"
+                    />
+                  </picture>
+                </div>
+                {% if block.caption %}
+                  <figcaption class="article-media-wide__caption">{{ block.caption }}</figcaption>
+                {% endif %}
+              </figure>
+            {% endif %}
+
+          {# 3. Карточка (Фото + Текст) с srcset #}
+          {% elseif block.content_group == 'media_card' %}
+            <div class="article-card-media">
+              {% set img = block.image.first() %}
+              {% if img %}
+                <div class="article-card-media__visual">
+                  <img 
+                    src="{{ img.path }}" 
+                    srcset="{{ img.path | resize(450, null, { mode: 'auto', quality: 85 }) }} 450w, 
+                            {{ img.path | resize(800, null, { mode: 'auto', quality: 85 }) }} 800w"
+                    sizes="(max-width: 600px) 100vw, 400px"
+                    alt="{{ block.title | default('Изображение') }}" 
+                    class="article-card-media__img" 
+                    width="600"
+                    height="400"
+                    loading="lazy" 
+                    decoding="async"
+                  />
+                </div>
+              {% endif %}
+              <div class="article-card-media__body">
+                {% if block.title %}
+                  <h3 class="article-card-media__title">{{ block.title }}</h3>
+                {% endif %}
+                {% if block.text %}
+                  <p class="article-card-media__text">{{ block.text | nl2br }}</p>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+
+        {% endfor %}
+      </div>
+    </div>
+  </article>
+</main>

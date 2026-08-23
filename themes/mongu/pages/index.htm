@@ -2,12 +2,6 @@
 url = "/"
 layout = "default"
 title = "Home"
-meta_title = "Tours in Kyrgyzstan | Mongu"
-meta_description = "Individual and group tours, jeep tours, horseback rides, and expeditions across Kyrgyzstan."
-page_js = "index.js"
-page_css_file = "index.css"
-schema_json = "{\"@context\":\"https://schema.org\",\"@type\":\"TravelAgency\",\"name\":\"Mongu\",\"description\":\"Индивидуальные и авторские джип-туры, конные прогулки и экспедиции по Кыргызстану.\",\"url\":\"https://mongu.kg/\"}"
-heroType = "index"
 
 [collection categories]
 handle = "Categories"
@@ -58,13 +52,15 @@ identifier = "slug"
                 <h3 class="about__features-title">1000+</h3>
                 <p>Happy travelers</p>
               </li>
-              <!-- <li class="features__item about__features-item">
+             {#
+              <li class="features__item about__features-item">
                 <svg class="icon">
                   <use href="{{ 'assets/sprites/icons.svg#award'|theme }}"></use>
                 </svg>
                 <h3 class="about__features-title">10+</h3>
                 <p>Years experience</p>
-              </li> -->
+              </li>
+              #}
               <li class="features__item about__features-item">
                 <svg class="icon">
                   <use href="{{ 'assets/sprites/icons.svg#tent'|theme }}"></use>
@@ -96,117 +92,13 @@ identifier = "slug"
             <p class="subtitle">From high-altitude alpine lakes to wild gorges and ancient nomadic paths</p>
           </div>
           
-          <div class="js-slider">
-            <div class="dest-mosaic js-slider-viewport">
-              
-              {% for cat in categories %}
-                {# 1. Читаем параметры из админки #}
-                {% set isBig = cat.is_large %}
-                {% set isWide = cat.is_wide %}
-                {% set isTall = cat.is_tall %}
-                
-                {% set pos = cat.preview_position | default('center-bg') %}
-
-                {# 2. Базовые размеры карточек (Обычная 1x1) #}
-                {% set desk_w = 280 %} {% set desk_h = 280 %}
-                {% set lap_w = 210 %}  {% set lap_h = 280 %}
-                
-                {# 3. Переопределяем размеры для Десктопа и Ноутбука, если включен модификатор #}
-                {% if isBig %}
-                  {% set desk_w = 576 %} {% set desk_h = 576 %}
-                  {% set lap_w = 436 %}  {% set lap_h = 576 %}
-                {% elseif isWide %}
-                  {% set desk_w = 576 %} {% set desk_h = 280 %}
-                  {% set lap_w = 436 %}  {% set lap_h = 280 %}
-                {% elseif isTall %}
-                  {% set desk_w = 280 %} {% set desk_h = 576 %}
-                  {% set lap_w = 210 %}  {% set lap_h = 576 %}
-                {% endif %}
-
-                {# 4. Размеры для Планшета (строго 4/3, 2 колонки) и Мобилки (строго 4/3, 1 колонка) #}
-                {% set tab_w = 336 %} {% set tab_h = 252 %}
-                {% set mob_w = 735 %} {% set mob_h = 551 %}
-
-                {# 5. Формируем классы сетки #}
-                {% set itemClasses = [
-                  'dest-mosaic__item show-info',
-                  isBig ? 'dest-mosaic__item_big' : '',
-                  isWide ? 'dest-mosaic__item_wide' : '',
-                  isTall ? 'dest-mosaic__item_tall' : '',
-                  'js-slide'
-                ] | filter(v => v) | join(' ') %}
-
-                <article class="{{ itemClasses }}" data-index="{{ loop.index0 }}">
-                  
-                  <div class="dest-mosaic__bg">
-                    {% if cat.preview %}
-                      {% for img in cat.preview %}
-                        <picture>
-                          <!-- Desktop (1440px+) -->
-                          <source type="image/avif" media="(min-width: 1440px)" srcset="{{ img | smart_crop(desk_w, desk_h, pos, 75, 'avif') }}" />
-                          <source type="image/webp" media="(min-width: 1440px)" srcset="{{ img | smart_crop(desk_w, desk_h, pos, 75, 'webp') }}" />
-                          
-                          <!-- Laptop (1024px - 1439px) -->
-                          <source type="image/avif" media="(min-width: 1024px)" srcset="{{ img | smart_crop(lap_w, lap_h, pos, 75, 'avif') }}" />
-                          <source type="image/webp" media="(min-width: 1024px)" srcset="{{ img | smart_crop(lap_w, lap_h, pos, 75, 'webp') }}" />
-                          
-                          <!-- Tablet (768px - 1023px) -->
-                          <source type="image/avif" media="(min-width: 768px)" srcset="{{ img | smart_crop(tab_w, tab_h, pos, 75, 'avif') }}" />
-                          <source type="image/webp" media="(min-width: 768px)" srcset="{{ img | smart_crop(tab_w, tab_h, pos, 75, 'webp') }}" />
-                          
-                          <!-- Mobile (0 - 767px) -->
-                          <source type="image/avif" srcset="{{ img | smart_crop(mob_w, mob_h, pos, 75, 'avif') }}" />
-                          <source type="image/webp" srcset="{{ img | smart_crop(mob_w, mob_h, pos, 75, 'webp') }}" />
-                          
-                          <img 
-                            src="{{ img | smart_crop(desk_w, desk_h, pos, 75, 'jpg') }}" 
-                            alt="{{ cat.preview_caption | default(cat.title) }}" 
-                            width="{{ desk_w }}" 
-                            height="{{ desk_h }}" 
-                            loading="lazy" 
-                            decoding="async" />
-                        </picture>
-                      {% endfor %}
-                    {% endif %}
-                  </div>
-                  
-                  <div class="dest-mosaic__content">
-                    {% if cat.icon_id %}
-                      <div class="dest-mosaic__icon-wrap">
-                          <svg class="icon icon_cat-icon">
-                            <use href="{{ ('assets/sprites/icons.svg#' ~ cat.icon_id) | theme }}"></use>
-                          </svg>
-                      </div>
-                    {% endif %}
-                    
-                    <h3 class="dest-mosaic__title">{{ cat.title|raw }}</h3>
-                    
-                    <div class="dest-mosaic__reveal">
-                      <div class="dest-mosaic__reveal-inner">
-                        {% if cat.description %}
-                          <p>{{ cat.description }}</p>
-                        {% endif %}
-                        <span class="dest-mosaic__btn">
-                          Explore 
-                          <svg class="icon"><use href="#arrow"></use></svg>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <a href="{{ 'category' | page({ slug: cat.slug }) }}" class="dest-mosaic__link" aria-label="Explore {{ cat.title }}"></a>
-                </article>
-                
-              {% endfor %}
-
-            </div>
-            
-            <div class="slider__pagination js-pagination">
-            {% for cat in categories %}
-              <div class="pagination-dot" data-index="{{ loop.index0 }}"></div>
-            {% endfor %}  
-            </div>
-          </div>
+          {% partial 'blocks/mosaic-grid' 
+            items=categories 
+            link_page='category' 
+            is_slider=true 
+            has_camp=true 
+          %}
+          
         </div>
       </section>
 
@@ -236,184 +128,6 @@ identifier = "slug"
       %}
 
     
-
-      <section class="reviews section-padding">
-        <div class="container">
-          <div class="title-wrap">
-            <h2 class="title title_centered">What our travelers say</h2>
-          </div>
-          <div class="reviews__slider slider js-slider">
-            <div class="js-slider-viewport">
-              <div class="reviews__slide js-slide" data-index="0">
-                <figure class="reviews__item">
-                  <div class="reviews__photo">
-                    <picture>
-                      <source
-                        type="image/avif"
-                        sizes="50px"
-                        srcset="/assets/images/reviews/user-50.avif 50w, /assets/images/reviews/user-100.avif 100w, /assets/images/reviews/user-150.avif 150w" />
-                      <source
-                        type="image/webp"
-                        sizes="50px"
-                        srcset="/assets/images/reviews/user-50.webp 50w, /assets/images/reviews/user-100.webp 100w, /assets/images/reviews/user-150.webp 150w" />
-                      <img
-                        src="/assets/images/reviews/user-100.jpg"
-                        alt="John Doe"
-                        width="50"
-                        height="50"
-                        loading="lazy"
-                        decoding="async" />
-                    </picture>
-                  </div>
-                  <div class="reviews__text">
-                    <blockquote>
-                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
-                    </blockquote>
-                    <figcaption>John Doe, USA</figcaption>
-                  </div>
-                </figure>
-              </div>
-
-              <div class="reviews__slide js-slide" data-index="1">
-                <figure class="reviews__item">
-                  <div class="reviews__photo">
-                    <picture>
-                      <source
-                        type="image/avif"
-                        sizes="50px"
-                        srcset="/assets/images/reviews/user-50.avif 50w, /assets/images/reviews/user-100.avif 100w, /assets/images/reviews/user-150.avif 150w" />
-                      <source
-                        type="image/webp"
-                        sizes="50px"
-                        srcset="/assets/images/reviews/user-50.webp 50w, /assets/images/reviews/user-100.webp 100w, /assets/images/reviews/user-150.webp 150w" />
-                      <img
-                        src="/assets/images/reviews/user-100.jpg"
-                        alt="John Doe"
-                        width="50"
-                        height="50"
-                        loading="lazy"
-                        decoding="async" />
-                    </picture>
-                  </div>
-                  <div class="reviews__text">
-                    <blockquote>
-                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
-                    </blockquote>
-                    <figcaption>John Doe, USA</figcaption>
-                  </div>
-                </figure>
-              </div>
-
-              <div class="reviews__slide js-slide" data-index="2">
-                <figure class="reviews__item">
-                  <div class="reviews__photo">
-                    <picture>
-                      <source
-                        type="image/avif"
-                        sizes="50px"
-                        srcset="/assets/images/reviews/user-50.avif 50w, /assets/images/reviews/user-100.avif 100w, /assets/images/reviews/user-150.avif 150w" />
-                      <source
-                        type="image/webp"
-                        sizes="50px"
-                        srcset="/assets/images/reviews/user-50.webp 50w, /assets/images/reviews/user-100.webp 100w, /assets/images/reviews/user-150.webp 150w" />
-                      <img
-                        src="/assets/images/reviews/user-100.jpg"
-                        alt="John Doe"
-                        width="50"
-                        height="50"
-                        loading="lazy"
-                        decoding="async" />
-                    </picture>
-                  </div>
-                  <div class="reviews__text">
-                    <blockquote>
-                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
-                    </blockquote>
-                    <figcaption>John Doe, USA</figcaption>
-                  </div>
-                </figure>
-              </div>
-
-              <div class="reviews__slide js-slide" data-index="3">
-                <figure class="reviews__item">
-                  <div class="reviews__photo">
-                    <picture>
-                      <source
-                        type="image/avif"
-                        sizes="50px"
-                        srcset="/assets/images/reviews/user-50.avif 50w, /assets/images/reviews/user-100.avif 100w, /assets/images/reviews/user-150.avif 150w" />
-                      <source
-                        type="image/webp"
-                        sizes="50px"
-                        srcset="/assets/images/reviews/user-50.webp 50w, /assets/images/reviews/user-100.webp 100w, /assets/images/reviews/user-150.webp 150w" />
-                      <img
-                        src="/assets/images/reviews/user-100.jpg"
-                        alt="John Doe"
-                        width="50"
-                        height="50"
-                        loading="lazy"
-                        decoding="async" />
-                    </picture>
-                  </div>
-                  <div class="reviews__text">
-                    <blockquote>
-                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
-                    </blockquote>
-                    <figcaption>John Doe, USA</figcaption>
-                  </div>
-                </figure>
-              </div>
-
-              <div class="reviews__slide js-slide" data-index="4">
-                <figure class="reviews__item">
-                  <div class="reviews__photo">
-                    <picture>
-                      <source
-                        type="image/avif"
-                        sizes="50px"
-                        srcset="/assets/images/reviews/user-50.avif 50w, /assets/images/reviews/user-100.avif 100w, /assets/images/reviews/user-150.avif 150w" />
-                      <source
-                        type="image/webp"
-                        sizes="50px"
-                        srcset="/assets/images/reviews/user-50.webp 50w, /assets/images/reviews/user-100.webp 100w, /assets/images/reviews/user-150.webp 150w" />
-                      <img
-                        src="/assets/images/reviews/user-100.jpg"
-                        alt="John Doe"
-                        width="50"
-                        height="50"
-                        loading="lazy"
-                        decoding="async" />
-                    </picture>
-                  </div>
-                  <div class="reviews__text">
-                    <blockquote>
-                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
-                    </blockquote>
-                    <figcaption>John Doe, USA</figcaption>
-                  </div>
-                </figure>
-              </div>
-            </div>
-            <div class="slider__nav">
-              <div class="slider__btn slider__btn_prev js-slider-prev" aria-label="Previous slide">
-                <svg class="icon">
-                  <use href="#angle"></use>
-                </svg>
-              </div>
-              <div class="slider__btn slider__btn_next js-slider-next" aria-label="Next slide">
-                <svg class="icon">
-                  <use href="#angle"></use>
-                </svg>
-              </div>
-            </div>
-            <div class="slider__pagination js-pagination">
-              <div class="pagination-dot" data-index="0"></div>
-              <div class="pagination-dot" data-index="1"></div>
-              <div class="pagination-dot" data-index="2"></div>
-              <div class="pagination-dot" data-index="3"></div>
-              <div class="pagination-dot" data-index="4"></div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {% partial 'blocks/reviews.htm' %}
+      
     </main>

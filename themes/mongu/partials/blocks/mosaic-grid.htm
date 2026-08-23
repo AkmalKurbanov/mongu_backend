@@ -1,0 +1,220 @@
+{# 
+  Входящие параметры:
+  items       - коллекция (categories или destination)
+  link_page   - 'category' или 'destination'
+  icon_sprite - 'icons.svg' или 'maps.svg'
+  btn_text    - 'Explore' или 'Explore region'
+  is_slider   - true/false (нужен ли слайдер)
+  has_camp    - true/false (нужна ли статичная карточка кэмпа)
+#}
+
+{% macro render_card(item, link_type, sprite, text) %}
+  {% set size = item.card_size %}
+  {% set isBig = size == 'large' %}
+  {% set isWide = size == 'wide' %}
+  {% set isTall = size == 'tall' %}
+  {% set isRight = item.is_right %}
+  {% set pos = item.preview_position | default('center-bg') %}
+
+  {% set desk_w = 280 %} {% set desk_h = 280 %}
+  {% set lap_w = 210 %}  {% set lap_h = 280 %}
+  
+  {% if isBig %}
+    {% set desk_w = 576 %} {% set desk_h = 576 %}
+    {% set lap_w = 436 %}  {% set lap_h = 576 %}
+  {% elseif isWide %}
+    {% set desk_w = 576 %} {% set desk_h = 280 %}
+    {% set lap_w = 436 %}  {% set lap_h = 280 %}
+  {% elseif isTall %}
+    {% set desk_w = 280 %} {% set desk_h = 576 %}
+    {% set lap_w = 210 %}  {% set lap_h = 576 %}
+  {% endif %}
+
+  {% set tab_w = 336 %} {% set tab_h = 252 %}
+  {% set mob_w = 735 %} {% set mob_h = 551 %}
+
+  {% set itemClasses = [
+    'mosaic-grid__item',
+    isBig ? 'mosaic-grid__item_big' : '',
+    isWide ? 'mosaic-grid__item_wide' : '',
+    isTall ? 'mosaic-grid__item_tall' : '',
+    isRight ? 'mosaic-grid__item_right' : '',
+    is_slide ? 'js-slide' : ''
+  ] | filter(v => v) | join(' ') %}
+
+  <article class="{{ itemClasses }}" {% if is_slide %}data-index="{{ loop_index }}"{% endif %}>
+    <div class="mosaic-grid__bg">
+      {% if item.preview %}
+        {% for img in item.preview %}
+          <picture>
+            <source type="image/avif" media="(min-width: 1440px)" srcset="{{ img | smart_crop(desk_w, desk_h, pos, 75, 'avif') }}" />
+            <source type="image/webp" media="(min-width: 1440px)" srcset="{{ img | smart_crop(desk_w, desk_h, pos, 75, 'webp') }}" />
+            <source type="image/avif" media="(min-width: 1024px)" srcset="{{ img | smart_crop(lap_w, lap_h, pos, 75, 'avif') }}" />
+            <source type="image/webp" media="(min-width: 1024px)" srcset="{{ img | smart_crop(lap_w, lap_h, pos, 75, 'webp') }}" />
+            <source type="image/avif" media="(min-width: 768px)" srcset="{{ img | smart_crop(tab_w, tab_h, pos, 75, 'avif') }}" />
+            <source type="image/webp" media="(min-width: 768px)" srcset="{{ img | smart_crop(tab_w, tab_h, pos, 75, 'webp') }}" />
+            <source type="image/avif" srcset="{{ img | smart_crop(mob_w, mob_h, pos, 75, 'avif') }}" />
+            <source type="image/webp" srcset="{{ img | smart_crop(mob_w, mob_h, pos, 75, 'webp') }}" />
+            <img src="{{ img | smart_crop(desk_w, desk_h, pos, 75, 'jpg') }}" alt="{{ item.preview_caption | default(item.title) }}" width="{{ desk_w }}" height="{{ desk_h }}" loading="lazy" decoding="async" />
+          </picture>
+        {% endfor %}
+      {% endif %}
+    </div>
+    
+    <div class="mosaic-grid__content">
+      {% if item.icon_id %}
+        <div class="mosaic-grid__icon-wrap">
+            <svg class="icon icon_cat-icon">
+              <use href="{{ ('assets/sprites/' ~ sprite ~ '#' ~ item.icon_id) | theme }}"></use>
+            </svg>
+        </div>
+      {% endif %}
+      
+      <h3 class="mosaic-grid__title">{{ item.title|raw }}</h3>
+      
+      <div class="mosaic-grid__reveal">
+        <div class="mosaic-grid__reveal-inner">
+          {% if item.description %}
+            <p>{{ item.description }}</p>
+          {% endif %}
+          <span class="mosaic-grid__btn">
+            {{ text }} 
+            <svg class="icon"><use href="#arrow"></use></svg>
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    <a href="{{ link_type | page({ slug: item.slug }) }}" class="mosaic-grid__link" aria-label="{{ text }} {{ item.title }}"></a>
+  </article>
+{% endmacro %}
+
+{% import _self as mosaic %}
+
+<div class="{% if is_slider %}js-slider{% endif %}">
+  <div class="mosaic-grid {% if is_slider %}js-slider-viewport{% endif %}">
+    
+    {% for item in items %}
+      {# Рендерим через макрос с передачей параметров #}
+      {% set size = item.card_size %}
+      {% set isBig = size == 'large' %}
+      {% set isWide = size == 'wide' %}
+      {% set isTall = size == 'tall' %}
+      {% set isRight = item.is_right %}
+      {% set pos = item.preview_position | default('center-bg') %}
+
+      {% set desk_w = isBig or isWide ? 576 : 280 %}
+      {% set desk_h = isBig or isTall ? 576 : 280 %}
+      {% set lap_w = isBig or isWide ? 436 : 210 %}
+      {% set lap_h = isBig or isTall ? 576 : 280 %}
+      {% set tab_w = 336 %} {% set tab_h = 252 %}
+      {% set mob_w = 735 %} {% set mob_h = 551 %}
+
+      {% set itemClasses = [
+        'mosaic-grid__item',
+        isBig ? 'mosaic-grid__item_big' : '',
+        isWide ? 'mosaic-grid__item_wide' : '',
+        isTall ? 'mosaic-grid__item_tall' : '',
+        isRight ? 'mosaic-grid__item_right' : '',
+        is_slider ? 'js-slide' : ''
+      ] | filter(v => v) | join(' ') %}
+
+      <article class="{{ itemClasses }}" {% if is_slider %}data-index="{{ loop.index0 }}"{% endif %}>
+        <div class="mosaic-grid__bg">
+          {% if item.preview %}
+            {% for img in item.preview %}
+              <picture>
+                <source type="image/avif" media="(min-width: 1440px)" srcset="{{ img | smart_crop(desk_w, desk_h, pos, 75, 'avif') }}" />
+                <source type="image/webp" media="(min-width: 1440px)" srcset="{{ img | smart_crop(desk_w, desk_h, pos, 75, 'webp') }}" />
+                <source type="image/avif" media="(min-width: 1024px)" srcset="{{ img | smart_crop(lap_w, lap_h, pos, 75, 'avif') }}" />
+                <source type="image/webp" media="(min-width: 1024px)" srcset="{{ img | smart_crop(lap_w, lap_h, pos, 75, 'webp') }}" />
+                <source type="image/avif" media="(min-width: 768px)" srcset="{{ img | smart_crop(tab_w, tab_h, pos, 75, 'avif') }}" />
+                <source type="image/webp" media="(min-width: 768px)" srcset="{{ img | smart_crop(tab_w, tab_h, pos, 75, 'webp') }}" />
+                <source type="image/avif" srcset="{{ img | smart_crop(mob_w, mob_h, pos, 75, 'avif') }}" />
+                <source type="image/webp" srcset="{{ img | smart_crop(mob_w, mob_h, pos, 75, 'webp') }}" />
+                <img src="{{ img | smart_crop(desk_w, desk_h, pos, 75, 'jpg') }}" alt="{{ item.preview_caption | default(item.title) }}" width="{{ desk_w }}" height="{{ desk_h }}" loading="lazy" decoding="async" />
+              </picture>
+            {% endfor %}
+          {% endif %}
+        </div>
+        
+        <div class="mosaic-grid__content">
+          {% if item.icon_id %}
+            <div class="mosaic-grid__icon-wrap">
+                <svg class="icon icon_cat-icon">
+                  <use href="{{ ('assets/sprites/' ~ (icon_sprite | default('icons.svg')) ~ '#' ~ item.icon_id) | theme }}"></use>
+                </svg>
+            </div>
+          {% endif %}
+          
+          <h3 class="mosaic-grid__title">{{ item.title|raw }}</h3>
+          
+          <div class="mosaic-grid__reveal">
+            <div class="mosaic-grid__reveal-inner">
+              {% if item.description %}
+                <p>{{ item.description }}</p>
+              {% endif %}
+              <span class="mosaic-grid__btn">
+                {{ btn_text | default('Explore') }} 
+                <svg class="icon"><use href="#arrow"></use></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <a href="{{ link_page | page({ slug: item.slug }) }}" class="mosaic-grid__link" aria-label="{{ btn_text | default('Explore') }} {{ item.title }}"></a>
+      </article>
+    {% endfor %}
+
+    {# Статичная карточка кэмпа (если включена) #}
+    {% if has_camp %}
+      <article class="mosaic-grid__item mosaic-grid__item_tall js-slide" data-index="{{ items|length }}">
+        <div class="mosaic-grid__bg">
+          <picture>
+            <source type="image/avif" media="(min-width: 1440px)" srcset="{{'assets/images/lodge/camp-teaser/camp1.avif'| theme}}">
+            <source type="image/webp" media="(min-width: 1440px)" srcset="{{'assets/images/lodge/camp-teaser/camp1.webp'| theme}}">
+            <source type="image/avif" media="(min-width: 1024px)" srcset="{{'assets/images/lodge/camp-teaser/camp2.avif'| theme}}">
+            <source type="image/webp" media="(min-width: 1024px)" srcset="{{'assets/images/lodge/camp-teaser/camp2.webp'| theme}}">
+            <source type="image/avif" media="(min-width: 768px)" srcset="{{'assets/images/lodge/camp-teaser/camp3.avif'| theme}}">
+            <source type="image/webp" media="(min-width: 768px)" srcset="{{'assets/images/lodge/camp-teaser/camp3.webp'| theme}}">
+            <source type="image/avif" srcset="{{'assets/images/lodge/camp-teaser/camp4.avif'}}">
+            <source type="image/webp" srcset="{{'assets/images/lodge/camp-teaser/camp4.webp'}}">
+            <img src="{{'assets/images/lodge/camp-teaser/camp5.jpg'}}" alt="Camp &amp; Infrastructure" width="280" height="576" loading="lazy" decoding="async">
+          </picture>
+        </div>
+          
+        <div class="mosaic-grid__content">
+          <div class="mosaic-grid__icon-wrap">
+            <svg class="icon icon_cat-icon">
+              <use href="{{'assets/sprites/icons.svg#tent'|theme}}"></use>
+            </svg>
+          </div>
+          <h3 class="mosaic-grid__title">Camp &amp; Infrastructure</h3>
+          <div class="mosaic-grid__reveal">
+            <div class="mosaic-grid__reveal-inner">
+              <p>Rest in authentic mountain yurt camps beside pristine high-altitude alpine lakesides.</p>
+              <span class="mosaic-grid__btn">
+                Explore 
+                <svg class="icon"><use href="#arrow"></use></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <a href="{{'accommodations'|page}}" class="mosaic-grid__link" aria-label="Explore Camp &amp; Infrastructure"></a>
+      </article>
+    {% endif %}
+
+  </div>
+  
+  {# Пагинация слайдера #}
+  {% if is_slider %}
+    <div class="slider__pagination js-pagination">
+      {% for item in items %}
+        <div class="pagination-dot" data-index="{{ loop.index0 }}"></div>
+      {% endfor %}  
+      {% if has_camp %}
+        <div class="pagination-dot" data-index="{{ items|length }}"></div>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

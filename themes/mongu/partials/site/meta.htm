@@ -1,15 +1,60 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<title>Авторские туры по Кыргызстану | Mongu</title>
-<meta
-  name="description"
-  content="Индивидуальные и авторские джип-туры, конные прогулки и экспедиции по самым красивым перевалам и озерам Кыргызстана с опытными гидами." />
+{% set seoMap = {
+    'index': 'home',
+    'categories': 'tours',
+    'accommodations': 'accommodations',
+    'hotel': 'hotel',
+    'lodge': 'lodge',
+    'destinations': 'destination',
+    'about': 'about',
+    'guide': 'guide',
+    'contacts': 'contacts',
+    'booking': 'booking'
+} %}
+
+{% set field = seoMap[this.page.id] %}
+
+{% set rawMetaTitle = field ? attribute(pagesSettings, field ~ '_meta_title') : null %}
+{% set rawMetaDesc  = field ? attribute(pagesSettings, field ~ '_meta_description') : null %}
+{% set rawOgTitle   = field ? attribute(pagesSettings, field ~ '_og_title') : null %}
+{% set rawOgDesc    = field ? attribute(pagesSettings, field ~ '_og_description') : null %}
+{% set rawOgImgObj  = field ? attribute(pagesSettings, field ~ '_og_image') : null %}
+{% set rawSchema    = field ? attribute(pagesSettings, 'hero_' ~ field ~ '_schema') : null %}
+
+{% set finalMetaTitle = this.page.meta_title ?: rawMetaTitle ?: 'Tours in Kyrgyzstan | Mongu' %}
+{% set finalMetaDesc  = this.page.meta_description ?: rawMetaDesc ?: 'Individual and group tours, jeep tours, horseback rides, and expeditions across Kyrgyzstan.' %}
+
+{% set finalOgTitle = this.page.og_title ?: rawOgTitle ?: finalMetaTitle %}
+{% set finalOgDesc  = this.page.og_description ?: rawOgDesc ?: finalMetaDesc %}
+{% set finalSchema  = this.page.schema_json ?: rawSchema %}
+
+{% set rawOgImg = this.page.og_image ?: rawOgImgObj %}
+{% set ogImgItem = rawOgImg is iterable ? (rawOgImg.first() ?? rawOgImg[0]) : rawOgImg %}
+{% set imgPath = ogImgItem.path ?? ogImgItem %}
+
+{% set finalOgImage = imgPath 
+    ? url(imgPath | resize(1200, 630, { mode: 'crop', quality: 80 })) 
+    : 'https://mongu.kg/assets/images/open-graph/og-image.jpg' 
+%}
+
+<link rel="canonical" href="{{ url(this.pageUrl()) }}" />
+
+<title>{{ finalMetaTitle | striptags | trim }}</title>
+<meta name="description" content="{{ finalMetaDesc | striptags | trim }}" />
+
 <meta property="og:type" content="website" />
-<meta property="og:title" content="Авторские туры по Кыргызстану — Mongu" />
-<meta property="og:description" content="Индивидуальные джип-туры и конные экспедиции по Кыргызстану." />
-<meta property="og:url" content="https://mongu.kg/" />
-<meta property="og:image" content="https://mongu.kg/images/og-image.jpg" />
+<meta property="og:title" content="{{ finalOgTitle | striptags | trim }}" />
+<meta property="og:description" content="{{ finalOgDesc | striptags | trim }}" />
+<meta property="og:url" content="{{ url(this.pageUrl()) }}" /> {# ИСПРАВЛЕНО: теперь отдает правильный URL #}
+<meta property="og:image" content="{{ finalOgImage }}" />
 
 <meta name="theme-color" content="#6c613e" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#3F3F25" media="(prefers-color-scheme: dark)" />
+
+{% if finalSchema %}
+<script type="application/ld+json">
+    {{ finalSchema | raw }}
+</script>
+{% endif %}

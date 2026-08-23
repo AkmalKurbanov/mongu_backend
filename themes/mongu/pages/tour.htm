@@ -1,572 +1,459 @@
 ##
 url = "/tour/:slug"
 layout = "default"
-title = "Tour detail"
-meta_title = "Tours in Kyrgyzstan | Mongu"
-meta_description = "Individual and group tours, jeep tours, horseback rides, and expeditions across Kyrgyzstan."
-page_js = "tour.js"
-page_css_file = "tour.css"
-schema_json = "{\"@context\":\"https://schema.org\",\"@type\":\"TravelAgency\",\"name\":\"Mongu\",\"description\":\"Индивидуальные и авторские джип-туры, конные прогулки и экспедиции по Кыргызстану.\",\"url\":\"https://mongu.kg/\"}"
+title = "Tour"
 headerType = "inside"
+page_js = "tour.js"
 
-[section]
+[section tours]
 handle = "Tours"
 ==
-{% set record = section %}
+<?php
+function onStart() {
+    $record = $this['tours']->where('slug', $this->param('slug'))->first();
+    
+    if (!$record) {
+        return \Response::make($this->controller->run('404'), 404);
+    }
 
-  
-  {% if record %}
-  
-    <main class="main-content main-content_inner-page">
-      <div class="breadcrumbs">
-          
+    $this['record'] = $record;
+
+    // 1. SEO (Google/Yandex)
+    $this->page['meta_title'] = $record->meta_title ?: $record->title . ' | Mongu';
+    $this->page['meta_description'] = $record->meta_description ?: strip_tags($record->description);
+    
+    // 2. Open Graph (Соцсети) - ДОБАВИЛИ ЭТИ ДВЕ СТРОКИ
+    $this->page['og_title'] = $record->og_title ?: null;
+    $this->page['og_description'] = $record->og_description ?: null;
+    
+    // OG Image
+    if ($record->og_image) {
+        $this->page['og_image'] = $record->og_image;
+    } elseif ($record->preview && $record->preview->count() > 0) {
+        $this->page['og_image'] = $record->preview->first()->path;
+    }
+    
+
+}
+?>
+==
+<main class="main-content main-content_inner-page">
+  <div class="breadcrumbs">
+    <div class="container">
+      <nav aria-label="breadcrumbs">
+        <ul class="breadcrumbs__list">
+          <li class="breadcrumbs__item">
+            <a class="breadcrumbs__link" href="{{ 'index' | page }}">Home</a>
+          </li>
+          {% if record.category and record.category.count() > 0 %}
+            {% set cat = record.category.first() %}
+            <li class="breadcrumbs__item">
+              <a class="breadcrumbs__link" href="{{ 'category' | page({ slug: cat.slug }) }}">{{ cat.title }}</a>
+            </li>
+          {% endif %}
+          <li class="breadcrumbs__item" aria-current="page">{{ record.title }}</li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <div class="tour section-padding-bottom">
+    <div class="container">
+      <div class="tour__grid">
+
+        {# Заголовок и краткое описание #}
+        <div class="tour__grid-item tour__desc">
+          <h1 class="title">{{ record.title }}</h1>
+          {% if record.description %}
+            <p>{{ record.description | raw }}</p>
+          {% endif %}
+        </div>
         
-          <div class="container">
-              <nav aria-label="Хлебные крошки">
-                  <ul class="breadcrumbs__list">
-                      <li class="breadcrumbs__item">
-                          <a class="breadcrumbs__link" href="/">Home</a>
-                      </li>
-                      <li class="breadcrumbs__item">
-                          <a class="breadcrumbs__link" href="{{ 'category' | page({ slug: record.category.slug }) }}">{{record.category.title}}</a>
-                      </li>
-                      <li class="breadcrumbs__item" aria-current="page">{{record.title}}</li>
-                      
-                  </ul>
-              </nav>
-          </div>
-      </div>
-      <div class="tour section-padding-bottom">
-          <div class="container">
-              <div class="tour__grid">
-   
+        {# Слайдер галереи #}
+        {% if record.gallery_items %}
+          <div class="tour__grid-item tour__gallery">
+            <div class="tour__slider-gallery js-slider">
+              <div class="tour__slider-wrap">
+                
+                <div class="tour__gallery-flex-wrap js-slider-viewport">
+                  {% for item in record.gallery_items %}
+                    {% set alt_text = item.caption ?: (record.title ~ ' - Фото ' ~ loop.index) %}
+                    {% set img = item.image ? item.image.first() : null %}
+                    {% set is_first = loop.first %}
 
-
-                  <div class="tour__grid-item tour__desc">
-                      <h1 class="title">
-                          {{record.title}}
-                      </h1>
-                      <p>
-                          {{record.short_desc | raw}}
-                      </p>
-                  </div>
-                  
-                  {% if record.gallery_items %}
-                    <div class="tour__grid-item tour__gallery">
-                      <div class="tour__slider-gallery js-slider">
-                        <div class="tour__slider-wrap">
-                          
-                    
-                          <div class="tour__gallery-flex-wrap js-slider-viewport">
-                            {% for item in record.gallery_items %}
-                              
-                              {% set alt_text = item.caption ?: (record.title ~ ' - Фото ' ~ loop.index) %}
-                              {% set img = item.image %}
-                              {% set is_first = loop.first %}
-
-                              <div class="tour__gallery-item js-slide" data-index="{{ loop.index0 }}">
-                                <picture>
-                                  <source
-                                      type="image/avif"
-                                      sizes="(min-width: 1440px) 760px, (min-width: 1024px) 550px, (min-width: 768px) 700px, calc(100vw - 32px)"
-                                      srcset="
-                                          {{ img|media|resize(400, null, { extension: 'avif', quality: 75 }) }} 400w,
-                                          {{ img|media|resize(800, null, { extension: 'avif', quality: 75 }) }} 800w,
-                                          {{ img|media|resize(1100, null, { extension: 'avif', quality: 75 }) }} 1100w,
-                                          {{ img|media|resize(1440, null, { extension: 'avif', quality: 75 }) }} 1440w,
-                                          {{ img|media|resize(1520, null, { extension: 'avif', quality: 75 }) }} 1520w
-                                      " />
-
-                                  <source
-                                      type="image/webp"
-                                      sizes="(min-width: 1440px) 760px, (min-width: 1024px) 550px, (min-width: 768px) 700px, calc(100vw - 32px)"
-                                      srcset="
-                                          {{ img|media|resize(400, null, { extension: 'webp', quality: 75 }) }} 400w,
-                                          {{ img|media|resize(800, null, { extension: 'webp', quality: 75 }) }} 800w,
-                                          {{ img|media|resize(1100, null, { extension: 'webp', quality: 75 }) }} 1100w,
-                                          {{ img|media|resize(1440, null, { extension: 'webp', quality: 75 }) }} 1440w,
-                                          {{ img|media|resize(1520, null, { extension: 'webp', quality: 75 }) }} 1520w
-                                      " />
-
-                                  <img
-                                      src="{{ img|media|resize(1100, 450, { quality: 75 }) }}"
-                                      alt="{{ alt_text }}"
-                                      width="760"
-                                      height="450"
-                                      {% if is_first %}
-                                          loading="eager"
-                                          fetchpriority="high"
-                                      {% else %}
-                                          loading="lazy"
-                                      {% endif %}
-                                  />
-                              </picture>
-
-                             
-                              </div>
-                            {% endfor %}
-                          </div>
-
-                         
-                          {% if record.gallery_items|length > 1 %}
-                            <div class="tour__gallery-nav slider__nav">
-                              <div class="slider__btn slider__btn_prev js-slider-prev" aria-label="Previous slide">
-                                <svg class="icon" aria-hidden="true">
-                                  <use href="#angle"></use>
-                                </svg>
-                              </div>
-                              <div class="slider__btn slider__btn_next js-slider-next" aria-label="Next slide">
-                                <svg class="icon" aria-hidden="true">
-                                  <use href="#angle"></use>
-                                </svg>
-                              </div>
-                            </div>
-                          {% endif %}
-
-                         
-                          {% if record.gallery_items|length > 1 %}
-                            <div class="tour__gallery-pagination slider__pagination js-pagination">
-                              {% for item in record.gallery_items %}
-                                <div class="pagination-dot" data-index="{{ loop.index0 }}"></div>
-                              {% endfor %}
-                            </div>
-                          {% endif %}
-                        </div>
-
-                        
-                        {% if record.gallery_items|length > 1 %}
-                          <div class="tour__gallery-thumbs slider__thumbnails js-slider-thumbnails">
-                            {% for item in record.gallery_items %}
-                              {% set alt_text = item.caption ?: (record.title ~ ' - Миниатюра ' ~ loop.index) %}
-                              {% set img = item.image %}
-                              
-                              <div class="tour__gallery-thumb slider__thumb js-thumb-item" data-index="{{ loop.index0 }}">
-                                 <picture>
-                                  <!-- AVIF Thumbs -->
-                                  <source
-                                      type="image/avif"
-                                      sizes="(min-width: 768px) 150px, 65px"
-                                      srcset="
-                                          {{ img|media|resize(80, null, { extension: 'avif', quality: 75 }) }} 80w,
-                                          {{ img|media|resize(150, null, { extension: 'avif', quality: 75 }) }} 150w,
-                                          {{ img|media|resize(160, null, { extension: 'avif', quality: 75 }) }} 160w,
-                                          {{ img|media|resize(300, null, { extension: 'avif', quality: 75 }) }} 300w
-                                      " />
-
-                                  <!-- WEBP Thumbs -->
-                                  <source
-                                      type="image/webp"
-                                      sizes="(min-width: 768px) 150px, 65px"
-                                      srcset="
-                                          {{ img|media|resize(80, null, { extension: 'webp', quality: 75 }) }} 80w,
-                                          {{ img|media|resize(150, null, { extension: 'webp', quality: 75 }) }} 150w,
-                                          {{ img|media|resize(160, null, { extension: 'webp', quality: 75 }) }} 160w,
-                                          {{ img|media|resize(300, null, { extension: 'webp', quality: 75 }) }} 300w
-                                      " />
-
-                                  <img
-                                      src="{{ img|media|resize(150, 100, { quality: 75 }) }}"
-                                      alt="{{ alt_text }}"
-                                      width="150"
-                                      height="100"
-                                      loading="lazy"
-                                  />
-                              </picture>
-                              </div>
-                            {% endfor %}
-                          </div>
-                        {% endif %}
-
+                    {% if img %}
+                      <div class="tour__gallery-item js-slide" data-index="{{ loop.index0 }}">
+                        <picture>
+                          <source
+                            type="image/avif"
+                            sizes="(min-width: 1440px) 760px, (min-width: 1024px) 533px, (min-width: 768px) 688px, 735px"
+                            srcset="
+                              {{ img | smart_crop(533, 300, 'center-bg', 75, 'avif') }} 533w,
+                              {{ img | smart_crop(688, 387, 'center-bg', 75, 'avif') }} 688w,
+                              {{ img | smart_crop(735, 413, 'center-bg', 75, 'avif') }} 735w,
+                              {{ img | smart_crop(760, 428, 'center-bg', 75, 'avif') }} 760w,
+                              {{ img | smart_crop(1066, 600, 'center-bg', 75, 'avif') }} 1066w,
+                              {{ img | smart_crop(1376, 774, 'center-bg', 75, 'avif') }} 1376w,
+                              {{ img | smart_crop(1470, 826, 'center-bg', 75, 'avif') }} 1470w,
+                              {{ img | smart_crop(1520, 855, 'center-bg', 75, 'avif') }} 1520w
+                            " />
+                          <source
+                            type="image/webp"
+                            sizes="(min-width: 1440px) 760px, (min-width: 1024px) 533px, (min-width: 768px) 688px, 735px"
+                            srcset="
+                              {{ img | smart_crop(533, 300, 'center-bg', 75, 'webp') }} 533w,
+                              {{ img | smart_crop(688, 387, 'center-bg', 75, 'webp') }} 688w,
+                              {{ img | smart_crop(735, 413, 'center-bg', 75, 'webp') }} 735w,
+                              {{ img | smart_crop(760, 428, 'center-bg', 75, 'webp') }} 760w,
+                              {{ img | smart_crop(1066, 600, 'center-bg', 75, 'webp') }} 1066w,
+                              {{ img | smart_crop(1376, 774, 'center-bg', 75, 'webp') }} 1376w,
+                              {{ img | smart_crop(1470, 826, 'center-bg', 75, 'webp') }} 1470w,
+                              {{ img | smart_crop(1520, 855, 'center-bg', 75, 'webp') }} 1520w
+                            " />
+                          <img
+                            src="{{ img | smart_crop(760, 428, 'center-bg', 75, 'jpg') }}"
+                            alt="{{ alt_text | striptags }}"
+                            width="760"
+                            height="428"
+                            {% if is_first %}
+                              loading="eager"
+                              fetchpriority="high"
+                            {% else %}
+                              loading="lazy"
+                              decoding="async"
+                            {% endif %}
+                          />
+                        </picture>
                       </div>
-                    </div>
-                  {% endif %}
+                    {% endif %}
+                  {% endfor %}
+                </div>
 
-                  <div class="tour__grid-item tour__specifications">
-                      <div class="tour__item-sticky">
-                          <div class="specifications">
-                              <div class="specifications__item">
-                                  <svg class="icon icon_category">
-                                      <use href="{{ ('assets/sprites/icons.svg#' ~ record.category.icon_id) | theme }}"></use>
-                                  </svg>
-                                  <span>{{record.category.title}}</span>
-                              </div>
-                              <div class="specifications__item">
-                                  <svg class="icon">
-                                      <use href="{{'assets/sprites/icons.svg#calendar'|theme}}"></use>
-                                  </svg>
-                                  <span>{{record.season}}</span>
-                              </div>
-                              <div class="specifications__item">
-                                  <div class="specifications__difficulty {% if record.physical_difficulty_lvl == 'Basic' %}specifications__difficulty_lvl-1{% elseif record.physical_difficulty_lvl == 'Intermediate' %}specifications__difficulty_lvl-2{% elseif record.physical_difficulty_lvl == 'Advanced' %}specifications__difficulty_lvl-3{% else %}specifications__difficulty_lvl-4{% endif %}">
-                                      <div
-                                          class="specifications__difficulty-icon"
-                                      >
-                                          <svg class="icon icon_difficulty">
-                                              <use
-                                                  href="{{'assets/sprites/icons.svg#difficulty'|theme}}"
-                                              ></use>
-                                          </svg>
-                                          <svg class="icon icon_difficulty-arrow">
-                                              <use
-                                                  href="{{'assets/sprites/icons.svg#difficulty-arrow'|theme}}"
-                                              ></use>
-                                          </svg>
-                                      </div>
-                                  </div>
-                                  <span>Physical complexity</span>
-                              </div>
-                              <div class="specifications__item">
-                                  <div class="specifications__difficulty {% if record.technical_difficulty_lvl == 'Basic' %}specifications__difficulty_lvl-1{% elseif record.technical_difficulty_lvl == 'Intermediate' %}specifications__difficulty_lvl-2{% elseif record.technical_difficulty_lvl == 'Advanced' %}specifications__difficulty_lvl-3{% else %}specifications__difficulty_lvl-4{% endif %}">
-                                      <div
-                                          class="specifications__difficulty-icon"
-                                      >
-                                          <svg class="icon icon_difficulty">
-                                              <use
-                                                  href="{{'assets/sprites/icons.svg#difficulty'|theme}}"
-                                              ></use>
-                                          </svg>
-                                          <svg class="icon icon_difficulty-arrow">
-                                              <use
-                                                  href="{{'assets/sprites/icons.svg#difficulty-arrow'|theme}}"
-                                              ></use>
-                                          </svg>
-                                      </div>
-                                  </div>
-                                  <span>Technical complexity</span>
-                              </div>
-                          </div>
-                          <div class="price-card">
-                              <div class="price-card__duration">
-                                  {{record.tour_duration}}
-                              </div>
-                              <div class="price-card__value">From {{record.program_price}}</div>
-                              <div class="price-card__label">
-                                  Price of the program per person
-                              </div>
-                          </div>
-                          <button
-                              type="button"
-                              class="tour__btn btn js-book-btn"
-                              data-tour-id="ala-archa"
-                              data-price="600"
-                          >
-                              Book now
-                          </button>
-                          <a href="{{'categories'| page}}" class="tour__all-link">
-                              <span>View all tours</span>
-                              <svg class="icon">
-                                  <use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use>
-                              </svg>
-                          </a>
-                      </div>
+                {% if record.gallery_items|length > 1 %}
+                  <div class="tour__gallery-nav slider__nav">
+                    <button type="button" class="slider__btn slider__btn_prev js-slider-prev" aria-label="Previous slide">
+                      <svg class="icon" aria-hidden="true"><use href="#angle"></use></svg>
+                    </button>
+                    <button type="button" class="slider__btn slider__btn_next js-slider-next" aria-label="Next slide">
+                      <svg class="icon" aria-hidden="true"><use href="#angle"></use></svg>
+                    </button>
                   </div>
 
-                  <div class="tour__grid-item tour__accordion">
-                      <div class="tour-tabs tabs js-tabs js-slider">
-                          <div
-                              class="tabs__list js-slider-viewport"
-                              role="tablist"
-                          >
-                              <button
-                                  class="tabs__tab js-slide tabs__tab_active"
-                                  role="tab"
-                                  aria-selected="true"
-                                  aria-controls="panel-1"
-                                  id="tab-1"
-                              >
-                                  Description
-                              </button>
-                              <button
-                                  class="tabs__tab js-slide"
-                                  role="tab"
-                                  aria-selected="false"
-                                  aria-controls="panel-2"
-                                  id="tab-2"
-                                  tabindex="-1"
-                              >
-                                  Prices
-                              </button>
-                              <button
-                                  class="tabs__tab js-slide"
-                                  role="tab"
-                                  aria-selected="false"
-                                  aria-controls="panel-3"
-                                  id="tab-3"
-                                  tabindex="-2"
-                              >
-                                  Dates
-                              </button>
-                              <button
-                                  class="tabs__tab js-slide"
-                                  role="tab"
-                                  aria-selected="false"
-                                  aria-controls="panel-4"
-                                  id="tab-4"
-                                  tabindex="-3"
-                              >
-                                  Additional information
-                              </button>
-                              <button
-                                  class="tabs__tab js-slide"
-                                  role="tab"
-                                  aria-selected="false"
-                                  aria-controls="panel-5"
-                                  id="tab-5"
-                                  tabindex="-4"
-                              >
-                                  Map
-                              </button>
-                          </div>
-
-                          <div class="tabs__panels">
-                              <div
-                                  class="tabs__panel"
-                                  role="tabpanel"
-                                  id="panel-1"
-                                  aria-labelledby="tab-1"
-                              >
-                                  <div class="tour-tabs__desc">
-                                      <h2>Description</h2>
-                                      <div class="tour-tabs__text">
-                                        {{record.description_text | raw}}
-                                      </div>
-                                  </div>
-
-                                  <h2>Itinerary</h2>
-                                  <div
-                                      class="accordion accordion_timeline js-accordion"
-                                  >
-                                      
-                                      {% if record.itinerary_days %}
-                                        {% for item in record.itinerary_days %}
-                                          <div class="accordion__item">
-                                              <button
-                                                  class="accordion__header"
-                                                  aria-expanded="false"
-                                                  aria-controls="content-{{ loop.index0 }}"
-                                              >
-                                                  <span
-                                                      >{{item.day_title}}</span
-                                                  >
-                                                  <svg class="icon">
-                                                      <use href="#angle"></use>
-                                                  </svg>
-                                              </button>
-                                              <div
-                                                  class="accordion__content"
-                                                  id="content-{{ loop.index0 }}""
-                                                  hidden=""
-                                              >
-                                                  <div class="accordion__body">
-                                                      {{item.day_content | raw}}
-                                                     
-                                                  </div>
-                                              </div>
-                                          </div>
-                                         {% endfor %}
-                                      {% endif %}
-                                     
-                                  </div>
-                              </div>
-
-                              <div
-                                  class="tabs__panel"
-                                  role="tabpanel"
-                                  id="panel-2"
-                                  aria-labelledby="tab-2"
-                                  hidden=""
-                              >
-                                  <div class="tour-tabs__desc">
-                                      <h2>Tour price per person</h2>
-                                      
-                                       {{record.prices_content | raw}}
-                                            
-                                        </div>
-                                  </div>
-                              
-                              </div>
-
-                              <div
-                                  class="tabs__panel"
-                                  role="tabpanel"
-                                  id="panel-3"
-                                  aria-labelledby="tab-5"
-                                  hidden=""
-                              >
-                                  <div class="tour-tabs__desc">
-                                      <h2>Dates for {{ "now"|date("Y") }}</h2>
-                                      <table class="tour-tabs__table-booking">
-                                        {% if record.tour_dates %}
-                                            <tbody>
-                                            {% for item in record.tour_dates %}
-                                              <tr>
-                                                  {% set en_months = {
-                                                      '1': 'January', '2': 'February', '3': 'March', '4': 'April',
-                                                      '5': 'May', '6': 'June', '7': 'July', '8': 'August',
-                                                      '9': 'September', '10': 'October', '11': 'November', '12': 'December'
-                                                  } %}
-
-                                                  {% set month_num = item.date_str|date('n') %}
-                                                  {% set day = item.date_str|date('j') %}
-                                                  {% set year = item.date_str|date('Y') %}
-
-                                                  <td>{{ en_months[month_num] }} {{ day }}, {{ year }}</td>
-                                                  <td>{{item.price_str}}</td>
-                                                  <td>
-                                                      <button
-                                                          class="tour-tabs__table-btn btn"
-                                                          type="button"
-                                                      >
-                                                          Book now
-                                                      </button>
-                                                  </td>
-                                              </tr>
-                                            {% endfor %}
-                                          </tbody>
-                                        {% endif %}
-                                      </table>
-                                  </div>
-                              </div>
-
-                              <div
-                                  class="tabs__panel"
-                                  role="tabpanel"
-                                  id="panel-4"
-                                  aria-labelledby="tab-3"
-                                  hidden=""
-                              >
-                                  <div class="accordion js-accordion">
-                                      {% if record.additional_accordions %}
-                                        {% for item in record.additional_accordions %}
-                                          <div class="accordion__item">
-                                          <button
-                                              class="accordion__header"
-                                              aria-expanded="false"
-                                              aria-controls="additional-info-{{ loop.index0 }}"
-                                          >
-                                              <span
-                                                  >{{item.acc_title}}</span
-                                              >
-                                              <svg class="icon">
-                                                  <use href="#angle"></use>
-                                              </svg>
-                                          </button>
-                                          <div
-                                              class="accordion__content"
-                                              id="additional-info-{{ loop.index0 }}"
-                                              hidden=""
-                                          >
-                                              <div class="accordion__body">
-                                                  {{item.acc_content | raw}}
-                                              </div>
-                                          </div>
-                                      </div>
-                                        {% endfor %}
-                                      {% endif %}
-                                      
-
-                                 
-                                  </div>
-                              </div>
-
-                              <div
-                                  class="tabs__panel"
-                                  role="tabpanel"
-                                  id="panel-5"
-                                  aria-labelledby="tab-4"
-                                  hidden=""
-                              >
-                                  <div class="tour-tabs__desc">
-                                      <h2>Tour map</h2>
-                                      <div class="tour-tabs__map">
-                                      {% if record.tour_map_image %}
-                                      {% if record.is_tour_map_image %}
-                                        <picture>
-                                        <source
-                                            type="image/avif"
-                                            sizes="(min-width: 1440px) 760px, (min-width: 1024px) 550px, (min-width: 768px) 700px, calc(100vw - 32px)"
-                                            srcset="
-                                                {{ record.tour_map_image|media|resize(400, null, { extension: 'avif', quality: 75 }) }} 400w,
-                                                {{ record.tour_map_image|media|resize(800, null, { extension: 'avif', quality: 75 }) }} 800w,
-                                                {{ record.tour_map_image|media|resize(1100, null, { extension: 'avif', quality: 75 }) }} 1100w,
-                                                {{ record.tour_map_image|media|resize(1440, null, { extension: 'avif', quality: 75 }) }} 1440w,
-                                                {{ record.tour_map_image|media|resize(1520, null, { extension: 'avif', quality: 75 }) }} 1520w
-                                            " />
-
-                                        <source
-                                            type="image/webp"
-                                            sizes="(min-width: 1440px) 760px, (min-width: 1024px) 550px, (min-width: 768px) 700px, calc(100vw - 32px)"
-                                            srcset="
-                                                {{ record.tour_map_image|media|resize(400, null, { extension: 'webp', quality: 75 }) }} 400w,
-                                                {{ record.tour_map_image|media|resize(800, null, { extension: 'webp', quality: 75 }) }} 800w,
-                                                {{ record.tour_map_image|media|resize(1100, null, { extension: 'webp', quality: 75 }) }} 1100w,
-                                                {{ record.tour_map_image|media|resize(1440, null, { extension: 'webp', quality: 75 }) }} 1440w,
-                                                {{ record.tour_map_image|media|resize(1520, null, { extension: 'webp', quality: 75 }) }} 1520w
-                                            " />
-
-                                        <img
-                                            src="{{ record.tour_map_image|media|resize(1100, 450, { quality: 75 }) }}"
-                                            alt="{{record.tour_map_seo}}"
-                                            width="760"
-                                            height="450"
-                                            {% if is_first %}
-                                                loading="eager"
-                                                fetchpriority="high"
-                                            {% else %}
-                                                loading="lazy"
-                                            {% endif %}
-                                        />
-                                        </picture>
-                                      {% endif %}
-                                        
-
-                                            
-                                      {% endif %}
-
-                                      {% if record.tour_map_frame %}
-
-                                        {% if record.is_tour_map_frame %}
-                                          <div class="tour-tabs__frame">
-
-                                            {% set raw_iframe = record.tour_map_frame %}
-                                            {% set map_src = '' %}
-
-                                          
-                                            {% if 'src="' in raw_iframe %}
-                                                
-                                                {% set map_src = raw_iframe|split('src="')[1]|split('"')[0] %}
-                                            {% else %}
-                                              
-                                                {% set map_src = raw_iframe %}
-                                            {% endif %}
-
-                                          
-                                            <iframe
-                                                src="{{ map_src }}"
-                                                width="100%"
-                                                height="100%"
-                                                style="border: 0"
-                                                allowfullscreen=""
-                                                loading="lazy"
-                                                referrerpolicy="no-referrer-when-downgrade"
-                                                title="{{ record.tour_map_seo | default('Interactive map for ' ~ record.title) }}"
-                                            ></iframe>
-                                        </div>
-                                        {% endif %}                                      
-                                        
-
-                                      {% endif %}
-
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
+                  <div class="tour__gallery-pagination slider__pagination js-pagination">
+                    {% for item in record.gallery_items %}
+                      <div class="pagination-dot" data-index="{{ loop.index0 }}"></div>
+                    {% endfor %}
                   </div>
+                {% endif %}
               </div>
+
+              {# Миниатюры слайдера #}
+              {% if record.gallery_items|length > 1 %}
+                <div class="tour__gallery-thumbs slider__thumbnails js-slider-thumbnails">
+                  {% for item in record.gallery_items %}
+                    {% set img = item.image ? item.image.first() : null %}
+                    {% if img %}
+                      <div class="tour__gallery-thumb slider__thumb js-thumb-item" data-index="{{ loop.index0 }}">
+                        <picture>
+                          <source type="image/avif" srcset="{{ img | smart_crop(148, 83, 'center-bg', 75, 'avif') }}" />
+                          <source type="image/webp" srcset="{{ img | smart_crop(148, 83, 'center-bg', 75, 'webp') }}" />
+                          <img
+                            src="{{ img | smart_crop(148, 83, 'center-bg', 75, 'jpg') }}"
+                            alt=""
+                            width="148"
+                            height="83"
+                            loading="lazy"
+                          />
+                        </picture>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+            </div>
           </div>
+        {% endif %}
+
+        {# Боковая карточка с параметрами #}
+        <div class="tour__grid-item tour__specifications">
+          <div class="tour__item-sticky">
+            <div class="specifications">
+              {% if record.category and record.category.count() > 0 %}
+                {% set cat = record.category.first() %}
+                <div class="specifications__item">
+                  {% if cat.icon_id %}
+                    <svg class="icon icon_category">
+                      <use href="{{ ('assets/sprites/icons.svg#' ~ cat.icon_id) | theme }}"></use>
+                    </svg>
+                  {% endif %}
+                  <span>{{ cat.title }}</span>
+                </div>
+              {% endif %}
+
+              {% if record.season %}
+                <div class="specifications__item">
+                  <svg class="icon">
+                    <use href="{{ 'assets/sprites/icons.svg#calendar' | theme }}"></use>
+                  </svg>
+                  <span>{{ record.season }}</span>
+                </div>
+              {% endif %}
+
+              {% if record.physical_difficulty_lvl %}
+                <div class="specifications__item">
+                  <div class="specifications__difficulty specifications__difficulty_lvl-{% if record.physical_difficulty_lvl == 'Basic' %}1{% elseif record.physical_difficulty_lvl == 'Intermediate' %}2{% elseif record.physical_difficulty_lvl == 'Advanced' %}3{% else %}4{% endif %}">
+                    <div class="specifications__difficulty-icon">
+                      <svg class="icon icon_difficulty">
+                        <use href="{{ 'assets/sprites/icons.svg#difficulty' | theme }}"></use>
+                      </svg>
+                      <svg class="icon icon_difficulty-arrow">
+                        <use href="{{ 'assets/sprites/icons.svg#difficulty-arrow' | theme }}"></use>
+                      </svg>
+                    </div>
+                  </div>
+                  <span>Physical complexity</span>
+                </div>
+              {% endif %}
+
+              {% if record.technical_difficulty_lvl %}
+                <div class="specifications__item">
+                  <div class="specifications__difficulty specifications__difficulty_lvl-{% if record.technical_difficulty_lvl == 'Basic' %}1{% elseif record.technical_difficulty_lvl == 'Intermediate' %}2{% elseif record.technical_difficulty_lvl == 'Advanced' %}3{% else %}4{% endif %}">
+                    <div class="specifications__difficulty-icon">
+                      <svg class="icon icon_difficulty">
+                        <use href="{{ 'assets/sprites/icons.svg#difficulty' | theme }}"></use>
+                      </svg>
+                      <svg class="icon icon_difficulty-arrow">
+                        <use href="{{ 'assets/sprites/icons.svg#difficulty-arrow' | theme }}"></use>
+                      </svg>
+                    </div>
+                  </div>
+                  <span>Technical complexity</span>
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="price-card">
+              {% if record.tour_duration %}
+                <div class="price-card__duration">{{ record.tour_duration }}</div>
+              {% endif %}
+              {% if record.program_price %}
+                <div class="price-card__value">From {{ record.program_price }}</div>
+              {% endif %}
+              <div class="price-card__label">Price of the program per person</div>
+            </div>
+
+            <button
+              type="button"
+              class="tour__btn btn js-book-btn"
+              data-tour-id="{{ record.slug }}"
+              data-price="{{ record.program_price | replace({'$': '', ' ': ''}) }}"
+            >
+              Book now
+            </button>
+
+            <a href="{{ 'categories' | page }}" class="tour__all-link">
+              <span>View all tours</span>
+              <svg class="icon">
+                <use href="{{ 'assets/sprites/icons.svg#arrow' | theme }}"></use>
+              </svg>
+            </a>
+          </div>
+        </div>
+
+        {# Секция табов #}
+        <div class="tour__grid-item tour__accordion">
+          <div class="tour-tabs tabs js-tabs js-slider">
+            <div class="tabs__list js-slider-viewport" role="tablist">
+              <button class="tabs__tab js-slide tabs__tab_active" role="tab" aria-selected="true" aria-controls="panel-1" id="tab-1">
+                Description
+              </button>
+              <button class="tabs__tab js-slide" role="tab" aria-selected="false" aria-controls="panel-2" id="tab-2" tabindex="-1">
+                Prices
+              </button>
+              <button class="tabs__tab js-slide" role="tab" aria-selected="false" aria-controls="panel-3" id="tab-3" tabindex="-2">
+                Dates
+              </button>
+              <button class="tabs__tab js-slide" role="tab" aria-selected="false" aria-controls="panel-4" id="tab-4" tabindex="-3">
+                Additional information
+              </button>
+              {% if record.map_type != 'none' %}
+                <button class="tabs__tab js-slide" role="tab" aria-selected="false" aria-controls="panel-5" id="tab-5" tabindex="-4">
+                  Map
+                </button>
+              {% endif %}
+            </div>
+
+            <div class="tabs__panels">
+              
+              {# Таб 1: Описание и таймлайн #}
+              <div class="tabs__panel" role="tabpanel" id="panel-1" aria-labelledby="tab-1">
+                {% if record.content %}
+                  <div class="tour-tabs__desc">
+                    <h2>Description</h2>
+                    <div class="tour-tabs__text">
+                      {{ record.content | raw }}
+                    </div>
+                  </div>
+                {% endif %}
+
+                {% if record.itinerary_days %}
+                  <h2>Itinerary</h2>
+                  <div class="accordion accordion_timeline js-accordion">
+                    {% for item in record.itinerary_days %}
+                      <div class="accordion__item">
+                        <button class="accordion__header" aria-expanded="false" aria-controls="content-{{ loop.index0 }}">
+                          <span>{{ item.day_title }}</span>
+                          <svg class="icon"><use href="#angle"></use></svg>
+                        </button>
+                        <div class="accordion__content" id="content-{{ loop.index0 }}" hidden="">
+                          <div class="accordion__body">
+                            {{ item.day_content | raw }}
+                          </div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              {# Таб 2: Цены и условия #}
+              <div class="tabs__panel" role="tabpanel" id="panel-2" aria-labelledby="tab-2" hidden="">
+                <div class="tour-tabs__desc">
+                  <h2>Tour price per person</h2>
+                  {{ record.prices_content | raw }}
+                </div>
+              </div>
+
+              {# Таб 3: Даты #}
+              <div class="tabs__panel" role="tabpanel" id="panel-3" aria-labelledby="tab-3" hidden="">
+                <div class="tour-tabs__desc">
+                  <h2>Dates for {{ "now" | date("Y") }}</h2>
+                  <table class="tour-tabs__table-booking">
+                    {% if record.tour_dates %}
+                      <tbody>
+                        {% for item in record.tour_dates %}
+                          <tr>
+                            <td>
+                              {% set en_months = {
+                                  '1': 'January', '2': 'February', '3': 'March', '4': 'April',
+                                  '5': 'May', '6': 'June', '7': 'July', '8': 'August',
+                                  '9': 'September', '10': 'October', '11': 'November', '12': 'December'
+                              } %}
+
+                              {% set start_month = en_months[item.date_start | date('n')] %}
+                              {{ start_month }} {{ item.date_start | date('j, Y') }}
+
+                              {% if item.date_end %}
+                                {% set end_month = en_months[item.date_end | date('n')] %}
+                                – {{ end_month }} {{ item.date_end | date('j, Y') }}
+                              {% endif %}
+                            </td>
+                            <td>{{ item.price }}</td>
+                            <td>
+                              <button class="tour-tabs__table-btn btn js-book-btn" type="button" data-date="{{ item.date_start }}">
+                                Book now
+                              </button>
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    {% else %}
+                      <tbody>
+                        <tr>
+                          <td colspan="3">Contact us for custom tour dates.</td>
+                        </tr>
+                      </tbody>
+                    {% endif %}
+                  </table>
+                </div>
+              </div>
+
+              {# Таб 4: Доп. информация #}
+              <div class="tabs__panel" role="tabpanel" id="panel-4" aria-labelledby="tab-4" hidden="">
+                <div class="accordion js-accordion">
+                  {% if record.additional_accordions %}
+                    {% for item in record.additional_accordions %}
+                      <div class="accordion__item">
+                        <button class="accordion__header" aria-expanded="false" aria-controls="additional-info-{{ loop.index0 }}">
+                          <span>{{ item.acc_title }}</span>
+                          <svg class="icon"><use href="#angle"></use></svg>
+                        </button>
+                        <div class="accordion__content" id="additional-info-{{ loop.index0 }}" hidden="">
+                          <div class="accordion__body">
+                            {{ item.acc_content | raw }}
+                          </div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                </div>
+              </div>
+
+              {# Таб 5: Карта #}
+              {% if record.map_type != 'none' %}
+                <div class="tabs__panel" role="tabpanel" id="panel-5" aria-labelledby="tab-5" hidden="">
+                  <div class="tour-tabs__desc">
+                    <h2>Tour map</h2>
+                    <div class="tour-tabs__map">
+                      
+                      {% if record.map_type == 'image' and record.tour_map_image and record.tour_map_image.count() > 0 %}
+                        {% set map_img = record.tour_map_image.first() %}
+                        <picture>
+                          <source
+                            type="image/avif"
+                            sizes="(min-width: 1440px) 760px, (min-width: 1024px) 550px, (min-width: 768px) 700px, calc(100vw - 32px)"
+                            srcset="
+                              {{ map_img | smart_crop(400, 240, 'center-bg', 75, 'avif') }} 400w,
+                              {{ map_img | smart_crop(800, 480, 'center-bg', 75, 'avif') }} 800w,
+                              {{ map_img | smart_crop(1100, 660, 'center-bg', 75, 'avif') }} 1100w,
+                              {{ map_img | smart_crop(1520, 912, 'center-bg', 75, 'avif') }} 1520w
+                            " />
+                          <source
+                            type="image/webp"
+                            sizes="(min-width: 1440px) 760px, (min-width: 1024px) 550px, (min-width: 768px) 700px, calc(100vw - 32px)"
+                            srcset="
+                              {{ map_img | smart_crop(400, 240, 'center-bg', 75, 'webp') }} 400w,
+                              {{ map_img | smart_crop(800, 480, 'center-bg', 75, 'webp') }} 800w,
+                              {{ map_img | smart_crop(1100, 660, 'center-bg', 75, 'webp') }} 1100w,
+                              {{ map_img | smart_crop(1520, 912, 'center-bg', 75, 'webp') }} 1520w
+                            " />
+                          <img
+                            src="{{ map_img | smart_crop(1100, 660, 'center-bg', 75, 'jpg') }}"
+                            alt="Map for {{ record.title }}"
+                            width="760"
+                            height="450"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </picture>
+                      {% elseif record.map_type == 'iframe' and record.tour_map_frame %}
+                        <div class="tour-tabs__frame">
+                          {% set raw_iframe = record.tour_map_frame %}
+                          {% set map_src = 'src="' in raw_iframe ? raw_iframe|split('src="')[1]|split('"')[0] : raw_iframe %}
+                          <iframe
+                            src="{{ map_src }}"
+                            width="100%"
+                            height="450"
+                            style="border: 0"
+                            allowfullscreen=""
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            title="Interactive map for {{ record.title }}"
+                          ></iframe>
+                        </div>
+                      {% endif %}
+
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
+
+            </div>
+          </div>
+        </div>
+
       </div>
-    </main>
-  {% else %}
-      Record not found
-  {% endif %}
+    </div>
+  </div>
+</main>

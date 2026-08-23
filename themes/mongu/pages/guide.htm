@@ -1,12 +1,12 @@
 ##
-url = "/destinations"
+url = "/guide"
 layout = "default"
-title = "Destinations"
+title = "Travel guide"
 page_css_file = "mosaic-grid.css"
 page_js = "core.js"
 
-[collection destinations]
-handle = "Destinations"
+[collection guide]
+handle = "Guide"
 ==
 <main class="main-content">
       <div class="container">
@@ -21,16 +21,15 @@ handle = "Destinations"
       <section class="section-padding-bottom">
         <div class="container">
           <div class="title-wrap">
-            <h2 class="title title_centered">Explore Central Asian Ranges</h2>
-            <p class="subtitle">From high-altitude alpine lakes to wild gorges and ancient nomadic paths</p>
+            <h2 class="title title_centered">Explore Our Travel Guide</h2>
+            <p class="subtitle">Discover something new and find useful insights here</p>
           </div>
 
           
             {% partial 'blocks/mosaic-grid' 
-              items=destinations 
-              link_page='destination' 
-              icon_sprite='maps.svg' 
-              btn_text='Explore region' 
+              items=guide 
+              link_page='article' 
+              btn_text='Read more' 
             %}
                     
           

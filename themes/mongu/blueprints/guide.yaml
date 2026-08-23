@@ -1,14 +1,14 @@
-uuid: 4aba879f-8ee1-40fc-b24d-a43d53217ffd
-handle: Categories
-type: structure
-name: Категории
-drafts: true
+uuid: e61de62e-f80c-41b8-baec-74c93498e303
+handle: Guide
+type: entry
+name: Путеводитель
+drafts: false
 
-navigation:
-    label: Категории
-    icon: icon-sitemap
-    parent: Tours
-    order: 23
+primaryNavigation:
+    label: Путеводитель
+    icon: icon-map
+    order: 26
+
 
 fields:
     preview:
@@ -26,6 +26,7 @@ fields:
         default: center-bg
         span: right
         tab: Тизер карточка
+        
         options:
             center-bg: По центру (Центр)
             top-bg: Верх по центру
@@ -43,52 +44,9 @@ fields:
         type: text
         span: right
         tab: Тизер карточка
-
-    # --- НАСТРОЙКИ СЕТКИ ---
-    card_size:
-        label: Размер карточки в сетке
-        type: dropdown
-        span: left
-        default: normal
-        tab: Тизер карточка
-        options:
-            normal: Стандартная (1x1)
-            large: Большая (2x2)
-            wide: Широкая (2x1)
-            tall: Высокая (1x2)
-
-    is_right:
-        label: Сместить карточку вправо
-        type: switch
-        span: right
-        default: false
-        comment: Принудительный сдвиг карточки на правую колонку
-        tab: Тизер карточка
-
-    # --- ТЕКСТЫ И ИКОНКИ ---
-    description:
-        label: Краткое описание
-        type: textarea
-        span: left
-        size: tiny
-        tab: Тизер карточка
-
-    icon_id:
-        label: Иконка
-        type: dropdown
-        span: right
-        tab: Тизер карточка
-        options:
-            "": "-- Без иконки --"
-            trekking: Trekking adventures
-            horse: Horseback expedition
-            car: Overland & jeep journeys
-            nomadic: Nomadic heritage
-            map: Custom expedition
-            tent: Camp & Infrastructure
-
+    
     hero:
-        label: Баннер страницы категории
+        label: Баннер статьи
         type: fileupload
         mode: image
         comment: 'Размер загружаемой картинки должен быть минимум 3840px. Перед загрузкой изображения ЖЕЛАТЕЛЬНО провести его предварительную оптимизацию с помощью сервиса <a href="https://squoosh.app/" target="_blank" rel="noopener">Squoosh</a>.'
@@ -119,6 +77,54 @@ fields:
         type: text
         span: right
         tab: Детальная
+
+    content_blocks:
+        label: Контент статьи (Конструктор)
+        type: repeater
+        prompt: Добавить блок
+        span: full
+        tab: Детальная
+        groups:
+            # 1. Обычный текстовый блок
+            text_block:
+                name: Текстовый абзац
+                icon: octo-icon-text
+                description: Обычный текст, заголовки, списки
+                fields:
+                    text:
+                        label: Текст
+                        type: richeditor
+
+            # 2. Тот самый блок с широкой картинкой
+            image_wide:
+                name: Широкое фото
+                icon: octo-icon-image
+                description: Полноширинное фото с подписью
+                fields:
+                    image:
+                        label: Изображение
+                        type: fileupload
+                        mode: image
+                    caption:
+                        label: Подпись под фото (SEO)
+                        type: text
+
+            # 3. Карточка (Фото + Текст)
+            media_card:
+                name: Карточка (Фото + Текст)
+                icon: octo-icon-list-ul
+                description: Информационный блок
+                fields:
+                    image:
+                        label: Изображение
+                        type: fileupload
+                        mode: image
+                    title:
+                        label: Заголовок
+                        type: text
+                    text:
+                        label: Текст описания
+                        type: textarea
 
     # --- SEO ---
     meta_title:
@@ -156,3 +162,10 @@ fields:
         imageHeight: 630
         span: full
         tab: Соцсети (OG)
+
+    description:
+        label: Краткое описание
+        type: textarea
+        span: left
+        size: tiny
+        tab: Тизер карточка

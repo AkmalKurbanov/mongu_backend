@@ -1,4 +1,3 @@
-##
 [collection categories]
 handle = "Categories"
 
@@ -70,17 +69,17 @@ handle = "Destinations"
                     <a href="{{ 'category' | page({ slug: 'private-tours' }) }}" class="header__nav-link">Private tours</a>
                 </li>
                 <li class="header__nav-item">
-                    <a href="/accommodations.html" class="header__nav-link"
+                    <a href="{{'accommodations' | page }}" class="header__nav-link"
                         >Accommodations</a
                     >
                     <ul class="header__nav-sublist">
                         <li class="header__nav-subitem">
-                            <a href="/hotel.html" class="header__nav-sublink"
+                            <a href="{{'hotel' | page }}" class="header__nav-sublink"
                                 >Mongu Hotel</a
                             >
                         </li>
                         <li class="header__nav-subitem">
-                            <a href="/lodge.html" class="header__nav-sublink"
+                            <a href="{{'lodge' | page }}" class="header__nav-sublink"
                                 >Sokmo Lodge</a
                             >
                         </li>
@@ -96,7 +95,7 @@ handle = "Destinations"
                       {% for record in destination %}
 
                         <li class="header__nav-subitem">
-                            <a href="#" class="header__nav-sublink"
+                            <a href="{{ 'destination' | page({ slug: record.slug }) }}" class="header__nav-sublink"
                                 ><svg class="icon">
                                     <use href="{{ ('assets/sprites/maps.svg#' ~ record.icon_id) | theme }}"></use>
                                     <span>{{record.title}}</span></a
@@ -110,7 +109,7 @@ handle = "Destinations"
                     <a href="{{'about'| page}}" class="header__nav-link">About us</a>
                 </li>
                 <li class="header__nav-item">
-                    <a href="/travel-guide.html" class="header__nav-link"
+                    <a href="{{'guide'|page}}" class="header__nav-link"
                         >Travel guide</a
                     >
                 </li>
@@ -134,8 +133,7 @@ handle = "Destinations"
                 </div>
                 <ul class="header__callback-list">
                     <li class="header__callback-item">
-                        {% set clean_phone = global.whatsapp_number | replace({'
-                        ': '', '+': '', '-': ''}) %}
+                        {% set clean_phone = globalSettings.whatsapp_number | replace({' ': '', '+': '', '-': ''}) %}
                         <a
                             class="header__callback-link"
                             href="https://wa.me/{{ clean_phone }}"
@@ -150,7 +148,7 @@ handle = "Destinations"
                     <li class="header__callback-item">
                         <a
                             class="header__callback-link"
-                            href="mailto:{{global.email_address}}"
+                            href="mailto:{{globalSettings.email_address}}"
                         >
                             <svg class="icon">
                                 <use href="{{'assets/sprites/icons.svg#envelope'|theme}}"></use></svg

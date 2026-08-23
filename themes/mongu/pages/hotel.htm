@@ -1,0 +1,540 @@
+##
+url = "/hotel"
+layout = "default"
+title = "Mongu hotel"
+==
+<main class="main-content hotel-page">
+      <div class="breadcrumbs">
+        <div class="container">
+          <nav aria-label="Хлебные крошки" class="breadcrumbs">
+            <ul class="breadcrumbs__list">
+              <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/">Home</a></li>
+              <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/categories.html">Accommodation</a></li>
+              <li class="breadcrumbs__item" aria-current="page">Mongu Hotel</li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      
+      <section class="hotel-hero">
+        <div class="container">
+          <div class="hotel-hero__media">
+            <picture>
+              <source
+                type="image/avif"
+                media="(min-width: 1024px)"
+                srcset="./images/hotel/hero-desk.avif 1x, ./images/hotel/hero-desk@2x.avif 2x" />
+              <source
+                type="image/webp"
+                media="(min-width: 1024px)"
+                srcset="./images/hotel/hero-desk.webp 1x, ./images/hotel/hero-desk@2x.webp 2x" />
+              <source
+                type="image/avif"
+                media="(max-width: 1023px)"
+                srcset="./images/hotel/hero-mob.avif 1x, ./images/hotel/hero-mob@2x.avif 2x" />
+              <source
+                type="image/webp"
+                media="(max-width: 1023px)"
+                srcset="./images/hotel/hero-mob.webp 1x, ./images/hotel/hero-mob@2x.webp 2x" />
+              <img
+                src="./images/hotel/hero-mob.jpg"
+                alt="Mongu Hotel Karakol Exterior"
+                fetchpriority="high"
+                loading="eager"
+                decoding="async"
+                width="800"
+                height="500" />
+            </picture>
+          </div>
+        </div>
+      </section>
+
+     
+      <section class="hotel-concept section-padding">
+        <div class="container">
+          <div class="hotel-concept__grid">
+            <div class="hotel-concept__text">
+              <h2 class="title">Comfort Meets Adventure</h2>
+              <p>
+                We know exactly what it means to return from Lenin Peak or after a week-long off-road expedition. Mongu
+                Hotel was built by travelers, specifically for travelers.
+              </p>
+              <p>
+                Expect more than just a spotless bed. We offer specialized infrastructure: from dedicated gear drying
+                rooms to an alpine breakfast served early for those hitting the trail at dawn.
+              </p>
+            </div>
+            <div class="hotel-concept__images">
+              <picture class="img-main">
+                <img
+                  src="./images/hotel/lounge.jpg"
+                  alt="Hotel Lounge"
+                  loading="lazy"
+                  decoding="async"
+                  width="400"
+                  height="500" />
+              </picture>
+              <picture class="img-secondary">
+                <img
+                  src="./images/hotel/details.jpg"
+                  alt="Hotel Details"
+                  loading="lazy"
+                  decoding="async"
+                  width="300"
+                  height="300" />
+              </picture>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    
+      <section class="hotel-features section-padding section-bg">
+        <div class="container">
+          <div class="title-wrap">
+            <h2 class="title title_centered">Designed for Explorers</h2>
+          </div>
+          <ul class="hotel-features__grid">
+            <li class="hotel-features__item">
+              <svg class="icon"><use href="{{'assets/sprites/hotel.svg#wifi'|theme}}"></use></svg>
+              <h3>Free Wi-Fi</h3>
+              <p>High-speed internet access available throughout the entire property.</p>
+            </li>
+            <li class="hotel-features__item">
+              <svg class="icon"><use href="{{'assets/sprites/hotel.svg#ski'|theme}}"></use></svg>
+              <h3>Ski & Mountain Gear Rental</h3>
+              <p>
+                Professional rental service for skis, snowboards, and high-altitude trekking equipment right on the
+                premises.
+              </p>
+            </li>
+            <li class="hotel-features__item">
+              <svg class="icon"><use href="{{'assets/sprites/hotel.svg#parking'|theme}}"></use></svg>
+              <h3>Free Parking</h3>
+              <p>Secure, gated parking area for private and overland vehicles.</p>
+            </li>
+            <li class="hotel-features__item">
+              <svg class="icon"><use href="{{'assets/sprites/hotel.svg#transfer'|theme}}"></use></svg>
+              <h3>Airport Shuttle</h3>
+              <p>Direct transfer services to and from the airport on request.</p>
+            </li>
+            <li class="hotel-features__item">
+              <svg class="icon"><use href="{{'assets/sprites/hotel.svg#cigarete'|theme}}"></use></svg>
+              <h3>Non-Smoking Rooms</h3>
+              <p>Clean, fresh, and smoke-free environment across all rooms.</p>
+            </li>
+            <li class="hotel-features__item">
+              <svg class="icon"><use href="{{'assets/sprites/hotel.svg#delivery'|theme}}"></use></svg>
+              <h3>Room Service</h3>
+              <p>Prompt food and beverage delivery directly to your door.</p>
+            </li>
+            <li class="hotel-features__item">
+              <svg class="icon"><use href="{{'assets/sprites/hotel.svg#breakfast'|theme}}"></use></svg>
+              <h3>Delicious Breakfast</h3>
+              <p>Hearty and fresh morning meals available daily at the hotel.</p>
+            </li>
+            <li class="hotel-features__item">
+              <svg class="icon"><use href="{{'assets/sprites/hotel.svg#dryer'|theme}}"></use></svg>
+              <h3>Gear Drying Room</h3>
+              <p>Professional heated facility to dry your boots and outdoor clothing.</p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      
+      <section class="room-showcase section-padding">
+        <div class="container">
+          <div class="title-wrap">
+            <h2 class="title title_centered">Your Alpine Sanctuary</h2>
+            <p class="subtitle">Designed for recovery after the hardest expeditions</p>
+          </div>
+
+          <div class="room-showcase__wrapper js-slider">
+           
+            <div class="room-showcase__visual">
+              <div class="room-showcase__slider-wrap">
+                <div class="room-showcase__slider-track js-slider-viewport">
+              
+                  <div class="room-showcase__slide js-slide" data-index="0">
+                    <picture>
+                      <source
+                        type="image/avif"
+                        sizes="(min-width: 1024px) 66vw, calc(100vw - 32px)"
+                        srcset="./images/hotel/slide-1-400.avif 400w, ./images/hotel/slide-1-800.avif 800w, ./images/hotel/slide-1-1200.avif 1200w, ./images/hotel/slide-1-1600.avif 1600w" />
+                      <source
+                        type="image/webp"
+                        sizes="(min-width: 1024px) 66vw, calc(100vw - 32px)"
+                        srcset="./images/hotel/slide-1-400.webp 400w, ./images/hotel/slide-1-800.webp 800w, ./images/hotel/slide-1-1200.webp 1200w, ./images/hotel/slide-1-1600.webp 1600w" />
+                      <img
+                        src="./images/hotel/slide-1-800.jpg"
+                        alt="Standard Twin Room"
+                        width="800"
+                        height="600"
+                        loading="eager"
+                        fetchpriority="high" />
+                    </picture>
+                  </div>
+
+                 
+                  <div class="room-showcase__slide js-slide" data-index="1">
+                    <picture>
+                      <source
+                        type="image/avif"
+                        sizes="(min-width: 1024px) 66vw, calc(100vw - 32px)"
+                        srcset="./images/hotel/slide-2-400.avif 400w, ./images/hotel/slide-2-800.avif 800w, ./images/hotel/slide-2-1200.avif 1200w, ./images/hotel/slide-2-1600.avif 1600w" />
+                      <source
+                        type="image/webp"
+                        sizes="(min-width: 1024px) 66vw, calc(100vw - 32px)"
+                        srcset="./images/hotel/slide-2-400.webp 400w, ./images/hotel/slide-2-800.webp 800w, ./images/hotel/slide-2-1200.webp 1200w, ./images/hotel/slide-2-1600.webp 1600w" />
+                      <img
+                        src="./images/hotel/slide-2-800.jpg"
+                        alt="Room Interior"
+                        width="800"
+                        height="600"
+                        loading="lazy"
+                        decoding="async" />
+                    </picture>
+                  </div>
+
+                 
+                  <div class="room-showcase__slide js-slide" data-index="2">
+                    <picture>
+                      <source
+                        type="image/avif"
+                        sizes="(min-width: 1024px) 66vw, calc(100vw - 32px)"
+                        srcset="./images/hotel/slide-3-400.avif 400w, ./images/hotel/slide-3-800.avif 800w, ./images/hotel/slide-3-1200.avif 1200w, ./images/hotel/slide-3-1600.avif 1600w" />
+                      <source
+                        type="image/webp"
+                        sizes="(min-width: 1024px) 66vw, calc(100vw - 32px)"
+                        srcset="./images/hotel/slide-3-400.webp 400w, ./images/hotel/slide-3-800.webp 800w, ./images/hotel/slide-3-1200.webp 1200w, ./images/hotel/slide-3-1600.webp 1600w" />
+                      <img
+                        src="./images/hotel/slide-3-800.jpg"
+                        alt="Bathroom"
+                        width="800"
+                        height="600"
+                        loading="lazy"
+                        decoding="async" />
+                    </picture>
+                  </div>
+
+                
+                  <div class="room-showcase__slide js-slide" data-index="3">
+                    <picture>
+                      <source
+                        type="image/avif"
+                        sizes="(min-width: 1024px) 66vw, calc(100vw - 32px)"
+                        srcset="./images/hotel/slide-4-400.avif 400w, ./images/hotel/slide-4-800.avif 800w, ./images/hotel/slide-4-1200.avif 1200w, ./images/hotel/slide-4-1600.avif 1600w" />
+                      <source
+                        type="image/webp"
+                        sizes="(min-width: 1024px) 66vw, calc(100vw - 32px)"
+                        srcset="./images/hotel/slide-4-400.webp 400w, ./images/hotel/slide-4-800.webp 800w, ./images/hotel/slide-4-1200.webp 1200w, ./images/hotel/slide-4-1600.webp 1600w" />
+                      <img
+                        src="./images/hotel/slide-4-800.jpg"
+                        alt="Terrace View"
+                        width="800"
+                        height="600"
+                        loading="lazy"
+                        decoding="async" />
+                    </picture>
+                  </div>
+
+                 
+                  <div class="room-showcase__slide js-slide" data-index="4">
+                    <picture>
+                      <source
+                        type="image/avif"
+                        sizes="(min-width: 1024px) 66vw, calc(100vw - 32px)"
+                        srcset="./images/hotel/slide-4-400.avif 400w, ./images/hotel/slide-4-800.avif 800w, ./images/hotel/slide-4-1200.avif 1200w, ./images/hotel/slide-4-1600.avif 1600w" />
+                      <source
+                        type="image/webp"
+                        sizes="(min-width: 1024px) 66vw, calc(100vw - 32px)"
+                        srcset="./images/hotel/slide-4-400.webp 400w, ./images/hotel/slide-4-800.webp 800w, ./images/hotel/slide-4-1200.webp 1200w, ./images/hotel/slide-4-1600.webp 1600w" />
+                      <img
+                        src="./images/hotel/slide-4-800.jpg"
+                        alt="Terrace View"
+                        width="800"
+                        height="600"
+                        loading="lazy"
+                        decoding="async" />
+                    </picture>
+                  </div>
+                </div>
+
+                
+                <div class="slider__pagination js-pagination">
+                  <div class="pagination-dot" data-index="0"></div>
+                  <div class="pagination-dot" data-index="1"></div>
+                  <div class="pagination-dot" data-index="2"></div>
+                  <div class="pagination-dot" data-index="3"></div>
+                </div>
+              </div>
+
+          
+              <div class="slider__thumbnails js-slider-thumbnails">
+                <div class="slider__thumb js-thumb-item slider__thumb--active" data-index="0">
+                  <picture>
+                    <source
+                      type="image/avif"
+                      srcset="./images/hotel/thumb-1-160.avif 1x, ./images/hotel/thumb-1-320.avif 2x" />
+                    <source
+                      type="image/webp"
+                      srcset="./images/hotel/thumb-1-160.webp 1x, ./images/hotel/thumb-1-320.webp 2x" />
+                    <img
+                      src="./images/hotel/thumb-1-160.jpg"
+                      alt="Thumb 1"
+                      width="160"
+                      height="120"
+                      loading="lazy"
+                      decoding="async" />
+                  </picture>
+                </div>
+                <div class="slider__thumb js-thumb-item" data-index="1">
+                  <picture>
+                    <source
+                      type="image/avif"
+                      srcset="./images/hotel/thumb-2-160.avif 1x, ./images/hotel/thumb-2-320.avif 2x" />
+                    <source
+                      type="image/webp"
+                      srcset="./images/hotel/thumb-2-160.webp 1x, ./images/hotel/thumb-2-320.webp 2x" />
+                    <img
+                      src="./images/hotel/thumb-2-160.jpg"
+                      alt="Thumb 2"
+                      width="160"
+                      height="120"
+                      loading="lazy"
+                      decoding="async" />
+                  </picture>
+                </div>
+                <div class="slider__thumb js-thumb-item" data-index="2">
+                  <picture>
+                    <source
+                      type="image/avif"
+                      srcset="./images/hotel/thumb-3-160.avif 1x, ./images/hotel/thumb-3-320.avif 2x" />
+                    <source
+                      type="image/webp"
+                      srcset="./images/hotel/thumb-3-160.webp 1x, ./images/hotel/thumb-3-320.webp 2x" />
+                    <img
+                      src="./images/hotel/thumb-3-160.jpg"
+                      alt="Thumb 3"
+                      width="160"
+                      height="120"
+                      loading="lazy"
+                      decoding="async" />
+                  </picture>
+                </div>
+                <div class="slider__thumb js-thumb-item" data-index="3">
+                  <picture>
+                    <source
+                      type="image/avif"
+                      srcset="./images/hotel/thumb-4-160.avif 1x, ./images/hotel/thumb-4-320.avif 2x" />
+                    <source
+                      type="image/webp"
+                      srcset="./images/hotel/thumb-4-160.webp 1x, ./images/hotel/thumb-4-320.webp 2x" />
+                    <img
+                      src="./images/hotel/thumb-4-160.jpg"
+                      alt="Thumb 4"
+                      width="160"
+                      height="120"
+                      loading="lazy"
+                      decoding="async" />
+                  </picture>
+                </div>
+                <div class="slider__thumb js-thumb-item" data-index="4">
+                  <picture>
+                    <source
+                      type="image/avif"
+                      srcset="./images/hotel/thumb-4-160.avif 1x, ./images/hotel/thumb-4-320.avif 2x" />
+                    <source
+                      type="image/webp"
+                      srcset="./images/hotel/thumb-4-160.webp 1x, ./images/hotel/thumb-4-320.webp 2x" />
+                    <img
+                      src="./images/hotel/thumb-4-160.jpg"
+                      alt="Thumb 4"
+                      width="160"
+                      height="120"
+                      loading="lazy"
+                      decoding="async" />
+                  </picture>
+                </div>
+              </div>
+            </div>
+
+   
+            <div class="slider__nav">
+              <div class="slider__btn slider__btn_prev js-slider-prev" aria-label="Previous slide">
+                <svg class="icon"><use href="#angle"></use></svg>
+              </div>
+              <div class="slider__btn slider__btn_next js-slider-next" aria-label="Next slide">
+                <svg class="icon"><use href="#angle"></use></svg>
+              </div>
+            </div>
+
+      
+            <div class="room-showcase__content">
+              <div class="room-showcase__header">
+                <h3 class="room-showcase__title">Standard Twin Room</h3>
+                <div class="room-showcase__meta">
+                  <span>20 m²</span>
+                  <span class="dot">•</span>
+                  <span>Mountain View</span>
+                  <span class="dot">•</span>
+                  <span>Private Terrace</span>
+                </div>
+              </div>
+
+              <p class="room-showcase__desc">
+                Мы спроектировали это пространство для идеального сна. Вас ждут удлиненные кровати с ортопедическими
+                матрасами, блэкаут-шторы, полностью блокирующие свет, и система очистки воздуха. Идеально для отдыха
+                перед покорением новых высот.
+              </p>
+
+              <ul class="room-showcase__amenities">
+                <li class="amenity">Terrace</li>
+                <li class="amenity">Safety deposit box</li>
+                <li class="amenity">Washing machine</li>
+                <li class="amenity">Desk</li>
+                <li class="amenity">Refrigerator</li>
+                <li class="amenity">Ironing facilities</li>
+                <li class="amenity">Coffee machine</li>
+                <li class="amenity">Heating</li>
+                <li class="amenity">Flat-screen TV</li>
+                <li class="amenity">Carpeted</li>
+                <li class="amenity">Electric kettle</li>
+                <li class="amenity">Dishwasher</li>
+                <li class="amenity">Wardrobe or closet</li>
+                <li class="amenity">Game console</li>
+                <li class="amenity">Dining table</li>
+                <li class="amenity">Drying rack for clothing</li>
+                <li class="amenity">Baby safety gates</li>
+                <li class="amenity">Air purifiers</li>
+              </ul>
+
+              <div class="room-showcase__action">
+                <div class="price">
+                  <span class="price__val">From $50</span>
+                  <span class="price__label">per night</span>
+                </div>
+                <a href="/booking.html?room=standard" class="btn">Reserve Room</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="hotel-trust section-padding section-bg">
+        <div class="container">
+          <div class="hotel-trust__header">
+            <div class="title-wrap" style="margin-bottom: 0">
+              <h2 class="title" style="text-align: left">Loved by Travelers Worldwide</h2>
+              <p class="subtitle" style="text-align: left; margin-inline: 0">
+                Read what our guests say about their stay
+              </p>
+            </div>
+
+            <a
+              href="https://www.booking.com/hotel/kg/mongu.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="booking-badge">
+              <div class="booking-badge__score">9.7</div>
+              <div class="booking-badge__info">
+                <span class="booking-badge__title">Exceptional</span>
+                <span class="booking-badge__desc">Based on Booking.com reviews</span>
+              </div>
+              <svg class="icon"><use href="./icons.svg#arrow"></use></svg>
+            </a>
+          </div>
+
+          <div class="reviews__slider slider js-slider">
+            <div class="js-slider-viewport">
+              <div class="reviews__slide js-slide" data-index="0">
+                <figure class="reviews__item">
+                  <div class="reviews__text">
+                    <blockquote>
+                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
+                    </blockquote>
+                    <figcaption>John Doe, USA</figcaption>
+                  </div>
+                </figure>
+              </div>
+
+              <div class="reviews__slide js-slide" data-index="1">
+                <figure class="reviews__item">
+                  <div class="reviews__text">
+                    <blockquote>
+                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
+                    </blockquote>
+                    <figcaption>John Doe, USA</figcaption>
+                  </div>
+                </figure>
+              </div>
+
+              <div class="reviews__slide js-slide" data-index="2">
+                <figure class="reviews__item">
+                  <div class="reviews__text">
+                    <blockquote>
+                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
+                    </blockquote>
+                    <figcaption>John Doe, USA</figcaption>
+                  </div>
+                </figure>
+              </div>
+
+              <div class="reviews__slide js-slide" data-index="3">
+                <figure class="reviews__item">
+                  <div class="reviews__text">
+                    <blockquote>
+                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
+                    </blockquote>
+                    <figcaption>John Doe, USA</figcaption>
+                  </div>
+                </figure>
+              </div>
+
+              <div class="reviews__slide js-slide" data-index="4">
+                <figure class="reviews__item">
+                  <div class="reviews__text">
+                    <blockquote>
+                      <p>"Lorem ipsum dolor sit amet consectetur adipisicing elit. Aperiam, repudiandae.</p>
+                    </blockquote>
+                    <figcaption>John Doe, USA</figcaption>
+                  </div>
+                </figure>
+              </div>
+            </div>
+            <div class="slider__nav">
+              <div class="slider__btn slider__btn_prev js-slider-prev" aria-label="Previous slide">
+                <svg class="icon">
+                  <use href="#angle"></use>
+                </svg>
+              </div>
+              <div class="slider__btn slider__btn_next js-slider-next" aria-label="Next slide">
+                <svg class="icon">
+                  <use href="#angle"></use>
+                </svg>
+              </div>
+            </div>
+            <div class="slider__pagination js-pagination">
+              <div class="pagination-dot" data-index="0"></div>
+              <div class="pagination-dot" data-index="1"></div>
+              <div class="pagination-dot" data-index="2"></div>
+              <div class="pagination-dot" data-index="3"></div>
+              <div class="pagination-dot" data-index="4"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {% partial 'blocks/promo-highlight' 
+          path='/assets/images/lodge/promo/promo-highlight' 
+          alt='Sokmo Lodge'
+          title='Ready for an adventure?'
+          text='Lorem ipsum dolor sit, amet consectetur adipisicing elit. <br /> Eos explicabo labore adipisci quos placeat at ipsum <br /> temporibus non error quas.'
+          btn_link='/booking'
+          btn_text='Book your stay'
+      %}
+  
+    </main>

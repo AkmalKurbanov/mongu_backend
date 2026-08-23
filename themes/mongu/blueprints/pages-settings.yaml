@@ -1,0 +1,589 @@
+uuid: 796855aa-e63b-42e5-823a-2cd5a8b157f4
+handle: PagesSettings
+type: global
+name: Настройки страниц
+
+primaryNavigation:
+    label: Страницы сайта
+    icon: icon-file-text-o
+    order: 21
+
+fields:
+    # ==========================================
+    # ТАБ: Home
+    # ==========================================
+    home_meta_title:
+        label: Meta Title
+        type: text
+        span: left
+        tab: Home
+    home_meta_description:
+        label: Meta Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Home
+    home_og_title:
+        label: Open Graph Title
+        type: text
+        span: left
+        tab: Home
+    home_og_description:
+        label: Open Graph Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Home
+    home_og_image:
+        label: Open Graph Image (1200x630)
+        type: mediafinder
+        mode: image
+        imageWidth: 1200
+        imageHeight: 630
+        span: full
+        tab: Home
+    hero_home_schema:
+        label: Schema JSON-LD
+        type: textarea
+        size: small
+        span: full
+        tab: Home
+    # ==========================================
+    # ТАБ: Tours
+    # ==========================================
+    hero_tours:
+        label: Баннер страницы
+        type: mediafinder
+        mode: image
+        imageWidth: 3840
+        span: left
+        tab: Tours
+    hero_tours_position:
+        label: Позиция кадрирования
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Tours
+        options: &bg_positions
+            center-bg: По центру (Центр)
+            top-bg: Верх по центру
+            bottom-bg: Низ по центру
+            left-bg: Лево по центру
+            right-bg: Право по центру
+            top-left-bg: Верхний левый угол
+            top-right-bg: Правый верхний угол
+            bottom-left-bg: Нижний левый угол
+            bottom-right-bg: Правый нижний угол
+    hero_tours_caption:
+        label: Подпись баннера (SEO alt)
+        type: text
+        span: full
+        tab: Tours
+    tours_meta_title:
+        label: Meta Title
+        type: text
+        span: left
+        tab: Tours
+    tours_meta_description:
+        label: Meta Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Tours
+    tours_og_title:
+        label: Open Graph Title
+        type: text
+        span: left
+        tab: Tours
+    tours_og_description:
+        label: Open Graph Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Tours
+    tours_og_image:
+        label: Open Graph Image (1200x630)
+        type: mediafinder
+        mode: image
+        imageWidth: 1200
+        imageHeight: 630
+        span: full
+        tab: Tours
+    hero_tours_schema:
+        label: Schema JSON-LD
+        type: textarea
+        size: small
+        span: full
+        tab: Tours
+
+    # ==========================================
+    # ТАБ: Accommodations
+    # ==========================================
+    hero_accommodations:
+        label: Баннер страницы
+        type: mediafinder
+        mode: image
+        imageWidth: 3840
+        span: left
+        tab: Accommodations
+    hero_accommodations_position:
+        label: Позиция кадрирования
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Accommodations
+        options: *bg_positions
+    hero_accommodations_caption:
+        label: Подпись баннера (SEO alt)
+        type: text
+        span: full
+        tab: Accommodations
+    accommodations_meta_title:
+        label: Meta Title
+        type: text
+        span: left
+        tab: Accommodations
+    accommodations_meta_description:
+        label: Meta Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Accommodations
+    accommodations_og_title:
+        label: Open Graph Title
+        type: text
+        span: left
+        tab: Accommodations
+    accommodations_og_description:
+        label: Open Graph Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Accommodations
+    accommodations_og_image:
+        label: Open Graph Image (1200x630)
+        type: mediafinder
+        mode: image
+        imageWidth: 1200
+        imageHeight: 630
+        span: full
+        tab: Accommodations
+    hero_accommodations_schema:
+        label: Schema JSON-LD
+        type: textarea
+        size: small
+        span: full
+        tab: Accommodations
+
+    # ==========================================
+    # ТАБ: Hotel
+    # ==========================================
+    hero_hotel:
+        label: Баннер страницы
+        type: mediafinder
+        mode: image
+        imageWidth: 3840
+        span: left
+        tab: Hotel
+    hero_hotel_position:
+        label: Позиция кадрирования
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Hotel
+        options: *bg_positions
+    hero_hotel_caption:
+        label: Подпись баннера (SEO alt)
+        type: text
+        span: full
+        tab: Hotel
+    hotel_meta_title:
+        label: Meta Title
+        type: text
+        span: left
+        tab: Hotel
+    hotel_meta_description:
+        label: Meta Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Hotel
+    hotel_og_title:
+        label: Open Graph Title
+        type: text
+        span: left
+        tab: Hotel
+    hotel_og_description:
+        label: Open Graph Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Hotel
+    hotel_og_image:
+        label: Open Graph Image (1200x630)
+        type: mediafinder
+        mode: image
+        imageWidth: 1200
+        imageHeight: 630
+        span: full
+        tab: Hotel
+    hero_hotel_schema:
+        label: Schema JSON-LD
+        type: textarea
+        size: small
+        span: full
+        tab: Hotel
+
+    # ==========================================
+    # ТАБ: Lodge
+    # ==========================================
+    hero_lodge:
+        label: Баннер страницы
+        type: mediafinder
+        mode: image
+        imageWidth: 3840
+        span: left
+        tab: Lodge
+    hero_lodge_position:
+        label: Позиция кадрирования
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Lodge
+        options: *bg_positions
+    hero_lodge_caption:
+        label: Подпись баннера (SEO alt)
+        type: text
+        span: full
+        tab: Lodge
+    lodge_meta_title:
+        label: Meta Title
+        type: text
+        span: left
+        tab: Lodge
+    lodge_meta_description:
+        label: Meta Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Lodge
+    lodge_og_title:
+        label: Open Graph Title
+        type: text
+        span: left
+        tab: Lodge
+    lodge_og_description:
+        label: Open Graph Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Lodge
+    lodge_og_image:
+        label: Open Graph Image (1200x630)
+        type: mediafinder
+        mode: image
+        imageWidth: 1200
+        imageHeight: 630
+        span: full
+        tab: Lodge
+    hero_lodge_schema:
+        label: Schema JSON-LD
+        type: textarea
+        size: small
+        span: full
+        tab: Lodge
+
+    # ==========================================
+    # ТАБ: Destinations
+    # ==========================================
+    hero_destination:
+        label: Баннер страницы
+        type: mediafinder
+        mode: image
+        imageWidth: 3840
+        span: left
+        tab: Destinations
+    hero_destination_position:
+        label: Позиция кадрирования
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Destinations
+        options: *bg_positions
+    hero_destination_caption:
+        label: Подпись баннера (SEO alt)
+        type: text
+        span: full
+        tab: Destinations
+    destination_meta_title:
+        label: Meta Title
+        type: text
+        span: left
+        tab: Destinations
+    destination_meta_description:
+        label: Meta Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Destinations
+    destination_og_title:
+        label: Open Graph Title
+        type: text
+        span: left
+        tab: Destinations
+    destination_og_description:
+        label: Open Graph Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Destinations
+    destination_og_image:
+        label: Open Graph Image (1200x630)
+        type: mediafinder
+        mode: image
+        imageWidth: 1200
+        imageHeight: 630
+        span: full
+        tab: Destinations
+    hero_destination_schema:
+        label: Schema JSON-LD
+        type: textarea
+        size: small
+        span: full
+        tab: Destinations
+
+    # ==========================================
+    # ТАБ: About
+    # ==========================================
+    hero_about:
+        label: Баннер страницы
+        type: mediafinder
+        mode: image
+        imageWidth: 3840
+        span: left
+        tab: About
+    hero_about_position:
+        label: Позиция кадрирования
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: About
+        options: *bg_positions
+    hero_about_caption:
+        label: Подпись баннера (SEO alt)
+        type: text
+        span: full
+        tab: About
+    about_meta_title:
+        label: Meta Title
+        type: text
+        span: left
+        tab: About
+    about_meta_description:
+        label: Meta Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: About
+    about_og_title:
+        label: Open Graph Title
+        type: text
+        span: left
+        tab: About
+    about_og_description:
+        label: Open Graph Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: About
+    about_og_image:
+        label: Open Graph Image (1200x630)
+        type: mediafinder
+        mode: image
+        imageWidth: 1200
+        imageHeight: 630
+        span: full
+        tab: About
+    hero_about_schema:
+        label: Schema JSON-LD
+        type: textarea
+        size: small
+        span: full
+        tab: About
+
+    # ==========================================
+    # ТАБ: Guide
+    # ==========================================
+    hero_guide:
+        label: Баннер страницы
+        type: mediafinder
+        mode: image
+        imageWidth: 3840
+        span: left
+        tab: Guide
+    hero_guide_position:
+        label: Позиция кадрирования
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Guide
+        options: *bg_positions
+    hero_guide_caption:
+        label: Подпись баннера (SEO alt)
+        type: text
+        span: full
+        tab: Guide
+    guide_meta_title:
+        label: Meta Title
+        type: text
+        span: left
+        tab: Guide
+    guide_meta_description:
+        label: Meta Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Guide
+    guide_og_title:
+        label: Open Graph Title
+        type: text
+        span: left
+        tab: Guide
+    guide_og_description:
+        label: Open Graph Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Guide
+    guide_og_image:
+        label: Open Graph Image (1200x630)
+        type: mediafinder
+        mode: image
+        imageWidth: 1200
+        imageHeight: 630
+        span: full
+        tab: Guide
+    hero_guide_schema:
+        label: Schema JSON-LD
+        type: textarea
+        size: small
+        span: full
+        tab: Guide
+
+    # ==========================================
+    # ТАБ: Contacts
+    # ==========================================
+    hero_contacts:
+        label: Баннер страницы
+        type: mediafinder
+        mode: image
+        imageWidth: 3840
+        span: left
+        tab: Contacts
+    hero_contacts_position:
+        label: Позиция кадрирования
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Contacts
+        options: *bg_positions
+    hero_contacts_caption:
+        label: Подпись баннера (SEO alt)
+        type: text
+        span: full
+        tab: Contacts
+    contacts_meta_title:
+        label: Meta Title
+        type: text
+        span: left
+        tab: Contacts
+    contacts_meta_description:
+        label: Meta Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Contacts
+    contacts_og_title:
+        label: Open Graph Title
+        type: text
+        span: left
+        tab: Contacts
+    contacts_og_description:
+        label: Open Graph Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Contacts
+    contacts_og_image:
+        label: Open Graph Image (1200x630)
+        type: mediafinder
+        mode: image
+        imageWidth: 1200
+        imageHeight: 630
+        span: full
+        tab: Contacts
+    hero_contacts_schema:
+        label: Schema JSON-LD
+        type: textarea
+        size: small
+        span: full
+        tab: Contacts
+
+    # ==========================================
+    # ТАБ: Booking
+    # ==========================================
+    hero_booking:
+        label: Баннер страницы
+        type: mediafinder
+        mode: image
+        imageWidth: 3840
+        span: left
+        tab: Booking
+    hero_booking_position:
+        label: Позиция кадрирования
+        type: dropdown
+        default: center-bg
+        span: right
+        tab: Booking
+        options: *bg_positions
+    hero_booking_caption:
+        label: Подпись баннера (SEO alt)
+        type: text
+        span: full
+        tab: Booking
+    booking_meta_title:
+        label: Meta Title
+        type: text
+        span: left
+        tab: Booking
+    booking_meta_description:
+        label: Meta Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Booking
+    booking_og_title:
+        label: Open Graph Title
+        type: text
+        span: left
+        tab: Booking
+    booking_og_description:
+        label: Open Graph Description
+        type: textarea
+        size: tiny
+        span: right
+        tab: Booking
+    booking_og_image:
+        label: Open Graph Image (1200x630)
+        type: mediafinder
+        mode: image
+        imageWidth: 1200
+        imageHeight: 630
+        span: full
+        tab: Booking
+    hero_booking_schema:
+        label: Schema JSON-LD
+        type: textarea
+        size: small
+        span: full
+        tab: Booking

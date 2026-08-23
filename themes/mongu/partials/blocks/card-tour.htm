@@ -1,0 +1,115 @@
+{# 
+  Входящие параметры:
+  tour       - объект записи тура
+  is_slide   - булево (нужен ли класс js-slide, по дефолту false)
+  loop_index - индекс цикла для слайдера (по дефолту null)
+#}
+
+{% set is_slide = is_slide | default(false) %}
+
+<article class="card {% if is_slide %}js-slide{% endif %}" {% if is_slide and loop_index is defined %}data-index="{{ loop_index }}"{% endif %}>
+  <div class="card__head">
+    <div class="card__img">
+      {% if tour.preview and tour.preview.count() > 0 %}
+        {% set img = tour.preview.first() %}
+        {% set pos = tour.preview_position | default('center-bg') %}
+        {% set caption = tour.preview_caption | default(tour.title) | striptags %}
+        
+        <picture>
+          <source
+            type="image/avif"
+            sizes="(min-width: 1440px) 376px, (min-width: 1024px) 283px, (min-width: 768px) 334px, 735px"
+            srcset="
+              {{ img | smart_crop(283, 159, pos, 75, 'avif') }} 283w,
+              {{ img | smart_crop(334, 188, pos, 75, 'avif') }} 334w,
+              {{ img | smart_crop(376, 212, pos, 75, 'avif') }} 376w,
+              {{ img | smart_crop(735, 413, pos, 75, 'avif') }} 735w,
+              {{ img | smart_crop(566, 318, pos, 75, 'avif') }} 566w,
+              {{ img | smart_crop(668, 376, pos, 75, 'avif') }} 668w,
+              {{ img | smart_crop(752, 424, pos, 75, 'avif') }} 752w,
+              {{ img | smart_crop(1470, 826, pos, 75, 'avif') }} 1470w
+            " />
+          <source
+            type="image/webp"
+            sizes="(min-width: 1440px) 376px, (min-width: 1024px) 283px, (min-width: 768px) 334px, 735px"
+            srcset="
+              {{ img | smart_crop(283, 159, pos, 75, 'webp') }} 283w,
+              {{ img | smart_crop(334, 188, pos, 75, 'webp') }} 334w,
+              {{ img | smart_crop(376, 212, pos, 75, 'webp') }} 376w,
+              {{ img | smart_crop(735, 413, pos, 75, 'webp') }} 735w,
+              {{ img | smart_crop(566, 318, pos, 75, 'webp') }} 566w,
+              {{ img | smart_crop(668, 376, pos, 75, 'webp') }} 668w,
+              {{ img | smart_crop(752, 424, pos, 75, 'webp') }} 752w,
+              {{ img | smart_crop(1470, 826, pos, 75, 'webp') }} 1470w
+            " />
+          <img
+            src="{{ img | smart_crop(376, 212, pos, 75, 'jpg') }}"
+            alt="{{ caption }}"
+            width="376"
+            height="212"
+            loading="lazy"
+            decoding="async" />
+        </picture>
+      {% endif %}
+    </div>
+
+    <ul class="badges">
+      {% if tour.height %}
+        <li class="badges__badge badges__badge_peak">
+          <svg class="icon">
+            <use href="{{ 'assets/sprites/icons.svg#mountains' | theme }}"></use>
+          </svg>
+          <span>{{ tour.height }}</span>
+        </li>
+      {% endif %}
+      {% if tour.program_price %}
+        <li class="badges__badge badges__badge_price">From {{ tour.program_price }}</li>
+      {% endif %}
+    </ul>
+  </div>
+
+  <div class="card__body">
+    <h3 class="card__title">{{ tour.title }}</h3>
+
+    <p class="card__desc">
+      {% set desc = (tour.description ?: tour.short_desc) | replace({'</p>': ' ', '<br>': ' ', '<br/>': ' ', '<br />': ' '}) | striptags | trim %}
+      {{ desc | length > 92 ? desc | slice(0, 92) ~ '...' : desc }}
+    </p>
+
+    <ul class="card__features feature">
+      {% if tour.technical_difficulty_lvl %}
+        <li class="card__feature" title="Difficulty">
+          <svg class="icon">
+            <use href="{{ 'assets/sprites/icons.svg#peak' | theme }}"></use>
+          </svg>
+          <span class="feature__label">Difficulty</span>
+          <span class="feature__value">{{ tour.technical_difficulty_lvl }}</span>
+        </li>
+      {% endif %}
+      {% if tour.season %}
+        <li class="card__feature" title="Season">
+          <svg class="icon">
+            <use href="{{ 'assets/sprites/icons.svg#calendar' | theme }}"></use>
+          </svg>
+          <span class="feature__label">Season</span>
+          <span class="feature__value">{{ tour.season }}</span>
+        </li>
+      {% endif %}
+      {% if tour.tour_duration %}
+        <li class="card__feature" title="Duration">
+          <svg class="icon">
+            <use href="{{ 'assets/sprites/icons.svg#clock' | theme }}"></use>
+          </svg>
+          <span class="feature__label">Duration</span>
+          <span class="feature__value">{{ tour.tour_duration }}</span>
+        </li>
+      {% endif %}
+    </ul>
+  </div>
+
+  <div class="card__footer">
+    <span class="card__btn btn">View tour</span>
+  </div>
+  
+  <a href="{{ 'tour' | page({ slug: tour.slug }) }}" class="card__link" aria-label="View {{ tour.title }}"></a>
+</article>

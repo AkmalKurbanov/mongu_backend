@@ -1,0 +1,147 @@
+##
+url = "/accommodations"
+layout = "default"
+title = "Accommodations"
+page_css_file = "content-card.css"
+page_js = "core.js"
+==
+<main class="main-content">
+      <div class="container">
+        <nav aria-label="Хлебные крошки" class="breadcrumbs">
+          <ul class="breadcrumbs__list">
+            <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/">Home</a></li>
+            <li class="breadcrumbs__item" aria-current="page">Accommodations</li>
+          </ul>
+        </nav>
+      </div>
+
+      <section class="section-padding-bottom">
+        <div class="container">
+          <div class="title-wrap">
+            <h2 class="title title_centered">Where comfort meets adventure</h2>
+            <p class="subtitle">Relax and recover in our proprietary properties designed for explorers</p>
+          </div>
+
+          <div class="content-grid">
+            
+            <article class="content-card">
+              <div class="content-card__visual">
+                <picture>
+                  <source
+                    type="image/avif"
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    srcset="{{('assets/images/hotel/promo-highlight-600.avif 600w') | theme}}, {{('assets/images/hotel/promo-highlight-1200.avif 1200w')|theme}}" />
+                  <source
+                    type="image/webp"
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    srcset="{{('assets/images/hotel/promo-highlight-600.webp 600w) |theme, (assets/images/hotel/promo-highlight-1200.webp 1200w') | theme}}" />
+                  <img
+                    src="{{('assets/images/hotel/promo-highlight-600.jpg') | theme}}"
+                    alt="Mongu Hotel in Karakol"
+                    width="600"
+                    height="400"
+                    loading="lazy"
+                    decoding="async" />
+                </picture>
+                <div class="content-card__badge">
+                  <svg class="icon"><use href="{{'assets/sprites/icons.svg#hotel'|theme}}"></use></svg> City Basecamp
+                </div>
+              </div>
+
+              <div class="content-card__content">
+                <div class="content-card__header">
+                  <h3 class="content-card__title">Mongu Hotel Karakol</h3>
+                  <p class="content-card__desc">
+                    Your ultimate base in the city. Built by travelers, for travelers. Featuring specialized
+                    infrastructure like gear drying rooms and early alpine breakfasts to ensure you are fully prepared
+                    for your expedition.
+                  </p>
+                </div>
+
+                <ul class="content-card__list">
+                  <li>
+                    <svg class="icon"><use href="{{'assets/sprites/hotel.svg#wifi'|theme}}"></use></svg> Free Wi-Fi
+                  </li>
+                  <li>
+                    <svg class="icon"><use href="{{'assets/sprites/hotel.svg#transfer'|theme}}"></use></svg> Airport Shuttle
+                  </li>
+                  <li>
+                    <svg class="icon"><use href="{{'assets/sprites/hotel.svg#dryer'|theme}}"></use></svg> Gear Drying Room
+                  </li>
+                  <li>
+                    <svg class="icon"><use href="{{'assets/sprites/hotel.svg#parking'|theme}}"></use></svg> Free Parking
+                  </li>
+                </ul>
+
+                <div class="content-card__footer">
+                  <div class="content-card__stats">
+                    <span class="content-card__stats-label">Rooms from</span>
+                    <span class="content-card__stats-val">$50</span>
+                  </div>
+                  <a href="/hotel.html" class="btn btn_bordered content-card__btn">Explore hotel</a>
+                </div>
+              </div>
+            </article>
+
+            
+            <article class="content-card">
+              <div class="content-card__visual">
+                <picture>
+                  <source
+                    type="image/avif"
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    srcset="/assets/images/lodge/promo-highlight-600.avif 600w, /assets/images/lodge/promo-highlight-1200.avif 1200w" />
+                  <source
+                    type="image/webp"
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    srcset="/assets/images/lodge/promo-highlight-600.webp 600w, /assets/images/lodge/promo-highlight-1200.webp 1200w" />
+                  <img
+                    src="/assets/images/lodge/promo-highlight-600.jpg"
+                    alt="Sokmo Lodge in the mountains"
+                    width="600"
+                    height="400"
+                    loading="lazy"
+                    decoding="async" />
+                </picture>
+                <div class="content-card__badge content-card__badge_dark">
+                  <svg class="icon"><use href="{{'assets/sprites/icons.svg#tent'|theme}}"></use></svg> Alpine Zone
+                </div>
+              </div>
+
+              <div class="content-card__content">
+                <div class="content-card__header">
+                  <h3 class="content-card__title">Sokmo Lodge</h3>
+                  <p class="content-card__desc">
+                    Eco-luxury amidst alpine splendor. Located high in the mountains, this exclusive lodge offers
+                    premium comfort in the wild, perfect for acclimatization or a secluded retreat.
+                  </p>
+                </div>
+
+                <ul class="content-card__list">
+                  <li>
+                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#mountains'|theme}}"></use></svg> Panoramic Views
+                  </li>
+                  <li>
+                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#breakfast'|theme}}"></use></svg> Full Board Meals
+                  </li>
+                  <li>
+                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#tent'|theme}}"></use></svg> Glamping Tents
+                  </li>
+                  <li>
+                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#guide'|theme}}"></use></svg> Hiking Trails
+                  </li>
+                </ul>
+
+                <div class="content-card__footer">
+                  <div class="content-card__stats">
+                    <span class="content-card__stats-label">Stay from</span>
+                    <span class="content-card__stats-val">$180</span>
+                  </div>
+                  <a href="/hotel.html" class="btn btn_bordered content-card__btn">Explore Lodge</a>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>

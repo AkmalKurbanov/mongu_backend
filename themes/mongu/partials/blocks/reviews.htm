@@ -1,0 +1,114 @@
+<section class="reviews section-padding">
+  <div class="container">
+    <div class="title-wrap">
+      <h2 class="title title_centered">What our travelers say</h2>
+    </div>
+    <div class="reviews__slider slider js-slider">
+      <div class="js-slider-viewport">
+        
+        
+        {% set records = reviews %}
+        
+        {% for record in records %}
+          {% if record.is_active %}
+            <div class="reviews__slide js-slide" data-index="{{ loop.index0 }}">
+              <figure class="reviews__item">
+                {% if record.photo %}
+                    {% for img in record.photo %}
+                        
+                      <div class="reviews__item-col">
+                        <div class="reviews__photo">
+
+                          <picture>
+                            <source 
+                              type="image/avif" 
+                              srcset="
+                                {{ record.photo.thumb(50, 50, { mode: 'crop', extension: 'avif' }) }} 50w,
+                                {{ record.photo.thumb(100, 100, { mode: 'crop', extension: 'avif' }) }} 100w,
+                                {{ record.photo.thumb(150, 150, { mode: 'crop', extension: 'avif' }) }} 150w
+                              " 
+                              sizes="50px">
+                              
+                            <source 
+                              type="image/webp" 
+                              srcset="
+                                {{ record.photo.thumb(50, 50, { mode: 'crop', extension: 'webp' }) }} 50w,
+                                {{ record.photo.thumb(100, 100, { mode: 'crop', extension: 'webp' }) }} 100w,
+                                {{ record.photo.thumb(150, 150, { mode: 'crop', extension: 'webp' }) }} 150w
+                              " 
+                              sizes="50px">
+
+                            <img 
+                              src="{{ record.photo.thumb(100, 100, { mode: 'crop' }) }}" 
+                              alt="Review: {{ record.name }}" 
+                              width="50" 
+                              height="50" 
+                              loading="lazy" 
+                              decoding="async">
+                          </picture>
+                          
+                        </div>
+                      </div>
+                      
+                      {% else %}
+                    {% endfor %}
+                  {% else %}
+                {% endif %}
+                <div class="reviews__item-col">
+                  {% if record.rating %}
+                    <div class="reviews__rating">
+                      <div class="rating" data-rating="{{record.rating}}" aria-label="Rating: {{record.rating}} from 5" title="{{record.rating}}">
+                        <div class="rating__stars">
+                          <span class="rating__star">&#9733;</span>
+                          <span class="rating__star">&#9733;</span>
+                          <span class="rating__star">&#9733;</span>
+                          <span class="rating__star">&#9733;</span>
+                          <span class="rating__star">&#9733;</span>
+                        </div>
+                        <div class="rating__total">{{record.rating}}</div>
+                      </div>
+                    </div>
+                    {% else %}
+                  {% endif %}  
+
+                  <div class="reviews__text">
+                    <blockquote>
+                      <p>{{record.review}}</p>
+                    </blockquote>
+                    <figcaption>{{record.name}}
+                    {% if record.location %}
+                    , {{record.location}}
+                    {% endif %}
+                    </figcaption>
+                  </div>
+                </div>
+              </figure>
+            </div>
+          {% endif %}
+          
+          {% else %}
+        {% endfor %}
+     
+      </div>
+      <div class="slider__nav">
+        <div class="slider__btn slider__btn_prev js-slider-prev" aria-label="Previous slide">
+          <svg class="icon">
+            <use href="#angle"></use>
+          </svg>
+        </div>
+        <div class="slider__btn slider__btn_next js-slider-next" aria-label="Next slide">
+          <svg class="icon">
+            <use href="#angle"></use>
+          </svg>
+        </div>
+      </div>
+      <div class="slider__pagination js-pagination">
+        <div class="pagination-dot" data-index="0"></div>
+        <div class="pagination-dot" data-index="1"></div>
+        <div class="pagination-dot" data-index="2"></div>
+        <div class="pagination-dot" data-index="3"></div>
+        <div class="pagination-dot" data-index="4"></div>
+      </div>
+    </div>
+  </div>
+</section>

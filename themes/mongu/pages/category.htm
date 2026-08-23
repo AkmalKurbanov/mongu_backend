@@ -1,9 +1,8 @@
+##
 url = "/category/:slug"
 layout = "default"
 title = "Category"
-heroType = 'inside'
-page_js = "category.js"
-page_css_file = "category.css"
+page_js = "core.js"
 
 [collection categories]
 handle = "Categories"
@@ -11,157 +10,71 @@ handle = "Categories"
 [collection tours]
 handle = "Tours"
 ==
-function onEnd() {
-    $category = \Tailor\Models\EntryRecord::inSection('Categories')->where('slug', $this->param('slug'))->first();
-
-    if ($category) {
-        $this->page['dynamicHeroTitle'] = $category->title;
-        
-        // Передаем разные настройки для разных мест
-        $this->page['dynamicHeroPosition'] = $category->hero_position ?: 'center';
-        $this->page['dynamicCardPosition'] = $category->card_crop_mode ?: 'center';
-        
-        if ($category->hero && $category->hero->count() > 0) {
-            $this->page['dynamicHeroImage'] = $category->hero->first();
-        }
-        
-        // Передаем SEO-подпись баннера для альта
-        $this->page['dynamicHeroAlt'] = $category->hero_caption;
+<?php
+function onStart() {
+    $record = \Tailor\Models\EntryRecord::inSection('Categories')
+        ->where('slug', $this->param('slug'))
+        ->first();
+    
+    if (!$record) {
+        return \Response::make($this->controller->run('404'), 404);
     }
-}
-==
-{# Твоя логика: находим категорию для локального использования #}
-{% set current_category = categories.where('slug', this.param.slug).first %}
-
-{% if not current_category %}
-    {% do abort(404) %}
-{% endif %}
-
-{# Фильтруем туры #}
-{% set filtered_tours = tours.whereRelation('category', 'id', current_category.id).get() %}
-<main class="main-content">
-  <div class="breadcrumbs">
-    <div class="container">
-      <nav aria-label="Хлебные крошки">
-        <ul class="breadcrumbs__list">
-          <li class="breadcrumbs__item">
-            <a class="breadcrumbs__link" href="/">Home</a>
-          </li>
-          <li class="breadcrumbs__item">
-            <a class="breadcrumbs__link" href="{{'categories' | page}}">Tours</a>
-          </li>
-          <li class="breadcrumbs__item" aria-current="page">{{ current_category.title }}</li>
-        </ul>
-      </nav>
-    </div>
-  </div>
 
   
+    $this['record'] = $record;
 
-  <section class="section-padding section-padding_sm-interval">
+    
+    $this->page['meta_title'] = $record->meta_title ?: $record->title . ' | Mongu';
+    $this->page['meta_description'] = $record->meta_description ?: strip_tags($record->description);
+    
+ 
+    $this->page['og_title'] = $record->og_title ?: null;
+    $this->page['og_description'] = $record->og_description ?: null;
+    
+    if ($record->og_image) {
+        $this->page['og_image'] = $record->og_image;
+    } elseif ($record->preview && $record->preview->count() > 0) {
+        $this->page['og_image'] = $record->preview->first()->path;
+    }
+
+    $this->page['dynamicHeroTitle'] = $record->title;
+    $this->page['dynamicHeroPosition'] = $record->hero_position ?: 'center-bg';
+    $this->page['dynamicHeroImage'] = $record->hero?->first() ?: $record->preview?->first();
+    $this->page['dynamicHeroAlt'] = $record->hero_caption ?: $record->title;
+}
+?>
+==
+{# Фильтруем туры по текущей категории #}
+{% set filtered_tours = tours.whereRelation('category', 'id', record.id).get() %}
+
+<main class="main-content">
+  <div class="container">
+    <nav aria-label="Хлебные крошки" class="breadcrumbs">
+      <ul class="breadcrumbs__list">
+        <li class="breadcrumbs__item">
+          <a class="breadcrumbs__link" href="{{ 'index' | page }}">Home</a>
+        </li>
+        <li class="breadcrumbs__item">
+          <a class="breadcrumbs__link" href="{{ 'categories' | page }}">Categories</a>
+        </li>
+        <li class="breadcrumbs__item" aria-current="page">{{ record.title }}</li>
+      </ul>
+    </nav>
+  </div>
+
+  <section class="section-padding-bottom">
     <div class="container">
+      <div class="title-wrap">
+        <h2 class="title">Explore {{ record.title }} tours</h2>
+      </div>
+
       <div class="card-grid">
-
         {% for tour in filtered_tours %}
-          {% if tour.is_active %}  
-            <article class="card">
-              <div class="card__head">
-                <div class="card__img">
-                  <picture>
-                    {% if tour.preview %}
-                        {% for img in tour.preview %}
-                            <source
-                                type="image/avif"
-                                sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
-                                srcset="
-                                    {{ img.path | resize(400, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 400w,
-                                    {{ img.path | resize(600, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 600w,
-                                    {{ img.path | resize(800, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 800w,
-                                    {{ img.path | resize(1200, null, { mode: 'crop', extension: 'avif', quality: 75 }) }} 1200w
-                                " />
-                            <source
-                                type="image/webp"
-                                sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
-                                srcset="
-                                    {{ img.path | resize(400, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 400w,
-                                    {{ img.path | resize(600, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 600w,
-                                    {{ img.path | resize(800, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 800w,
-                                    {{ img.path | resize(1200, null, { mode: 'crop', extension: 'webp', quality: 75 }) }} 1200w
-                                " />
-                            <img
-                                src="{{ img.path | resize(800, null, { mode: 'crop', quality: 75 }) }}"
-                                alt="{{ tour.title }}"
-                                width="376"
-                                height="282"
-                                loading="lazy"
-                                decoding="async" />
-                        {% endfor %}
-                    {% endif %}
-                </picture>
-                </div>
-                <ul class="badges">
-                  {% if tour.height %}
-                    <li class="badges__badge badges__badge_peak">
-                      <svg class="icon">
-                        <use href="{{'assets/sprites/icons.svg#mountains'|theme}}"></use>
-                      </svg>
-                      <span>{{tour.height}}</span>
-                    </li>
-                  {% else %}
-                  {% endif %}
-                  {% if tour.program_price %}
-                    <li class="badges__badge badges__badge_price">From {{tour.program_price}}</li>
-                  {% else %}
-                  {% endif %}
-                </ul>
-              </div>
-
-              <div class="card__body">
-                <h3 class="card__title">{{tour.title}}</h3>
-
-                <p class="card__desc">
-                  {% set desc = tour.short_desc | striptags %}
-                  {{ desc | length > 92 ? desc | slice(0, 92) ~ '...' : desc }}
-                </p>
-
-                <ul class="card__features feature">
-                  <li class="card__feature" title="Difficulty">
-                    <svg class="icon">
-                      <use href="{{'assets/sprites//icons.svg#peak' | theme}}"></use>
-                    </svg>
-                    <span class="feature__label">Difficulty</span>
-                    <span class="feature__value">{{tour.technical_difficulty_lvl}}</span>
-                  </li>
-                  <li class="card__feature" title="Season">
-                    <svg class="icon">
-                      <use href="{{'assets/sprites/icons.svg#calendar' | theme}}"></use>
-                    </svg>
-                    <span class="feature__label">Season</span>
-                    <span class="feature__value">{{tour.season}}</span>
-                  </li>
-                  <li class="card__feature" title="Duration">
-                    <svg class="icon">
-                      <use href="{{'assets/sprites/icons.svg#clock' | theme}}"></use>
-                    </svg>
-                    <span class="feature__label">Duration</span>
-                    <span class="feature__value">{{tour.tour_duration}}</span>
-                  </li>
-                </ul>
-              </div>
-
-              <div class="card__footer">
-                <span class="card__btn btn">View tour</span>
-              </div>
-              <a href="{{ 'tour' | page({ slug: tour.slug }) }}" class="card__link" aria-label="tour name"></a>
-            </article>
-          {% endif %}
-                
-          {% else %}
-            <p>В этой категории пока нет туров.</p>
+          {% partial 'blocks/card-tour' tour=tour %}
+        {% else %}
+          <p class="empty-state">В этой категории пока нет доступных туров.</p>
         {% endfor %}
-        
-     
-     </div>
+      </div>
     </div>
   </section>
 </main>

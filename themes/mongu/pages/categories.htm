@@ -1,12 +1,10 @@
 ##
 url = "/categories"
 layout = "default"
-title = "Categories"
-page_js = "categories.js"
-page_css_file = "categories.css"
-heroType = "inside"
-heroImgBase = "horseback-hero"
+title = "Tours"
+page_js = "core.js"
 heroTitle = "Tours"
+
 [collection categories]
 handle = "Categories"
 ==
@@ -14,7 +12,7 @@ handle = "Categories"
 
       <div class="breadcrumbs">
         <div class="container">
-          <nav aria-label="Хлебные крошки">
+          <nav aria-label="breadcrumbs">
             <ul class="breadcrumbs__list">
               <li class="breadcrumbs__item">
                 <a class="breadcrumbs__link" href="/">Home</a>
@@ -37,25 +35,46 @@ handle = "Categories"
               <li class="categories__item">
                 <div class="categories__img">
                   {% if cat.preview %}
-                      {% for img in cat.preview %}
+                     {% for img in cat.preview %}
                       <picture>
+                          
                           <source
                               type="image/avif"
-                              sizes="(min-width: 1024px) 435px, (min-width: 768px) 335px, calc(100vw - 32px)"
-                              srcset="{{ img.path | resize(450, null, { extension: 'avif', quality: 75 }) }} 450w, 
-                                      {{ img.path | resize(700, null, { extension: 'avif', quality: 75 }) }} 700w, 
-                                      {{ img.path | resize(900, null, { extension: 'avif', quality: 75 }) }} 900w" />
+                              sizes="(min-width: 1440px) 574px, (min-width: 1024px) 434px, (min-width: 768px) 334px, 720px"
+                              srcset="
+                                  {{ img.path | resize(334, 188, { mode: 'crop', extension: 'avif', quality: 75 }) }} 334w,
+                                  {{ img.path | resize(434, 244, { mode: 'crop', extension: 'avif', quality: 75 }) }} 434w,
+                                  {{ img.path | resize(574, 323, { mode: 'crop', extension: 'avif', quality: 75 }) }} 574w,
+                                  {{ img.path | resize(668, 376, { mode: 'crop', extension: 'avif', quality: 75 }) }} 668w,
+                                  {{ img.path | resize(720, 405, { mode: 'crop', extension: 'avif', quality: 75 }) }} 720w,
+                                  {{ img.path | resize(868, 488, { mode: 'crop', extension: 'avif', quality: 75 }) }} 868w,
+                                  {{ img.path | resize(1148, 646, { mode: 'crop', extension: 'avif', quality: 75 }) }} 1148w,
+                                  {{ img.path | resize(1440, 810, { mode: 'crop', extension: 'avif', quality: 75 }) }} 1440w
+                              " />
+                              
+                          
+                          
                           <source
                               type="image/webp"
-                              sizes="(min-width: 1024px) 435px, (min-width: 768px) 335px, calc(100vw - 32px)"
-                              srcset="{{ img.path | resize(450, null, { extension: 'webp', quality: 75 }) }} 450w, 
-                                      {{ img.path | resize(700, null, { extension: 'webp', quality: 75 }) }} 700w, 
-                                      {{ img.path | resize(900, null, { extension: 'webp', quality: 75 }) }} 900w" />
+                              sizes="(min-width: 1440px) 574px, (min-width: 1024px) 434px, (min-width: 768px) 334px, 720px"
+                              srcset="
+                                  {{ img.path | resize(334, 188, { mode: 'crop', extension: 'webp', quality: 75 }) }} 334w,
+                                  {{ img.path | resize(434, 244, { mode: 'crop', extension: 'webp', quality: 75 }) }} 434w,
+                                  {{ img.path | resize(574, 323, { mode: 'crop', extension: 'webp', quality: 75 }) }} 574w,
+                                  {{ img.path | resize(668, 376, { mode: 'crop', extension: 'webp', quality: 75 }) }} 668w,
+                                  {{ img.path | resize(720, 405, { mode: 'crop', extension: 'webp', quality: 75 }) }} 720w,
+                                  {{ img.path | resize(868, 488, { mode: 'crop', extension: 'webp', quality: 75 }) }} 868w,
+                                  {{ img.path | resize(1148, 646, { mode: 'crop', extension: 'webp', quality: 75 }) }} 1148w,
+                                  {{ img.path | resize(1440, 810, { mode: 'crop', extension: 'webp', quality: 75 }) }} 1440w
+                              " />
+                              
+                          
+                          
                           <img
-                              src="{{ img.path | resize(700, null, { quality: 75 }) }}"
+                              src="{{ img.path | resize(574, 323, { mode: 'crop', quality: 75 }) }}"
                               alt="{{ cat.preview_caption }}"
-                              width="435"
-                              height="320"
+                              width="574"
+                              height="323"
                               loading="eager"
                               fetchpriority="high" />
                       </picture>

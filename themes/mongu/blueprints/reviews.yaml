@@ -1,0 +1,59 @@
+uuid: 7ef48464-88f7-49b4-8289-60cb6f53ca97
+handle: Reviews
+type: entry
+name: Отзывы
+drafts: false
+
+primaryNavigation:
+    label: Отзывы
+    icon: icon-comment
+    order: 25
+
+fields:
+    is_active:
+        label: Активный
+        type: switch
+        default: true
+        span: left
+        tab: Основное
+
+    rating:
+        label: Рейтинг звезд
+        type: dropdown
+        default: "5.0"
+        span: right
+        tab: Основное
+        options:
+            "5.0": "5.0 ★★★★★"
+            "4.5": "4.5 ★★★★½"
+            "4.0": "4.0 ★★★★☆"
+            "3.5": "3.5 ★★★½☆"
+            "3.0": "3.0 ★★★☆☆"
+
+    name:
+        label: Имя автора
+        type: text
+        span: left
+        tab: Основное
+
+    location:
+        label: Локация / Страна (напр. Germany)
+        type: text
+        span: right
+        tab: Основное
+
+    photo:
+        label: Аватар автора
+        type: fileupload
+        mode: image
+        imageWidth: 200
+        imageHeight: 200
+        span: left
+        tab: Основное
+
+    review:
+        label: Текст отзыва
+        type: textarea
+        size: small
+        span: right
+        tab: Основное

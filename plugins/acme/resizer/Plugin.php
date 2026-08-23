@@ -1,17 +1,19 @@
 <?php namespace Acme\Resizer;
 
 use System\Classes\PluginBase;
+use October\Rain\Resize\Resizer;
 use File;
+use Log;
 
 class Plugin extends PluginBase
 {
     public function pluginDetails()
     {
         return [
-            'name' => 'Smart Resizer',
-            'description' => 'Умный физический кроп по позициям из админки.',
-            'author' => 'Acme',
-            'icon' => 'icon-picture-o'
+            'name'        => 'Smart Resizer',
+            'description' => 'Адаптивный физический кроп на базе движка October CMS.',
+            'author'      => 'Acme',
+            'icon'        => 'icon-picture-o'
         ];
     }
 
@@ -24,110 +26,156 @@ class Plugin extends PluginBase
         ];
     }
 
-    public function makeSmartCrop($image, $width, $height, $position = 'center', $quality = 75, $extension = 'webp')
+    public function makeSmartCrop($image, $width, $height, $position = 'center-bg', $quality = 75, $extension = 'webp')
     {
-        if (!$image) {
+        if (!$image || !$width || !$height) {
             return '';
         }
 
         $absolutePath = null;
 
+        // 1. Извлечение физического пути к файлу
         if (is_object($image) && method_exists($image, 'getLocalPath')) {
             $absolutePath = $image->getLocalPath();
         } elseif (is_string($image)) {
-            $absolutePath = base_path(ltrim($image, '/'));
+            $cleanPath = ltrim($image, '/');
+            if (str_starts_with($cleanPath, 'storage/app/media/')) {
+                $absolutePath = base_path($cleanPath);
+            } else {
+                $absolutePath = storage_path('app/media/' . $cleanPath);
+            }
+
+            if (!File::exists($absolutePath) && File::exists($image)) {
+                $absolutePath = $image;
+            }
         }
 
         if (!$absolutePath || !File::exists($absolutePath)) {
             return '';
         }
 
-        // Уникальный хэш для кэша обрезанных картинок
+        $extension = strtolower($extension);
+        if (!in_array($extension, ['webp', 'avif', 'jpg', 'jpeg', 'png'])) {
+            $extension = 'webp';
+        }
+
+        // 2. Проверка кэша
         $hash = md5($absolutePath . $width . $height . $position . $quality . $extension);
         $cacheDir = storage_path('app/smart_crops');
         $cacheFileName = $hash . '.' . $extension;
         $cacheFilePath = $cacheDir . '/' . $cacheFileName;
         $publicUrl = url('storage/app/smart_crops/' . $cacheFileName);
 
-        // Если файл уже есть в кэше — отдаем сразу
         if (File::exists($cacheFilePath)) {
             return $publicUrl;
         }
 
         if (!File::isDirectory($cacheDir)) {
-            File::makeDirectory($cacheDir, 0777, true, true);
+            File::makeDirectory($cacheDir, 0775, true, true);
         }
 
-        // Получаем размеры исходника
-        list($origWidth, $origHeight, $imageType) = getimagesize($absolutePath);
-        
-        if (!$origWidth || !$origHeight) {
+        // 3. Маппинг позиций кропа для нативного Resizer
+        $offsetMap = [
+            'top-bg'          => [0, 'top'],
+            'bottom-bg'       => [0, 'bottom'],
+            'left-bg'         => ['left', 0],
+            'right-bg'        => ['right', 0],
+            'top-left-bg'     => ['left', 'top'],
+            'top-right-bg'    => ['right', 'top'],
+            'bottom-left-bg'  => ['left', 'bottom'],
+            'bottom-right-bg' => ['right', 'bottom'],
+            'center-bg'       => [0, 0],
+        ];
+
+        $offset = $offsetMap[$position] ?? [0, 0];
+
+        try {
+            // Если запрошен настоящий AVIF и сервер его поддерживает
+            if ($extension === 'avif' && function_exists('imageavif')) {
+                $this->renderAvifNative($absolutePath, $cacheFilePath, (int)$width, (int)$height, $offset, (int)$quality);
+            } else {
+                // Во всех остальных случаях используем нативный Resizer October CMS
+                Resizer::open($absolutePath)
+                    ->resize((int)$width, (int)$height, [
+                        'mode'    => 'crop',
+                        'offset'  => $offset,
+                        'quality' => (int)$quality
+                    ])
+                    ->save($cacheFilePath);
+            }
+
+            return $publicUrl;
+        } catch (\Throwable $e) {
+            Log::error('[SmartResizer] Error resizing image ' . $absolutePath . ': ' . $e->getMessage());
             return '';
         }
+    }
 
-        // Создаем ресурс картинки
-        switch ($imageType) {
-            case IMAGETYPE_JPEG: $sourceImage = imagecreatefromjpeg($absolutePath); break;
-            case IMAGETYPE_PNG:  $sourceImage = imagecreatefrompng($absolutePath); break;
-            case IMAGETYPE_WEBP: $sourceImage = imagecreatefromwebp($absolutePath); break;
-            default: return '';
+    /**
+     * Прямая генерация валидного AVIF через GD с поддержкой EXIF
+     */
+    protected function renderAvifNative(string $srcPath, string $destPath, int $width, int $height, array $offset, int $quality): void
+    {
+        list($origW, $origH, $type) = getimagesize($srcPath);
+        
+        $src = match ($type) {
+            IMAGETYPE_JPEG => imagecreatefromjpeg($srcPath),
+            IMAGETYPE_PNG  => imagecreatefrompng($srcPath),
+            IMAGETYPE_WEBP => imagecreatefromwebp($srcPath),
+            default        => null,
+        };
+
+        if (!$src) {
+            throw new \RuntimeException('Unsupported image format for AVIF generation');
         }
 
-        // Расчет пропорций для точного кропа без искажений
+        // Автоповорот по EXIF для JPEG
+        if ($type === IMAGETYPE_JPEG && function_exists('exif_read_data')) {
+            $exif = @exif_read_data($srcPath);
+            if (!empty($exif['Orientation'])) {
+                $src = match ($exif['Orientation']) {
+                    3 => imagerotate($src, 180, 0),
+                    6 => imagerotate($src, -90, 0),
+                    8 => imagerotate($src, 90, 0),
+                    default => $src,
+                };
+                $origW = imagesx($src);
+                $origH = imagesy($src);
+            }
+        }
+
         $targetRatio = $width / $height;
-        $origRatio = $origWidth / $origHeight;
+        $origRatio = $origW / $origH;
 
         if ($origRatio > $targetRatio) {
-            $cropHeight = $origHeight;
-            $cropWidth = $origHeight * $targetRatio;
+            $cropH = $origH;
+            $cropW = (int)round($origH * $targetRatio);
         } else {
-            $cropWidth = $origWidth;
-            $cropHeight = $origWidth / $targetRatio;
+            $cropW = $origW;
+            $cropH = (int)round($origW / $targetRatio);
         }
 
-        $srcX = 0;
-        $srcY = 0;
+        $srcX = match ($offset[0]) {
+            'left'  => 0,
+            'right' => $origW - $cropW,
+            default => (int)round(($origW - $cropW) / 2),
+        };
 
-        // Позиционирование по вертикали (top, bottom, center)
-        if (strpos($position, 'top') !== false) {
-            $srcY = 0;
-        } elseif (strpos($position, 'bottom') !== false) {
-            $srcY = $origHeight - $cropHeight;
-        } else {
-            $srcY = ($origHeight - $cropHeight) / 2;
-        }
+        $srcY = match ($offset[1]) {
+            'top'    => 0,
+            'bottom' => $origH - $cropH,
+            default  => (int)round(($origH - $cropH) / 2),
+        };
 
-        // Позиционирование по горизонтали (left, right, center)
-        if (strpos($position, 'left') !== false) {
-            $srcX = 0;
-        } elseif (strpos($position, 'right') !== false) {
-            $srcX = $origWidth - $cropWidth;
-        } else {
-            $srcX = ($origWidth - $cropWidth) / 2;
-        }
+        $dst = imagecreatetruecolor($width, $height);
+        imagealphablending($dst, false);
+        imagesavealpha($dst, true);
 
-        // Создаем холст под нужный размер (например, мобильные 450x400)
-        $virtualImage = imagecreatetruecolor($width, $height);
+        imagecopyresampled($dst, $src, 0, 0, $srcX, $srcY, $width, $height, $cropW, $cropH);
+        
+        imageavif($dst, $destPath, $quality);
 
-        imagealphablending($virtualImage, false);
-        imagesavealpha($virtualImage, true);
-
-        imagecopyresampled(
-            $virtualImage, $sourceImage,
-            0, 0, $srcX, $srcY,
-            $width, $height, $cropWidth, $cropHeight
-        );
-
-        // Сохраняем вwebp или avif/jpeg
-        if ($extension === 'avif' || $extension === 'webp') {
-            imagewebp($virtualImage, $cacheFilePath, $quality);
-        } else {
-            imagejpeg($virtualImage, $cacheFilePath, $quality);
-        }
-
-        imagedestroy($virtualImage);
-        imagedestroy($sourceImage);
-
-        return $publicUrl;
+        imagedestroy($dst);
+        imagedestroy($src);
     }
 }
