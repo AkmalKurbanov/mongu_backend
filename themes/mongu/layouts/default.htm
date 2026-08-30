@@ -41,10 +41,13 @@ handle = "Reviews"
     {% endif %}
     {# Критические стили #}
 
+    {% if globalSettings.analytics_code %}
+      {{ globalSettings.analytics_code | raw }}
+    {% endif %}
+    
   </head>
   <body>
     
-    {% partial 'blocks/whatsapp-btn.htm' %}
     {% partial 'blocks/scroll-top-btn.htm' %}
     
     {% partial 'site/header' headerType=this.page.headerType %}

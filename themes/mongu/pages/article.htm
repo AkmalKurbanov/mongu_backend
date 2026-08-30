@@ -1,4 +1,3 @@
-##
 url = "/article/:slug"
 layout = "default"
 title = "Article"
@@ -10,7 +9,6 @@ handle = "Guide"
 ==
 <?php
 function onStart() {
-    
     $record = \Tailor\Models\EntryRecord::inSection('guide')
         ->where('slug', $this->param('slug'))
         ->first();
@@ -21,7 +19,6 @@ function onStart() {
 
     $this['record'] = $record;
 
-    // Убрали обращение к старому полю description, чтобы не ломать PHP[cite: 10]
     $this->page['meta_title'] = $record->meta_title ?: $record->title . ' | Mongu';
     $this->page['meta_description'] = $record->meta_description ?: '';
 
@@ -53,120 +50,195 @@ function onStart() {
     </nav>
   </div>
 
-  <article class="article section-padding-bottom">
+  <article class="article">
     <div class="container">
-      <header class="article__header">
-        <h1 class="article__title">{{ record.title }}</h1>
-      </header>
+      <div class="title-wrap">
+        <h1 class="title">{{ record.title }}</h1>
+      </div>
+    </div>
 
-      {% set heroImg = record.hero.first() %}
-      {% if heroImg %}
-        <figure class="article__hero">
-          <picture>
-            <source type="image/avif" media="(min-width: 1024px)" 
-                    srcset="{{ heroImg | smart_crop(1168, 584, record.hero_position | default('center-bg'), 75, 'avif') }} 1168w, 
-                            {{ heroImg | smart_crop(2336, 1168, record.hero_position | default('center-bg'), 50, 'avif') }} 2336w" sizes="1168px" />
-            <source type="image/webp" media="(min-width: 1024px)" 
-                    srcset="{{ heroImg | smart_crop(1168, 584, record.hero_position | default('center-bg'), 75, 'webp') }} 1168w, 
-                            {{ heroImg | smart_crop(2336, 1168, record.hero_position | default('center-bg'), 50, 'webp') }} 2336w" sizes="1168px" />
+    <section class="section-padding-bottom">
+      <div class="container">
+        
+        {# === 1. ГЛАВНЫЙ БАННЕР СТАТЬИ (HERO) === #}
+        {# Ширина 100% (до 1168px), высота строго 350px #}
+        {% set heroImg = record.hero.first() %}
+        {% if heroImg %}
+          {% set pos = record.hero_position | default('center-bg') %}
+          {% set caption = record.hero_caption | default(record.title) | striptags %}
+          <figure class="article__img-full">
+            <picture>
+              <source
+                type="image/avif"
+                sizes="(min-width: 1440px) 1168px, (min-width: 1024px) 1024px, (min-width: 768px) 768px, 100vw"
+                srcset="
+                  {{ heroImg | smart_crop(720, 350, pos, 75, 'avif') }} 720w,
+                  {{ heroImg | smart_crop(768, 350, pos, 75, 'avif') }} 768w,
+                  {{ heroImg | smart_crop(1024, 350, pos, 75, 'avif') }} 1024w,
+                  {{ heroImg | smart_crop(1168, 350, pos, 75, 'avif') }} 1168w,
+                  {{ heroImg | smart_crop(1440, 700, pos, 75, 'avif') }} 1440w,
+                  {{ heroImg | smart_crop(1536, 700, pos, 75, 'avif') }} 1536w,
+                  {{ heroImg | smart_crop(2048, 700, pos, 75, 'avif') }} 2048w,
+                  {{ heroImg | smart_crop(2336, 700, pos, 75, 'avif') }} 2336w
+                " />
+              <source
+                type="image/webp"
+                sizes="(min-width: 1440px) 1168px, (min-width: 1024px) 1024px, (min-width: 768px) 768px, 100vw"
+                srcset="
+                  {{ heroImg | smart_crop(720, 350, pos, 75, 'webp') }} 720w,
+                  {{ heroImg | smart_crop(768, 350, pos, 75, 'webp') }} 768w,
+                  {{ heroImg | smart_crop(1024, 350, pos, 75, 'webp') }} 1024w,
+                  {{ heroImg | smart_crop(1168, 350, pos, 75, 'webp') }} 1168w,
+                  {{ heroImg | smart_crop(1440, 700, pos, 75, 'webp') }} 1440w,
+                  {{ heroImg | smart_crop(1536, 700, pos, 75, 'webp') }} 1536w,
+                  {{ heroImg | smart_crop(2048, 700, pos, 75, 'webp') }} 2048w,
+                  {{ heroImg | smart_crop(2336, 700, pos, 75, 'webp') }} 2336w
+                " />
+              <img
+                src="{{ heroImg | smart_crop(1168, 350, pos, 75, 'jpg') }}"
+                alt="{{ caption }}"
+                width="1168"
+                height="350"
+                fetchpriority="high"
+                loading="eager"
+                decoding="async" />
+            </picture>
+            {% if record.hero_caption %}
+              <figcaption class="article__img-caption">{{ record.hero_caption }}</figcaption>
+            {% endif %}
+          </figure>
+        {% endif %}
 
-            <source type="image/avif" 
-                    srcset="{{ heroImg | smart_crop(768, 400, record.hero_position | default('center-bg'), 75, 'avif') }} 768w, 
-                            {{ heroImg | smart_crop(1536, 800, record.hero_position | default('center-bg'), 50, 'avif') }} 1536w" sizes="100vw" />
-            <source type="image/webp" 
-                    srcset="{{ heroImg | smart_crop(768, 400, record.hero_position | default('center-bg'), 75, 'webp') }} 768w, 
-                            {{ heroImg | smart_crop(1536, 800, record.hero_position | default('center-bg'), 50, 'webp') }} 1536w" sizes="100vw" />
+        {# Счетчик для реверса карточек #}
+        {% set cardIndex = 0 %}
 
-            <img 
-              src="{{ heroImg | smart_crop(1168, 584, record.hero_position | default('center-bg'), 75, 'webp') }}" 
-              alt="{{ record.hero_caption | default(record.title) }}" 
-              class="article__hero-img" 
-              width="1168"
-              height="584"
-              loading="eager" 
-              decoding="async"
-            >
-          </picture>
-          {% if record.hero_caption %}
-            <figcaption class="article__hero-caption">{{ record.hero_caption }}</figcaption>
-          {% endif %}
-        </figure>
-      {% endif %}
-
-      <div class="article__body">
+        {# === 2. ДИНАМИЧЕСКИЙ КОНТЕНТ === #}
         {% for block in record.content_blocks %}
           
-          {# 1. Текстовый блок #}
+          {# -- ТЕКСТ -- #}
           {% if block.content_group == 'text_block' %}
             <div class="article__text-content">
               {{ block.text | raw }}
             </div>
           
-          {# 2. Широкое фото (Full-width) с адаптивным srcset #}
+          {# -- ШИРОКОЕ ФОТО -- #}
+          {# Ширина 100% (до 1168px), высота строго 350px #}
           {% elseif block.content_group == 'image_wide' %}
             {% set img = block.image.first() %}
             {% if img %}
-              <figure class="article-media-wide">
-                <div class="article-media-wide__wrapper">
-                  <picture>
-                    {# Пример генерации ресайзов через встроенный фильтр resize (ширина 800px для мобилок, 1450px для десктопа) #}
-                    <source 
-                      media="(max-width: 768px)" 
-                      srcset="{{ img.path | resize(800, null, { mode: 'auto', quality: 85 }) }}" 
-                    />
-                    <img 
-                      src="{{ img.path }}" 
-                      srcset="{{ img.path | resize(800, null, { mode: 'auto', quality: 85 }) }} 800w, 
-                              {{ img.path }} 1450w"
-                      sizes="100vw"
-                      alt="{{ block.caption | default('Иллюстрация к статье') }}" 
-                      class="article-media-wide__img" 
-                      width="1450"
-                      height="800"
-                      loading="lazy" 
-                      decoding="async"
-                    />
-                  </picture>
-                </div>
+              {% set pos = block.image_position | default('center-bg') %}
+              {% set caption = block.caption | default(record.title) | striptags %}
+              <figure class="article__img-full">
+                <picture>
+                  <source
+                    type="image/avif"
+                    sizes="(min-width: 1440px) 1168px, (min-width: 1024px) 1024px, (min-width: 768px) 768px, 100vw"
+                    srcset="
+                      {{ img | smart_crop(720, 350, pos, 75, 'avif') }} 720w,
+                      {{ img | smart_crop(768, 350, pos, 75, 'avif') }} 768w,
+                      {{ img | smart_crop(1024, 350, pos, 75, 'avif') }} 1024w,
+                      {{ img | smart_crop(1168, 350, pos, 75, 'avif') }} 1168w,
+                      {{ img | smart_crop(1440, 700, pos, 75, 'avif') }} 1440w,
+                      {{ img | smart_crop(1536, 700, pos, 75, 'avif') }} 1536w,
+                      {{ img | smart_crop(2048, 700, pos, 75, 'avif') }} 2048w,
+                      {{ img | smart_crop(2336, 700, pos, 75, 'avif') }} 2336w
+                    " />
+                  <source
+                    type="image/webp"
+                    sizes="(min-width: 1440px) 1168px, (min-width: 1024px) 1024px, (min-width: 768px) 768px, 100vw"
+                    srcset="
+                      {{ img | smart_crop(720, 350, pos, 75, 'webp') }} 720w,
+                      {{ img | smart_crop(768, 350, pos, 75, 'webp') }} 768w,
+                      {{ img | smart_crop(1024, 350, pos, 75, 'webp') }} 1024w,
+                      {{ img | smart_crop(1168, 350, pos, 75, 'webp') }} 1168w,
+                      {{ img | smart_crop(1440, 700, pos, 75, 'webp') }} 1440w,
+                      {{ img | smart_crop(1536, 700, pos, 75, 'webp') }} 1536w,
+                      {{ img | smart_crop(2048, 700, pos, 75, 'webp') }} 2048w,
+                      {{ img | smart_crop(2336, 700, pos, 75, 'webp') }} 2336w
+                    " />
+                  <img
+                    src="{{ img | smart_crop(1168, 350, pos, 75, 'jpg') }}"
+                    alt="{{ caption }}"
+                    width="1168"
+                    height="350"
+                    loading="lazy"
+                    decoding="async" />
+                </picture>
                 {% if block.caption %}
-                  <figcaption class="article-media-wide__caption">{{ block.caption }}</figcaption>
+                  <figcaption class="article__img-caption">{{ block.caption }}</figcaption>
                 {% endif %}
               </figure>
             {% endif %}
 
-          {# 3. Карточка (Фото + Текст) с srcset #}
+          {# -- КАРТОЧКА -- #}
+          {# Размеры строго по брейкпоинтам с сохранением 16:9 #}
           {% elseif block.content_group == 'media_card' %}
-            <div class="article-card-media">
+            {% set cardIndex = cardIndex + 1 %}
+            {% set isReverse = cardIndex % 2 == 0 %}
+            
+            <div class="article__card {{ isReverse ? 'article__card_reverce' : '' }}">
               {% set img = block.image.first() %}
               {% if img %}
-                <div class="article-card-media__visual">
-                  <img 
-                    src="{{ img.path }}" 
-                    srcset="{{ img.path | resize(450, null, { mode: 'auto', quality: 85 }) }} 450w, 
-                            {{ img.path | resize(800, null, { mode: 'auto', quality: 85 }) }} 800w"
-                    sizes="(max-width: 600px) 100vw, 400px"
-                    alt="{{ block.title | default('Изображение') }}" 
-                    class="article-card-media__img" 
-                    width="600"
-                    height="400"
-                    loading="lazy" 
-                    decoding="async"
-                  />
+                {% set pos = block.image_position | default('center-bg') %}
+                {% set caption = block.caption | default(block.title | default(record.title)) | striptags %}
+                <div class="article__card-img article__card-col">
+                  <figure>
+                    <picture>
+                      <source
+                        type="image/avif"
+                        sizes="(min-width: 1440px) 574px, (min-width: 1024px) 434px, (min-width: 768px) 688px, 720px"
+                        srcset="
+                          {{ img | smart_crop(434, 244, pos, 75, 'avif') }} 434w,
+                          {{ img | smart_crop(574, 323, pos, 75, 'avif') }} 574w,
+                          {{ img | smart_crop(688, 387, pos, 75, 'avif') }} 688w,
+                          {{ img | smart_crop(720, 405, pos, 75, 'avif') }} 720w,
+                          {{ img | smart_crop(868, 488, pos, 75, 'avif') }} 868w,
+                          {{ img | smart_crop(1148, 646, pos, 75, 'avif') }} 1148w,
+                          {{ img | smart_crop(1376, 774, pos, 75, 'avif') }} 1376w,
+                          {{ img | smart_crop(1440, 810, pos, 75, 'avif') }} 1440w
+                        " />
+                      <source
+                        type="image/webp"
+                        sizes="(min-width: 1440px) 574px, (min-width: 1024px) 434px, (min-width: 768px) 688px, 720px"
+                        srcset="
+                          {{ img | smart_crop(434, 244, pos, 75, 'webp') }} 434w,
+                          {{ img | smart_crop(574, 323, pos, 75, 'webp') }} 574w,
+                          {{ img | smart_crop(688, 387, pos, 75, 'webp') }} 688w,
+                          {{ img | smart_crop(720, 405, pos, 75, 'webp') }} 720w,
+                          {{ img | smart_crop(868, 488, pos, 75, 'webp') }} 868w,
+                          {{ img | smart_crop(1148, 646, pos, 75, 'webp') }} 1148w,
+                          {{ img | smart_crop(1376, 774, pos, 75, 'webp') }} 1376w,
+                          {{ img | smart_crop(1440, 810, pos, 75, 'webp') }} 1440w
+                        " />
+                      <img
+                        src="{{ img | smart_crop(574, 323, pos, 75, 'jpg') }}"
+                        alt="{{ caption }}"
+                        width="574"
+                        height="323"
+                        loading="lazy"
+                        decoding="async" />
+                    </picture>
+                    {% if block.caption %}
+                      <figcaption class="article__img-caption">{{ block.caption }}</figcaption>
+                    {% endif %}
+                  </figure>
                 </div>
               {% endif %}
-              <div class="article-card-media__body">
+              
+              <div class="article__card-text article__card-col">
                 {% if block.title %}
-                  <h3 class="article-card-media__title">{{ block.title }}</h3>
+                  <h2>{{ block.title }}</h2>
                 {% endif %}
                 {% if block.text %}
-                  <p class="article-card-media__text">{{ block.text | nl2br }}</p>
+                  {{ block.text | raw }}
                 {% endif %}
               </div>
             </div>
           {% endif %}
 
         {% endfor %}
+
       </div>
-    </div>
+    </section>
   </article>
 </main>

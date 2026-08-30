@@ -9,7 +9,6 @@ primaryNavigation:
     icon: icon-map
     order: 26
 
-
 fields:
     preview:
         label: Превью карточки
@@ -26,7 +25,7 @@ fields:
         default: center-bg
         span: right
         tab: Тизер карточка
-        
+
         options:
             center-bg: По центру (Центр)
             top-bg: Верх по центру
@@ -44,7 +43,7 @@ fields:
         type: text
         span: right
         tab: Тизер карточка
-    
+
     hero:
         label: Баннер статьи
         type: fileupload
@@ -105,9 +104,29 @@ fields:
                         label: Изображение
                         type: fileupload
                         mode: image
+                        span: left
+
+                    image_position:
+                        label: Позиция кадрирования превью
+                        type: dropdown
+                        default: center-bg
+                        span: right
+
+                        options:
+                            center-bg: По центру (Центр)
+                            top-bg: Верх по центру
+                            bottom-bg: Низ по центру
+                            left-bg: Лево по центру
+                            right-bg: Право по центру
+                            top-left-bg: Верхний левый угол
+                            top-right-bg: Правый верхний угол
+                            bottom-left-bg: Нижний левый угол
+                            bottom-right-bg: Правый нижний угол
+
                     caption:
                         label: Подпись под фото (SEO)
                         type: text
+                        span: right
 
             # 3. Карточка (Фото + Текст)
             media_card:
@@ -119,12 +138,40 @@ fields:
                         label: Изображение
                         type: fileupload
                         mode: image
+                        span: left
+
+                    image_position:
+                        label: Позиция кадрирования превью
+                        type: dropdown
+                        default: center-bg
+                        span: right
+
+                        options:
+                            center-bg: По центру (Центр)
+                            top-bg: Верх по центру
+                            bottom-bg: Низ по центру
+                            left-bg: Лево по центру
+                            right-bg: Право по центру
+                            top-left-bg: Верхний левый угол
+                            top-right-bg: Правый верхний угол
+                            bottom-left-bg: Нижний левый угол
+                            bottom-right-bg: Правый нижний угол
+
+                    caption:
+                        label: Подпись под фото (SEO)
+                        type: text
+                        span: right
+                    
                     title:
                         label: Заголовок
                         type: text
+                        span: left
+                    
                     text:
                         label: Текст описания
-                        type: textarea
+                        type: richeditor
+                        span: right
+                        size: small
 
     # --- SEO ---
     meta_title:

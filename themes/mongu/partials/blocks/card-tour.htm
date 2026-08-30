@@ -69,7 +69,9 @@
   </div>
 
   <div class="card__body">
-    <h3 class="card__title">{{ tour.title }}</h3>
+    <h3 class="card__title">
+    {{ tour.title | length > 76 ? tour.title | slice(0, 76) ~ '...' : tour.title }}
+    </h3>
 
     <p class="card__desc">
       {% set desc = (tour.description ?: tour.short_desc) | replace({'</p>': ' ', '<br>': ' ', '<br/>': ' ', '<br />': ' '}) | striptags | trim %}

@@ -67,3 +67,8 @@ fields:
         size: small
         span: full
         tab: Интеграции
+    hotel_price:
+        label: Цена за ночь с человека
+        type: text
+        span: full
+        tab: Отель
