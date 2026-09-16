@@ -85,8 +85,10 @@ handle = "Reviews"
     
     {% set finalHeroAlt = record.hero_caption ?: record.preview_caption ?: this.page.dynamicHeroAlt ?: rawCaption ?: finalHeroTitle %}
     {% if this.page.id == 'index' %}
-        {% partial 'blocks/hero-index' %}
-    {% elseif this.page.id == 'tour' or this.page.id == 'article' %}
+        {% partial 'blocks/hero-index' heroFolder='index' %}
+    {% elseif this.page.id == 'lodge-stub' %}
+        {% partial 'blocks/hero-index' heroFolder='lodge-stub' %}
+    {% elseif this.page.id == 'tour' or this.page.id == 'article' or this.page.id == 'lodge-stub' %}
         
     {% else %}
         {% partial 'blocks/hero-inside'  

@@ -78,69 +78,71 @@ page_js = "core.js"
                     <span class="content-card__stats-label">Rooms from</span>
                     <span class="content-card__stats-val">$50</span>
                   </div>
-                  <a href="/hotel.html" class="btn btn_bordered content-card__btn">Explore hotel</a>
+                  <a href="{{'hotel'| page}}" class="btn btn_bordered content-card__btn">Explore hotel</a>
                 </div>
               </div>
             </article>
 
             
-            <article class="content-card">
-              <div class="content-card__visual">
-                <picture>
-                  <source
-                    type="image/avif"
-                    sizes="(min-width: 1024px) 50vw, 100vw"
-                    srcset="/assets/images/lodge/promo-highlight-600.avif 600w, /assets/images/lodge/promo-highlight-1200.avif 1200w" />
-                  <source
-                    type="image/webp"
-                    sizes="(min-width: 1024px) 50vw, 100vw"
-                    srcset="/assets/images/lodge/promo-highlight-600.webp 600w, /assets/images/lodge/promo-highlight-1200.webp 1200w" />
-                  <img
-                    src="/assets/images/lodge/promo-highlight-600.jpg"
-                    alt="Sokmo Lodge in the mountains"
-                    width="600"
-                    height="400"
-                    loading="lazy"
-                    decoding="async" />
-                </picture>
-                <div class="content-card__badge content-card__badge_dark">
-                  <svg class="icon"><use href="{{'assets/sprites/icons.svg#tent'|theme}}"></use></svg> Alpine Zone
-                </div>
-              </div>
-
-              <div class="content-card__content">
-                <div class="content-card__header">
-                  <h3 class="content-card__title">Sokmo Lodge</h3>
-                  <p class="content-card__desc">
-                    Eco-luxury amidst alpine splendor. Located high in the mountains, this exclusive lodge offers
-                    premium comfort in the wild, perfect for acclimatization or a secluded retreat.
-                  </p>
-                </div>
-
-                <ul class="content-card__list">
-                  <li>
-                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#mountains'|theme}}"></use></svg> Panoramic Views
-                  </li>
-                  <li>
-                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#breakfast'|theme}}"></use></svg> Full Board Meals
-                  </li>
-                  <li>
-                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#tent'|theme}}"></use></svg> Glamping Tents
-                  </li>
-                  <li>
-                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#guide'|theme}}"></use></svg> Hiking Trails
-                  </li>
-                </ul>
-
-                <div class="content-card__footer">
-                  <div class="content-card__stats">
-                    <span class="content-card__stats-label">Stay from</span>
-                    <span class="content-card__stats-val">$180</span>
+            {#
+              <article class="content-card">
+                <div class="content-card__visual">
+                  <picture>
+                    <source
+                      type="image/avif"
+                      sizes="(min-width: 1024px) 50vw, 100vw"
+                      srcset="/assets/images/lodge/promo-highlight-600.avif 600w, /assets/images/lodge/promo-highlight-1200.avif 1200w" />
+                    <source
+                      type="image/webp"
+                      sizes="(min-width: 1024px) 50vw, 100vw"
+                      srcset="/assets/images/lodge/promo-highlight-600.webp 600w, /assets/images/lodge/promo-highlight-1200.webp 1200w" />
+                    <img
+                      src="/assets/images/lodge/promo-highlight-600.jpg"
+                      alt="Sokmo Lodge in the mountains"
+                      width="600"
+                      height="400"
+                      loading="lazy"
+                      decoding="async" />
+                  </picture>
+                  <div class="content-card__badge content-card__badge_dark">
+                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#tent'|theme}}"></use></svg> Alpine Zone
                   </div>
-                  <a href="/hotel.html" class="btn btn_bordered content-card__btn">Explore Lodge</a>
                 </div>
-              </div>
-            </article>
+
+                <div class="content-card__content">
+                  <div class="content-card__header">
+                    <h3 class="content-card__title">Sokmo Lodge</h3>
+                    <p class="content-card__desc">
+                      Eco-luxury amidst alpine splendor. Located high in the mountains, this exclusive lodge offers
+                      premium comfort in the wild, perfect for acclimatization or a secluded retreat.
+                    </p>
+                  </div>
+
+                  <ul class="content-card__list">
+                    <li>
+                      <svg class="icon"><use href="{{'assets/sprites/icons.svg#mountains'|theme}}"></use></svg> Panoramic Views
+                    </li>
+                    <li>
+                      <svg class="icon"><use href="{{'assets/sprites/icons.svg#breakfast'|theme}}"></use></svg> Full Board Meals
+                    </li>
+                    <li>
+                      <svg class="icon"><use href="{{'assets/sprites/icons.svg#tent'|theme}}"></use></svg> Glamping Tents
+                    </li>
+                    <li>
+                      <svg class="icon"><use href="{{'assets/sprites/icons.svg#guide'|theme}}"></use></svg> Hiking Trails
+                    </li>
+                  </ul>
+
+                  <div class="content-card__footer">
+                    <div class="content-card__stats">
+                      <span class="content-card__stats-label">Stay from</span>
+                      <span class="content-card__stats-val">$180</span>
+                    </div>
+                    <a href="/hotel.html" class="btn btn_bordered content-card__btn">Explore Lodge</a>
+                  </div>
+                </div>
+              </article>
+            #}
           </div>
         </div>
       </section>

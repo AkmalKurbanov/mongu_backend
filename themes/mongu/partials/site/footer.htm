@@ -125,15 +125,15 @@
 
                 <nav aria-label="Основная навигация">
                     <ul>
-                        <li><a href="/categories.html">Tours</a></li>
-                        <li><a href="#">Private tours</a></li>
-                        <li><a href="/lodge.html">Sokmo lodge</a></li>
-                        <li><a href="/destination.html">Destination</a></li>
-                        <li><a href="/about.html">About us</a></li>
+                        <li><a href="{{'categories' | page }}">Tours</a></li>
+                        <li><a href="{{ 'category' | page({ slug: 'private-tours' }) }}">Private tours</a></li>
+                        <li><a href="{{'lodge-stub' | page }}">Sokmo lodge</a></li>
+                        <li><a href="{{'destinations'| page}}">Destination</a></li>
+                        <li><a href="{{'about'| page }}">About us</a></li>
                         <li>
-                            <a href="{{'travel-guide'|page}}">Travel guide</a>
+                            <a href="{{'guide'|page}}">Travel guide</a>
                         </li>
-                        <li><a href="/contacts.html">Contacts</a></li>
+                        <li><a href="{{'contacts'| page}}">Contacts</a></li>
                     </ul>
                 </nav>
 

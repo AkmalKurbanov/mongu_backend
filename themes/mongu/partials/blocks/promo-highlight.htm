@@ -24,7 +24,7 @@
   
   <div class="promo-highlight__desc">
     <div>
-      <h2 class="title title_light">{{ title | default('') }}</h2>
+      <h2 class="title title_light">{{ title | default('') | raw }}</h2>
       
       {% if text %}
         <p>{{ text | raw }}</p>
