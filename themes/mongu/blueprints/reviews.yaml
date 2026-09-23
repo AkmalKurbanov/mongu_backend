@@ -1,4 +1,4 @@
-uuid: 7ef48464-88f7-49b4-8289-60cb6f53ca97
+uuid: 696e77d9-0102-4169-ab40-5f42a1a765d0
 handle: Reviews
 type: entry
 name: Отзывы
@@ -46,8 +46,6 @@ fields:
         label: Аватар автора
         type: fileupload
         mode: image
-        imageWidth: 200
-        imageHeight: 200
         span: left
         tab: Основное
 

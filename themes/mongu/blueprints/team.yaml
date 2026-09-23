@@ -1,0 +1,72 @@
+uuid: 7ef48464-88f7-49b4-8289-60cb6f53ca97
+handle: Team
+type: entry
+name: Команда
+drafts: false
+
+primaryNavigation:
+    label: Команда
+    icon: icon-users
+    order: 30
+
+fields:
+    is_active:
+        label: Активный
+        type: switch
+        default: true
+        span: left
+
+    photo:
+        label: Фото
+        type: fileupload
+        mode: image
+        imageWidth: 200
+        imageHeight: 200
+        span: left
+
+    photo_position:
+        label: Позиция кадрирования фото
+        type: dropdown
+        default: center-bg
+        span: right
+        options: &bg_positions
+            center-bg: По центру (Центр)
+            top-bg: Верх по центру
+            bottom-bg: Низ по центру
+            left-bg: Лево по центру
+            right-bg: Право по центру
+            top-left-bg: Верхний левый угол
+            top-right-bg: Правый верхний угол
+            bottom-left-bg: Нижний левый угол
+            bottom-right-bg: Правый нижний угол
+
+    photo_seo:
+        label: Описание картинки
+        type: text
+        span: right
+
+    name:
+        label: Имя
+        type: text
+        span: left
+
+    position:
+        label: Позиция / Должность
+        type: text
+        span: right
+
+    description:
+        label: Описание
+        type: textarea
+        size: small 
+        span: full
+
+    facebook:
+        label: Facebook
+        type: text
+        span: left
+
+    instagram:
+        label: Instagram
+        type: text
+        span: right

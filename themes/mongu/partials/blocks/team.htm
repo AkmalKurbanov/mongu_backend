@@ -1,0 +1,149 @@
+[collection team]
+handle = "Team"
+==
+{% set records = team %}
+
+<section class="section-padding">
+        <div class="container">
+          <div class="title-wrap">
+            <h2 class="title title_centered">Meet our team</h2>
+          </div>
+   
+
+          <div class="card-slider card-slider_per-3 slider js-slider">
+            <div class="card-slider__viewport js-slider-viewport">
+
+            {% for record in records %}
+              {% if record.is_active %}
+
+                <article class="card card_centered js-slide" data-index="{{ loop.index0 }}">
+                  <div class="card__head">
+                    <div class="card__img card__img_aspect-4-3">
+
+                   {% if record.photo %}
+                      
+                      {% for img in record.photo %}
+                        {% set pos = record.photo_position | default('center-bg') %}
+
+                        <picture>
+                          <source
+                            type="image/avif"
+                            sizes="(min-width: 1440px) 376px, (min-width: 1024px) 283px, (min-width: 768px) 334px, 720px"
+                            srcset="
+                              {{ img | smart_crop(283, 212, pos, 75, 'avif') }} 283w,
+                              {{ img | smart_crop(334, 251, pos, 75, 'avif') }} 334w,
+                              {{ img | smart_crop(376, 282, pos, 75, 'avif') }} 376w,
+                              {{ img | smart_crop(566, 425, pos, 75, 'avif') }} 566w,
+                              {{ img | smart_crop(668, 501, pos, 75, 'avif') }} 668w,
+                              {{ img | smart_crop(720, 540, pos, 75, 'avif') }} 720w,
+                              {{ img | smart_crop(752, 564, pos, 75, 'avif') }} 752w,
+                              {{ img | smart_crop(1440, 1080, pos, 75, 'avif') }} 1440w
+                            " />
+                          <source
+                            type="image/webp"
+                            sizes="(min-width: 1440px) 376px, (min-width: 1024px) 283px, (min-width: 768px) 334px, 720px"
+                            srcset="
+                              {{ img | smart_crop(283, 212, pos, 75, 'webp') }} 283w,
+                              {{ img | smart_crop(334, 251, pos, 75, 'webp') }} 334w,
+                              {{ img | smart_crop(376, 282, pos, 75, 'webp') }} 376w,
+                              {{ img | smart_crop(566, 425, pos, 75, 'webp') }} 566w,
+                              {{ img | smart_crop(668, 501, pos, 75, 'webp') }} 668w,
+                              {{ img | smart_crop(720, 540, pos, 75, 'webp') }} 720w,
+                              {{ img | smart_crop(752, 564, pos, 75, 'webp') }} 752w,
+                              {{ img | smart_crop(1440, 1080, pos, 75, 'webp') }} 1440w
+                            " />
+                          <img
+                            src="{{ img | smart_crop(720, 540, pos, 75, 'jpg') }}"
+                            alt="{{ record.photo_seo }}"
+                            width="720"
+                            height="540"
+                            loading="lazy"
+                            decoding="async" />
+                        </picture>
+                      {% endfor %}
+                    {% endif %}
+                      
+                      
+                    </div>
+                  </div>
+
+                  <div class="card__body">
+                    <div>
+                      <h3 class="card__title">{{record.name}}</h3>
+                      <span class="card__subtitle">{{record.position}}</span>
+                    </div>
+
+                    <p class="card__desc">
+                      {{record.description}}
+                    </p>
+
+                    <div class="social">
+                      <ul class="social__list">
+                        <li class="social__item">
+                          <a
+                            href="{{record.facebook}}"
+                            class="social__link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="social media facebok">
+                            <svg class="icon">
+                              <use href="{{'assets/sprites/icons.svg#facebook'|theme}}"></use>
+                            </svg>
+                          </a>
+                        </li>
+                        <li class="social__item">
+                          <a
+                            href="{{record.instagram}}"
+                            class="social__link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="social media instagram">
+                            <svg class="icon">
+                              <use href="{{'assets/sprites/icons.svg#instagram'|theme}}"></use>
+                            </svg>
+                          </a>
+                        </li>
+                        {#<li class="social__item">
+                          <a
+                            href="#"
+                            class="social__link"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="video-sharing platform youtube">
+                            <svg class="icon">
+                              <use href="{{'assets/sprites/icons.svg#youtube'|theme}}"></use>
+                            </svg>
+                          </a>
+                        </li>#}
+                      </ul>
+                    </div>
+                  </div>
+                  
+                </article>
+
+              {% endif %}
+            {% endfor %}
+                
+            
+            </div>
+            <div class="slider__nav">
+              <div class="slider__btn slider__btn_prev js-slider-prev" aria-label="Previous slide">
+                <svg class="icon">
+                  <use href="#angle"></use>
+                </svg>
+              </div>
+              <div class="slider__btn slider__btn_next js-slider-next" aria-label="Next slide">
+                <svg class="icon">
+                  <use href="#angle"></use>
+                </svg>
+              </div>
+            </div>
+            <div class="slider__pagination js-pagination">
+            
+              <div class="pagination-dot" data-index="0"></div>
+ 
+            </div>
+          </div>
+
+        </div>
+      </section>

@@ -125,114 +125,9 @@ page_js = "index.js"
       </section>
 
       
-      <section class="section-padding section-bg">
-        <div class="container">
-          <div class="title-wrap">
-            <h2 class="title title_centered">Meet our team</h2>
-          </div>
-
-          <div class="card-slider card-slider_per-3 slider js-slider">
-            <div class="card-slider__viewport js-slider-viewport">
-              <article class="card card_centered js-slide" data-index="0">
-                <div class="card__head">
-                  <div class="card__img card__img_aspect-4-3">
-                    <picture>
-                      <source
-                        type="image/avif"
-                        sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
-                        srcset="./images/team/team1-400.avif 400w, ./images/team/team1-600.avif 600w, ./images/team/team1-800.avif 800w, ./images/team/team1-1200.avif 1200w" />
-                      <source
-                        type="image/webp"
-                        sizes="(min-width: 1440px) 376px, (min-width: 1024px) 282px, (min-width: 768px) 334px, calc(100vw - 32px)"
-                        srcset="./images/team/team1-400.webp 400w, ./images/team/team1-600.webp 600w, ./images/team/team1-800.webp 800w, ./images/team/team1-1200.webp 1200w" />
-                      <img
-                        src="./images/team/team1-800.jpg"
-                        alt="Description"
-                        width="1920"
-                        height="1080"
-                        loading="lazy"
-                        decoding="async" />
-                    </picture>
-                  </div>
-                </div>
-
-                <div class="card__body">
-                  <div>
-                    <h3 class="card__title">John Doe</h3>
-                    <span class="card__subtitle">Experienced guide</span>
-                  </div>
-
-                  <p class="card__desc">
-                    A 7-day practical mountaineering course combining rock climbing, ice climbing, rope work and...
-                  </p>
-
-                  <div class="social">
-                    <ul class="social__list">
-                      <li class="social__item">
-                        <a
-                          href="#"
-                          class="social__link"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="social media facebok">
-                          <svg class="icon">
-                            <use href="{{'assets/sprites/icons.svg#facebook'|theme}}"></use>
-                          </svg>
-                        </a>
-                      </li>
-                      <li class="social__item">
-                        <a
-                          href="#"
-                          class="social__link"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="social media instagram">
-                          <svg class="icon">
-                            <use href="{{'assets/sprites/icons.svg#instagram'|theme}}"></use>
-                          </svg>
-                        </a>
-                      </li>
-                      <li class="social__item">
-                        <a
-                          href="#"
-                          class="social__link"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label="video-sharing platform youtube">
-                          <svg class="icon">
-                            <use href="{{'assets/sprites/icons.svg#youtube'|theme}}"></use>
-                          </svg>
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-                <a href="/tour.html" class="card__link" aria-label="tour name"></a>
-              </article>
-            </div>
-            <div class="slider__nav">
-              <div class="slider__btn slider__btn_prev js-slider-prev" aria-label="Previous slide">
-                <svg class="icon">
-                  <use href="#angle"></use>
-                </svg>
-              </div>
-              <div class="slider__btn slider__btn_next js-slider-next" aria-label="Next slide">
-                <svg class="icon">
-                  <use href="#angle"></use>
-                </svg>
-              </div>
-            </div>
-            <div class="slider__pagination js-pagination">
-            
-              <div class="pagination-dot" data-index="0"></div>
- 
-            </div>
-          </div>
-
-        </div>
-      </section>
-
       
+      {% partial 'blocks/team.htm' %}
+
       <section class="about-infra section-padding">
         <div class="container">
           <div class="about-infra__grid">
@@ -323,4 +218,5 @@ page_js = "index.js"
           </div>
         </div>
       </section>
+      
     </main>
