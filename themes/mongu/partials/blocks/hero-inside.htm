@@ -39,6 +39,8 @@
                          alt="{{ heroImageAlt | default(this.page.title) }}" 
                          class="hero__poster-img" 
                          fetchpriority="high" 
+                         decoding="async"
+                         width="450" height="950"
                          loading="eager" />
                 {% endif %}
             </picture>

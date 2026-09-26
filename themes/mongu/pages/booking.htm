@@ -9,7 +9,7 @@ url = "/booking"
         <div class="container">
           <nav aria-label="breadcrumbs">
             <ul class="breadcrumbs__list">
-              <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="/">Home</a></li>
+              <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'index' | page}}">Home</a></li>
               <li class="breadcrumbs__item" aria-current="page">Booking</li>
             </ul>
           </nav>
@@ -19,7 +19,7 @@ url = "/booking"
       <section class="section-padding-bottom">
         <div class="container">
           <div class="title-wrap">
-            <h1 class="title">Create your journey</h1>
+            <h2 class="title">Create your journey</h2>
           </div>
 
           <div class="js-booking-container">
@@ -91,7 +91,7 @@ url = "/booking"
                           class="booking-card__input"
                           checked />
                         <span class="booking-card__content">
-                          <svg class="icon"><use href="/icons.svg#trekking"></use></svg>
+                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#trekking'|theme }}"></use></svg>
                           <span class="booking-card__title">Trekking adventures</span>
                           <span class="booking-card__desc">Guided group & private treks</span>
                         </span>
@@ -104,7 +104,7 @@ url = "/booking"
                           data-item-type="tour"
                           class="booking-card__input" />
                         <span class="booking-card__content">
-                          <svg class="icon"><use href="/icons.svg#horse"></use></svg>
+                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#horse'|theme}}"></use></svg>
                           <span class="booking-card__title">Horseback expedition</span>
                           <span class="booking-card__desc">Nomad mountain trails</span>
                         </span>
@@ -117,7 +117,7 @@ url = "/booking"
                           data-item-type="tour"
                           class="booking-card__input" />
                         <span class="booking-card__content">
-                          <svg class="icon"><use href="/icons.svg#car"></use></svg>
+                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#car'|theme}}"></use></svg>
                           <span class="booking-card__title">Overland jeep journeys</span>
                           <span class="booking-card__desc">Passes & lake expeditions</span>
                         </span>
@@ -130,7 +130,7 @@ url = "/booking"
                           data-item-type="tour"
                           class="booking-card__input" />
                         <span class="booking-card__content">
-                          <svg class="icon"><use href="/icons.svg#nomadic"></use></svg>
+                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#nomadic'|theme}}"></use></svg>
                           <span class="booking-card__title">Nomadic heritage</span>
                           <span class="booking-card__desc">Authentic cultural experiences</span>
                         </span>
@@ -145,7 +145,7 @@ url = "/booking"
                           data-item-type="custom"
                           class="booking-card__input" />
                         <span class="booking-card__content">
-                          <svg class="icon"><use href="/icons.svg#map"></use></svg>
+                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#map'|theme}}"></use></svg>
                           <span class="booking-card__title">Custom expedition</span>
                           <span class="booking-card__desc">Pre-designed unique itineraries</span>
                         </span>
@@ -160,7 +160,7 @@ url = "/booking"
                           data-item-type="accommodation"
                           class="booking-card__input" />
                         <span class="booking-card__content">
-                          <svg class="icon"><use href="/icons.svg#tent"></use></svg>
+                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#tent'|theme}}"></use></svg>
                           <span class="booking-card__title">Sokmo Lodge</span>
                           <span class="booking-card__desc">Alpine camp experience</span>
                         </span>
@@ -173,14 +173,16 @@ url = "/booking"
                           data-item-type="accommodation"
                           class="booking-card__input" />
                         <span class="booking-card__content">
-                          <svg class="icon"><use href="/icons.svg#hotel"></use></svg>
+                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#hotel'|theme}}"></use></svg>
                           <span class="booking-card__title">Mongu Hotel</span>
                           <span class="booking-card__desc">Comfortable city stay</span>
                         </span>
                       </label>
                     </div>
                     <div class="btn-wrap">
-                      <button type="button" class="btn js-next-step">Continue</button>
+                      <button type="button" class="btn js-next-step">Continue
+                        <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
+                      </button>
                     </div>
                   </div>
 
@@ -199,7 +201,7 @@ url = "/booking"
                             </select>
                             <div class="custom-select__trigger js-custom-select-trigger" tabindex="0">
                               <span class="custom-select__value js-custom-select-value">Choose a tour...</span>
-                              <svg class="icon custom-select__arrow"><use href="/icons.svg#angle"></use></svg>
+                              <svg class="icon custom-select__arrow"><use href="{{'assets/sprites/icons.svg#angle'|theme}}"></use></svg>
                             </div>
                             <div class="custom-select__dropdown">
                               <div class="custom-select__search-wrap">
@@ -245,10 +247,10 @@ url = "/booking"
                     </div>
                     <div class="btn-wrap">
                       <button type="button" class="btn btn_bordered js-prev-step">
-                        <svg class="icon"><use href="/icons.svg#arrow"></use></svg>Back
+                        <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>Back
                       </button>
                       <button type="button" class="btn js-next-step">
-                        Continue<svg class="icon"><use href="/icons.svg#arrow"></use></svg>
+                        Continue<svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
                       </button>
                     </div>
                   </div>
@@ -261,7 +263,7 @@ url = "/booking"
                       <!-- data-calc-type: per_person (умножает на гостей) или fixed (считает 1 раз) -->
                       <div class="booking-recommendation js-hotel-recommendation js-addon-wrap" data-exclude-on="mongu">
                         <div class="booking-recommendation__header">
-                          <svg class="icon"><use href="/icons.svg#hotel"></use></svg>
+                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#hotel'|theme}}"></use></svg>
                           <span>Stay with us in Karakol</span>
                         </div>
                         <label class="booking-addon booking-addon_special">
@@ -332,7 +334,7 @@ url = "/booking"
                         </select>
                         <div class="custom-select__trigger js-custom-select-trigger" tabindex="0">
                           <span class="custom-select__value js-custom-select-value">No special requirements</span>
-                          <svg class="icon custom-select__arrow"><use href="/icons.svg#angle"></use></svg>
+                          <svg class="icon custom-select__arrow"><use href="{{'assets/sprites/icons.svg#angle'|theme}}"></use></svg>
                         </div>
                         <div class="custom-select__dropdown">
                           <ul class="custom-select__list js-custom-select-list">
@@ -352,10 +354,10 @@ url = "/booking"
 
                     <div class="btn-wrap" style="margin-top: 2rem">
                       <button type="button" class="btn btn_bordered js-prev-step">
-                        <svg class="icon"><use href="/icons.svg#arrow"></use></svg>Back
+                        <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>Back
                       </button>
                       <button type="button" class="btn js-next-step">
-                        Continue<svg class="icon"><use href="/icons.svg#arrow"></use></svg>
+                        Continue<svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
                       </button>
                     </div>
                   </div>
@@ -397,7 +399,10 @@ url = "/booking"
                       </div>
                     </div>
                     <div class="btn-wrap">
-                      <button type="button" class="btn btn_bordered js-prev-step">Back</button>
+                      <button type="button" class="btn btn_bordered js-prev-step">
+                        <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
+                        Back
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -433,7 +438,7 @@ url = "/booking"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="btn order-summary__wa-btn js-whatsapp-fast-btn">
-                    <svg class="icon"><use href="/icons.svg#whatsapp"></use></svg>Book via WhatsApp
+                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#whatsapp'|theme}}"></use></svg>Book via WhatsApp
                   </a>
                   <div class="booking__divider-text"><span>or</span></div>
                   <!-- Кнопка submit формы для дальнейшей отправки в October CMS -->

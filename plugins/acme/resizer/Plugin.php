@@ -1,7 +1,6 @@
 <?php namespace Acme\Resizer;
 
 use System\Classes\PluginBase;
-use October\Rain\Resize\Resizer;
 use File;
 use Log;
 
@@ -15,6 +14,17 @@ class Plugin extends PluginBase
             'author'      => 'Acme',
             'icon'        => 'icon-picture-o'
         ];
+    }
+
+    public function register()
+    {
+        $this->registerConsoleCommand('smartcrop.clean', \Acme\Resizer\Console\CleanSmartCrops::class);
+    }
+
+    public function registerSchedule($schedule)
+    {
+        // Раз в сутки в 03:00 чистит файлы старше 60 дней
+        $schedule->command('smartcrop:clean --days=60')->dailyAt('03:00');
     }
 
     public function registerMarkupTags()
@@ -59,8 +69,12 @@ class Plugin extends PluginBase
             $extension = 'webp';
         }
 
-        // 2. Проверка кэша
-        $hash = md5($absolutePath . $width . $height . $position . $quality . $extension);
+        // 2. Проверка кэша.
+        // ВАЖНО: в хэш добавлен filemtime исходника — если файл в медиатеке
+        // перезалит по тому же пути, старая версия кропа больше не будет
+        // залипать в кэше навсегда.
+        $sourceMtime = File::lastModified($absolutePath);
+        $hash = md5($absolutePath . $sourceMtime . $width . $height . $position . $quality . $extension);
         $cacheDir = storage_path('app/smart_crops');
         $cacheFileName = $hash . '.' . $extension;
         $cacheFilePath = $cacheDir . '/' . $cacheFileName;
@@ -74,50 +88,31 @@ class Plugin extends PluginBase
             File::makeDirectory($cacheDir, 0775, true, true);
         }
 
-        // 3. Маппинг позиций кропа для нативного Resizer
-        $offsetMap = [
-            'top-bg'          => [0, 'top'],
-            'bottom-bg'       => [0, 'bottom'],
-            'left-bg'         => ['left', 0],
-            'right-bg'        => ['right', 0],
-            'top-left-bg'     => ['left', 'top'],
-            'top-right-bg'    => ['right', 'top'],
-            'bottom-left-bg'  => ['left', 'bottom'],
-            'bottom-right-bg' => ['right', 'bottom'],
-            'center-bg'       => [0, 0],
-        ];
 
-        $offset = $offsetMap[$position] ?? [0, 0];
+        $lockFilePath = $cacheFilePath . '.lock';
+        if (File::exists($lockFilePath) && (time() - File::lastModified($lockFilePath)) < 30) {
+            return $publicUrl;
+        }
+        File::put($lockFilePath, '1');
 
         try {
-            // Если запрошен настоящий AVIF и сервер его поддерживает
-            if ($extension === 'avif' && function_exists('imageavif')) {
-                $this->renderAvifNative($absolutePath, $cacheFilePath, (int)$width, (int)$height, $offset, (int)$quality);
-            } else {
-                // Во всех остальных случаях используем нативный Resizer October CMS
-                Resizer::open($absolutePath)
-                    ->resize((int)$width, (int)$height, [
-                        'mode'    => 'crop',
-                        'offset'  => $offset,
-                        'quality' => (int)$quality
-                    ])
-                    ->save($cacheFilePath);
-            }
-
+            $this->renderCropped($absolutePath, $cacheFilePath, (int)$width, (int)$height, $position, (int)$quality, $extension);
             return $publicUrl;
         } catch (\Throwable $e) {
             Log::error('[SmartResizer] Error resizing image ' . $absolutePath . ': ' . $e->getMessage());
             return '';
+        } finally {
+            File::delete($lockFilePath);
         }
     }
 
     /**
-     * Прямая генерация валидного AVIF через GD с поддержкой EXIF
+     *  Ручной кроп через GD для всех форматов (avif, webp, jpg, png).
      */
-    protected function renderAvifNative(string $srcPath, string $destPath, int $width, int $height, array $offset, int $quality): void
+    protected function renderCropped(string $srcPath, string $destPath, int $width, int $height, string $position, int $quality, string $extension): void
     {
         list($origW, $origH, $type) = getimagesize($srcPath);
-        
+
         $src = match ($type) {
             IMAGETYPE_JPEG => imagecreatefromjpeg($srcPath),
             IMAGETYPE_PNG  => imagecreatefrompng($srcPath),
@@ -126,7 +121,7 @@ class Plugin extends PluginBase
         };
 
         if (!$src) {
-            throw new \RuntimeException('Unsupported image format for AVIF generation');
+            throw new \RuntimeException('Unsupported source image format for crop generation: ' . $srcPath);
         }
 
         // Автоповорот по EXIF для JPEG
@@ -144,27 +139,30 @@ class Plugin extends PluginBase
             }
         }
 
+        // Область кропа под нужное соотношение сторон
         $targetRatio = $width / $height;
         $origRatio = $origW / $origH;
 
         if ($origRatio > $targetRatio) {
             $cropH = $origH;
-            $cropW = (int)round($origH * $targetRatio);
+            $cropW = (int) round($origH * $targetRatio);
         } else {
             $cropW = $origW;
-            $cropH = (int)round($origW / $targetRatio);
+            $cropH = (int) round($origW / $targetRatio);
         }
 
-        $srcX = match ($offset[0]) {
+        [$offsetX, $offsetY] = $this->resolvePosition($position);
+
+        $srcX = match ($offsetX) {
             'left'  => 0,
             'right' => $origW - $cropW,
-            default => (int)round(($origW - $cropW) / 2),
+            default => (int) round(($origW - $cropW) / 2), // center
         };
 
-        $srcY = match ($offset[1]) {
+        $srcY = match ($offsetY) {
             'top'    => 0,
             'bottom' => $origH - $cropH,
-            default  => (int)round(($origH - $cropH) / 2),
+            default  => (int) round(($origH - $cropH) / 2), // center
         };
 
         $dst = imagecreatetruecolor($width, $height);
@@ -172,10 +170,33 @@ class Plugin extends PluginBase
         imagesavealpha($dst, true);
 
         imagecopyresampled($dst, $src, 0, 0, $srcX, $srcY, $width, $height, $cropW, $cropH);
-        
-        imageavif($dst, $destPath, $quality);
+
+        match ($extension) {
+            'avif'         => imageavif($dst, $destPath, $quality),
+            'webp'         => imagewebp($dst, $destPath, $quality),
+            'png'          => imagepng($dst, $destPath, (int) round((100 - $quality) / 100 * 9)),
+            default        => imagejpeg($dst, $destPath, $quality), // jpg, jpeg
+        };
 
         imagedestroy($dst);
         imagedestroy($src);
+    }
+
+   
+    protected function resolvePosition(string $position): array
+    {
+        $map = [
+            'top-bg'          => [0, 'top'],
+            'bottom-bg'       => [0, 'bottom'],
+            'left-bg'         => ['left', 0],
+            'right-bg'        => ['right', 0],
+            'top-left-bg'     => ['left', 'top'],
+            'top-right-bg'    => ['right', 'top'],
+            'bottom-left-bg'  => ['left', 'bottom'],
+            'bottom-right-bg' => ['right', 'bottom'],
+            'center-bg'       => [0, 0],
+        ];
+
+        return $map[$position] ?? $map['center-bg'];
     }
 }

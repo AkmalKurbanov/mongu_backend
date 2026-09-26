@@ -173,6 +173,7 @@ title = "Mongu hotel"
                         width="800"
                         height="600"
                         loading="eager"
+                        decoding="async"
                         fetchpriority="high" />
                     </picture>
                   </div>
@@ -416,7 +417,7 @@ title = "Mongu hotel"
                   <span class="price__val">From ${{ globalSettings.hotel_price }}</span>
                   <span class="price__label">per night</span>
                 </div>
-                <a href="/booking.html?room=standard" class="btn">Reserve Room</a>
+                <a href="{{'booking'|page}}?room=standard" class="btn">Reserve Room</a>
               </div>
             </div>
           </div>
