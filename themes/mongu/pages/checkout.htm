@@ -1,0 +1,185 @@
+url = "/checkout/:token"
+layout = "default"
+title = "Booking Details"
+page_js = "core.js"
+==
+<?php
+use Tailor\Models\EntryRecord;
+
+function onStart() {
+    $token = $this->param('token');
+    
+    if ($token) {
+        $order = EntryRecord::inSection('Orders')
+            ->where('secure_token', $token)
+            ->first();
+
+        $this['order'] = $order;
+        $this['tour'] = ($order && $order->tour_slug)
+            ? EntryRecord::inSection('Tours')->where('slug', $order->tour_slug)->first()
+            : null;
+    }
+}
+?>
+==
+<main class="main-content section-padding-bottom">
+  <div class="breadcrumbs">
+    <div class="container">
+      <nav aria-label="breadcrumbs">
+        <ul class="breadcrumbs__list">
+          <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'index' | page}}">Home</a></li>
+          <li class="breadcrumbs__item" aria-current="page">Checkout</li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container">
+    
+    <div class="title-wrap title-wrap_centered">
+      <h2 class="title title_centered">Information about your order and current status</h2>
+    </div>
+
+    {% if order %}
+      <div class="checkout">
+        <div class="checkout__alert">
+          <svg class="icon" aria-hidden="true">
+            <use href="{{'assets/sprites/icons.svg#mail' | theme}}"></use>
+          </svg>
+          <div>
+            <strong>Confirmation email sent!</strong><br>
+            We have sent a copy of this booking receipt to <strong>{{ order.email }}</strong>. You can safely close this page and access it anytime via the link in your email or WhatsApp.
+          </div>
+        </div>
+
+        <div class="checkout__card">
+          
+          {# Order Header & Status #}
+          <div class="checkout__header">
+            <span class="checkout__number">{{ order.title }}</span>
+            
+            {# Статусы из orders.yaml: new, approved, paid, canceled (старые написания тоже поддержаны) #}
+            {% set orderStatus = order.status | default('new') %}
+            {% if orderStatus == 'confirmed' %}{% set orderStatus = 'approved' %}{% endif %}
+            {% if orderStatus == 'cancelled' %}{% set orderStatus = 'canceled' %}{% endif %}
+            {% set legacyClass = orderStatus == 'approved' ? 'confirmed' : (orderStatus == 'canceled' ? 'cancelled' : orderStatus) %}
+            <span class="checkout__status checkout__status_{{ orderStatus }} checkout__status_{{ legacyClass }}">
+              {% if orderStatus == 'new' %}
+                New / Awaiting Review
+              {% elseif orderStatus == 'approved' %}
+                Approved
+              {% elseif orderStatus == 'paid' %}
+                Paid & Verified
+              {% elseif orderStatus == 'canceled' %}
+                Cancelled
+              {% else %}
+                {{ orderStatus | replace({'_': ' '}) | capitalize }}
+              {% endif %}
+            </span>
+          </div>
+
+          {# Customer Information #}
+          <div class="checkout__section">
+            <h3 class="checkout__section-title">Customer Information</h3>
+            <div class="checkout__grid">
+              <div class="checkout__info-item">
+                <span class="checkout__label">Full Name:</span>
+                <span class="checkout__value">{{ order.client_name }}</span>
+              </div>
+              <div class="checkout__info-item">
+                <span class="checkout__label">Email:</span>
+                <span class="checkout__value"><a href="mailto:{{ order.email }}">{{ order.email }}</a></span>
+              </div>
+              <div class="checkout__info-item">
+                <span class="checkout__label">Phone:</span>
+                <span class="checkout__value"><a href="tel:{{ order.phone }}">{{ order.phone }}</a></span>
+              </div>
+            </div>
+          </div>
+
+          {# Trip Details #}
+          <div class="checkout__section">
+            <h3 class="checkout__section-title">Trip Details</h3>
+            <div class="checkout__grid">
+              <div class="checkout__info-item">
+                <span class="checkout__label">Booking Type:</span>
+                <span class="checkout__value">{{ order.booking_type | replace({'-': ' ', '_': ' '}) | title }}</span>
+              </div>
+              {% if tour %}
+              <div class="checkout__info-item">
+                <span class="checkout__label">Tour:</span>
+                <span class="checkout__value">{{ tour.title }}</span>
+              </div>
+              {% endif %}
+              <div class="checkout__info-item">
+                <span class="checkout__label">Date:</span>
+                <span class="checkout__value">{{ order.booking_date | default('Open Date / TBD') }}</span>
+              </div>
+              <div class="checkout__info-item">
+                <span class="checkout__label">Guests:</span>
+                <span class="checkout__value">{{ order.guests }} {{ order.guests == 1 ? 'person' : 'people' }}</span>
+              </div>
+            </div>
+          </div>
+
+          {# Additional Options & Notes #}
+          {% if order.comments %}
+            <div class="checkout__section">
+              <h3 class="checkout__section-title">Selected Add-ons & Notes</h3>
+              <div class="checkout__addons">
+                <div class="checkout__addons-list">
+                  {% for line in order.comments | split("\n") %}
+                    {% if line | trim is not empty %}
+                      <div class="checkout__addon-item">{{ line }}</div>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+          <hr class="checkout__divider" />
+
+          {# Total Price #}
+          <div class="checkout__total">
+            <span class="checkout__total-label">Total Amount:</span>
+            {% if order.booking_type in ['sokmo', 'mongu'] or not order.total_price or order.total_price == 0 %}
+              <span class="checkout__total-price">On request</span>
+            {% else %}
+              <span class="checkout__total-price">${{ order.total_price | number_format(2, '.', ',') }}</span>
+            {% endif %}
+          </div>
+
+          {# Bank / Order Status Notice #}
+          {% if orderStatus == 'new' %}
+            <div class="checkout__notice checkout__notice_pending">
+              Your request has been registered in our system and is pending manager verification. Payment instructions will be provided once details are verified.
+            </div>
+          {% elseif orderStatus == 'approved' %}
+            <div class="checkout__notice checkout__notice_pending">
+              Your booking is approved. Please proceed with payment according to the instructions provided by our manager.
+            </div>
+          {% elseif orderStatus == 'paid' %}
+            <div class="checkout__notice checkout__notice_success">
+              Payment confirmed. Thank you! Your booking is fully secured and active.
+            </div>
+          {% elseif orderStatus == 'canceled' %}
+            <div class="checkout__notice checkout__notice_error" style="background: #fff5f5; color: #c53030; border-left: 4px solid #e53e3e; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
+              This booking request has been cancelled. If you have any questions, please contact support.
+            </div>
+          {% else %}
+            <div class="checkout__notice checkout__notice_pending">
+              Our manager will contact you shortly to confirm the details.
+            </div>
+          {% endif %}
+
+        </div>
+      </div>
+    {% else %}
+      <div class="checkout__empty">
+        <h2 class="title">Booking Not Found</h2>
+        <p class="subtitle">Please check the URL or contact support for assistance.</p>
+      </div>
+    {% endif %}
+  </div>
+</main>

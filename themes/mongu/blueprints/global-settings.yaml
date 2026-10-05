@@ -67,8 +67,70 @@ fields:
         size: small
         span: full
         tab: Интеграции
-    hotel_price:
-        label: Цена за ночь с человека
-        type: text
-        span: full
-        tab: Отель
+    
+    # --- ТАБ: Дополнительные услуги (Addons) ---
+    addons:
+        label: Дополнительные услуги (Отображаются в форме бронирования)
+        type: repeater
+        tab: Доп. услуги
+        prompt: Добавить услугу
+        form:
+            fields:
+                is_highlighted:
+                    label: Выделить как рекомендацию
+                    type: switch
+                    span: full
+
+                highlight_header:
+                    label: Заголовок шапки (напр. STAY WITH US IN KARAKOL)
+                    type: text
+                    span: left
+                    trigger:
+                        action: show
+                        field: is_highlighted
+                        condition: checked
+
+                badge_text:
+                    label: Текст бейджа (напр. OUR PROPERTY)
+                    type: text
+                    span: right
+                    trigger:
+                        action: show
+                        field: is_highlighted
+                        condition: checked
+                code:
+                    label: "Системный код (напр. mongu_rooms, single_tents, transfer)"
+                    comment: "Важно для программистов (без пробелов, латиницей)"
+                    type: text
+                    span: left
+                    required: true
+                title:
+                    label: Название услуги
+                    type: text
+                    span: right
+                    required: true
+                description:
+                    label: Краткое описание
+                    type: text
+                    span: full
+                price:
+                    label: Цена в долларах (только цифра, напр. 80)
+                    type: text
+                    span: left
+                    required: true
+                input_type:
+                    label: Тип поля
+                    type: dropdown
+                    span: right
+                    options:
+                        counter: Счетчик (выбор количества)
+                        checkbox: Чекбокс (да/нет)
+                icon:
+                    label: Иконка (ID из спрайта, напр. hotel)
+                    comment: "Используется, если включено выделение как рекомендации"
+                    type: text
+                    span: left
+                exclude_on:
+                    label: "Исключить для типов (через запятую: sokmo, mongu)"
+                    type: text
+                    span: right

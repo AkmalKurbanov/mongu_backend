@@ -1,455 +1,688 @@
-##
-title = "Booking"
-layout = "default"
 url = "/booking"
+layout = "default"
+title = "Booking"
+
+[collection tourCategories]
+handle = "Categories"
+
+[collection tours]
+handle = "Tours"
 ==
+<?php
 
-<main class="main-content">
-      <div class="breadcrumbs">
-        <div class="container">
-          <nav aria-label="breadcrumbs">
-            <ul class="breadcrumbs__list">
-              <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'index' | page}}">Home</a></li>
-              <li class="breadcrumbs__item" aria-current="page">Booking</li>
-            </ul>
-          </nav>
+use Tailor\Models\EntryRecord;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
+
+protected function sendWhatsApp($phone, $text) {
+    $instanceId = env('WA_INSTANCE_ID');
+    $apiToken  = env('WA_API_TOKEN');
+
+    if (!$instanceId || !$apiToken) {
+        return;
+    }
+
+    $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
+
+    try {
+        Http::timeout(5)->post("https://api.green-api.com/waInstance{$instanceId}/sendMessage/{$apiToken}", [
+            'chatId'  => $cleanPhone . '@c.us',
+            'message' => $text,
+        ]);
+    } catch (\Exception $e) {
+        trace_log('WhatsApp Send Error: ' . $e->getMessage());
+    }
+}
+
+public function onStoreBooking()
+{
+    $data = post();
+
+    $rules = [
+        'full_name'    => 'required|string|min:2|max:100',
+        'email'        => 'required|email:rfc,dns',
+        'phone'        => 'required|min:7|regex:/^[\+\d\s\-\(\)]+$/',
+        'booking_type' => 'required',
+    ];
+
+    $validator = Validator::make($data, $rules);
+
+    if ($validator->fails()) {
+        throw new ValidationException($validator);
+    }
+
+    $bookingType = $data['booking_type'] ?? '';
+    $tourSlug = in_array($bookingType, ['sokmo', 'mongu']) ? null : ($data['tour_id'] ?? null);
+
+    $totalPrice = floatval($data['total_price'] ?? 0);
+    if ($totalPrice < 0) {
+        $totalPrice = 0.00;
+    }
+
+    $addonsInput = $data['addons'] ?? [];
+    $addonsTextArray = [];
+    $addonsHtmlArray = [];
+
+    $hotelPax = intval($addonsInput['mongu_hotel_pax'] ?? 0);
+    if ($hotelPax > 0) {
+        $hotelDates = $addonsInput['mongu_hotel_dates'] ?? 'Not specified';
+        $hotelNights = $addonsInput['mongu_hotel_nights'] ?? 0;
+        $hotelNotes = $addonsInput['mongu_hotel_notes'] ?? '';
+        
+        $addonsTextArray[] = "Mongu Hotel Stay: Guests: {$hotelPax}, Dates: {$hotelDates} ({$hotelNights} nights)";
+        $addonsHtmlArray[] = "<li><strong>Mongu Hotel Stay:</strong> Guests: {$hotelPax}, Dates: {$hotelDates} ({$hotelNights} nights)" . (!empty($hotelNotes) ? "<br><em>Notes: {$hotelNotes}</em>" : "") . "</li>";
+    }
+
+    foreach ($addonsInput as $key => $val) {
+        if (in_array($key, ['mongu_hotel_pax', 'mongu_hotel_dates', 'mongu_hotel_nights', 'mongu_hotel_notes'])) {
+            continue;
+        }
+        if (!empty($val) && $val != '0') {
+            $addonsTextArray[] = "Add-on [{$key}]: {$val}";
+            $addonsHtmlArray[] = "<li><strong>Add-on [{$key}]:</strong> {$val}</li>";
+        }
+    }
+
+    $clientComment = trim($data['comments'] ?? '');
+    $fullComments = implode("\n", $addonsTextArray);
+    if (!empty($clientComment)) {
+        if (!empty($fullComments)) {
+            $fullComments .= "\n";
+        }
+        $fullComments .= "Client Comment: " . $clientComment;
+    }
+
+    $secureToken = Str::random(32);
+
+    $isFlexible = !empty($data['is_flexible_dates']);
+    $rawDate = trim($data['booking_date'] ?? '');
+
+    if ($isFlexible) {
+        $bookingDateFormatted = !empty($rawDate) ? e($rawDate) . ' (Flexible)' : 'Flexible / Dates TBD';
+    } else {
+        $bookingDateFormatted = !empty($rawDate) ? e($rawDate) : 'Flexible / TBD';
+    }
+
+    $bookingData = [
+        'client_name'  => e($data['full_name']),
+        'email'        => e($data['email']),
+        'phone'        => e($data['phone']),
+        'booking_type' => e($bookingType),
+        'tour_slug'    => e($tourSlug),
+        'booking_date' => $bookingDateFormatted,
+        'guests'       => intval($data['guests'] ?? 1),
+        'total_price'  => $totalPrice,
+        'comments'     => e($fullComments),
+        'secure_token' => $secureToken,
+        'created_at'   => date('Y-m-d H:i:s')
+    ];
+    
+    $order = \Tailor\Models\EntryRecord::inSection('Orders');
+    $order->title = $bookingData['client_name'] . ' - ' . ($bookingData['tour_slug'] ?: strtoupper($bookingData['booking_type']));
+    $order->slug = Str::slug($bookingData['client_name'] . '-' . time() . '-' . Str::random(4));
+    
+    $order->client_name = $bookingData['client_name'];
+    $order->email = $bookingData['email'];
+    $order->phone = $bookingData['phone'];
+    $order->booking_type = $bookingData['booking_type'];
+    $order->tour_slug = $bookingData['tour_slug'];
+    $order->booking_date = $bookingData['booking_date'];
+    $order->guests = $bookingData['guests'];
+    $order->total_price = $bookingData['total_price'];
+    $order->comments = $bookingData['comments'];
+    $order->secure_token = $bookingData['secure_token'];
+    $order->save();
+
+    $checkoutUrl = url('/checkout/' . $secureToken);
+    $addonsHtmlList = !empty($addonsHtmlArray) ? '<ul style="margin: 0; padding-left: 20px; color: #555;">' . implode('', $addonsHtmlArray) . '</ul>' : '<p style="color: #777; margin: 0;">None selected</p>';
+    $commentBlock = !empty($clientComment) ? '<p style="margin: 10px 0 0 0; color: #555;"><strong>Client Comment:</strong> ' . nl2br(e($clientComment)) . '</p>' : '';
+
+    $adminHtml = '
+    <div style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px; color: #333;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="background-color: #1a1a1a; color: #ffffff; padding: 20px 30px;">
+          <h2 style="margin: 0; font-size: 20px;">New Booking Request</h2>
         </div>
-      </div>
-
-      <section class="section-padding-bottom">
-        <div class="container">
-          <div class="title-wrap">
-            <h2 class="title">Create your journey</h2>
+        <div style="padding: 30px;">
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+            <tr><td style="padding: 8px 0; color: #777; width: 140px;">Client Name:</td><td style="padding: 8px 0; font-weight: bold;">' . $bookingData['client_name'] . '</td></tr>
+            <tr><td style="padding: 8px 0; color: #777;">Email:</td><td style="padding: 8px 0;"><a href="mailto:' . $bookingData['email'] . '" style="color: #0066cc;">' . $bookingData['email'] . '</a></td></tr>
+            <tr><td style="padding: 8px 0; color: #777;">Phone / WA:</td><td style="padding: 8px 0;"><a href="tel:' . $bookingData['phone'] . '" style="color: #0066cc;">' . $bookingData['phone'] . '</a></td></tr>
+            <tr><td style="padding: 8px 0; color: #777;">Booking Type:</td><td style="padding: 8px 0; text-transform: uppercase;">' . $bookingData['booking_type'] . '</td></tr>
+            <tr><td style="padding: 8px 0; color: #777;">Tour Slug:</td><td style="padding: 8px 0;">' . ($bookingData['tour_slug'] ?: '—') . '</td></tr>
+            <tr><td style="padding: 8px 0; color: #777;">Start Date:</td><td style="padding: 8px 0;">' . $bookingData['booking_date'] . '</td></tr>
+            <tr><td style="padding: 8px 0; color: #777;">Guests:</td><td style="padding: 8px 0;">' . $bookingData['guests'] . '</td></tr>
+            <tr><td style="padding: 8px 0; color: #777;">Total Price:</td><td style="padding: 8px 0; font-weight: bold; color: #2c7a7b;">$' . $bookingData['total_price'] . '</td></tr>
+          </table>
+          
+          <div style="background: #f9fafb; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+            <p style="margin: 0 0 8px 0; font-weight: bold; color: #444;">Add-ons & Details:</p>
+            ' . $addonsHtmlList . '
+            ' . $commentBlock . '
           </div>
 
-          <div class="js-booking-container">
+          <div style="text-align: center; margin-top: 30px;">
+            <a href="' . $checkoutUrl . '" style="background-color: #2c7a7b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Open Checkout Page</a>
+          </div>
+        </div>
+      </div>
+    </div>';
+
+    $clientHtml = '
+    <div style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px; color: #333;">
+      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+        <div style="background-color: #2c7a7b; color: #ffffff; padding: 20px 30px;">
+          <h2 style="margin: 0; font-size: 20px;">Booking Request Received</h2>
+        </div>
+        <div style="padding: 30px;">
+          <p style="margin-top: 0; font-size: 16px;">Hello, <strong>' . $bookingData['client_name'] . '</strong>!</p>
+          <p style="color: #555; line-height: 1.5;">Thank you for your request. We have received your booking details and will contact you shortly to confirm everything.</p>
+          
+          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; margin: 20px 0;">
+            <h3 style="margin: 0 0 12px 0; font-size: 15px; color: #2d3748; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Your Trip Summary</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 6px 0; color: #777; width: 120px;">Start Date:</td><td style="padding: 6px 0; font-weight: bold;">' . $bookingData['booking_date'] . '</td></tr>
+              <tr><td style="padding: 6px 0; color: #777;">Guests:</td><td style="padding: 6px 0; font-weight: bold;">' . $bookingData['guests'] . '</td></tr>
+              <tr><td style="padding: 6px 0; color: #777;">Estimated Total:</td><td style="padding: 6px 0; font-weight: bold; color: #2c7a7b;">$' . $bookingData['total_price'] . '</td></tr>
+            </table>
             
-            <div class="booking-intro js-booking-intro">
-              <div class="booking-intro__grid">
-                <div class="booking-intro__card booking-intro__card_wa">
-                  <div>
-                    <svg class="icon" aria-hidden="true">
-                                <use
-                                    href="{{'assets/sprites/icons.svg#whatsapp' | theme}}"
-                                ></use>
-                            </svg>
-                    <h3 class="booking-intro__title">Fast booking via WhatsApp</h3>
-                    <p class="booking-intro__desc">
-                      Get instant confirmation and chat with our trip specialist in 1 click.
-                    </p>
-                  </div>
-                  {% set clean_phone = globalSettings.whatsapp_number |
-                        replace({' ': '', '+': '', '-': ''}) %}
-                  <a
-                    href="https://wa.me/{{ clean_phone }}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn btn_light js-whatsapp-fast-btn"
-                    >Chat on WhatsApp</a
-                  >
-                </div>
-                <div class="booking-intro__card booking-intro__card_form">
-                  <div>
-                    <svg class="icon" aria-hidden="true">
-                                <use
-                                    href="{{'assets/sprites/icons.svg#form' | theme}}"
-                                ></use>
-                            </svg>
-                    <h3 class="booking-intro__title">Book on Website</h3>
-                    <p class="booking-intro__desc">
-                      Select dates, customize your trip with add-ons, and fill out the details yourself.
-                    </p>
-                  </div>
-                  <button type="button" class="btn js-start-wizard">Continue on Website</button>
-                </div>
+            <div style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
+              <p style="margin: 0 0 6px 0; font-size: 14px; font-weight: bold; color: #444;">Selected Options:</p>
+              ' . $addonsHtmlList . '
+            </div>
+          </div>
+
+          <p style="color: #555; line-height: 1.5; text-align: center; margin-bottom: 25px;">You can view and track your booking summary at any time using your personal link below:</p>
+          
+          <div style="text-align: center; margin-bottom: 30px;">
+            <a href="' . $checkoutUrl . '" style="background-color: #2c7a7b; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block; font-size: 15px;">View My Booking & Checkout</a>
+          </div>
+
+          <p style="color: #888; font-size: 13px; text-align: center; margin: 0;">Best regards,<br><strong>Mongu Team</strong></p>
+        </div>
+      </div>
+    </div>';
+
+    Mail::html($adminHtml, function($message) {
+        $message->to(Config::get('mail.from.address'), Config::get('mail.from.name'));
+        $message->subject('New Booking Request - Mongu');
+    });
+
+    Mail::html($clientHtml, function($message) use ($bookingData) {
+        $message->to($bookingData['email'], $bookingData['client_name']);
+        $message->subject('Your Booking Request Received - Mongu');
+    });
+
+    return Redirect::to('/checkout/' . $order->secure_token);
+}
+?>
+==
+<main class="main-content">
+  <div class="breadcrumbs">
+    <div class="container">
+      <nav aria-label="breadcrumbs">
+        <ul class="breadcrumbs__list">
+          <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'index' | page}}">Home</a></li>
+          <li class="breadcrumbs__item" aria-current="page">Booking</li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <section class="section-padding-bottom">
+    <div class="container">
+      <div class="title-wrap">
+        <h2 class="title">Create your journey</h2>
+      </div>
+
+      <div class="booking js-booking-container">
+        
+        <div class="booking__intro js-booking-intro">
+          <div class="booking__intro-grid">
+            <div class="booking__intro-card booking__intro-card_wa">
+              <div>
+                <svg class="icon" aria-hidden="true">
+                  <use href="{{'assets/sprites/icons.svg#whatsapp' | theme}}"></use>
+                </svg>
+                <h3 class="booking__intro-title">Fast booking via WhatsApp</h3>
+                <p class="booking__intro-desc">
+                  Get instant confirmation and chat with our trip specialist in 1 click.
+                </p>
               </div>
+              {% set clean_phone = globalSettings.whatsapp_number | replace({' ': '', '+': '', '-': ''}) %}
+              <a
+                href="https://wa.me/{{ clean_phone }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn_light js-whatsapp-fast-btn">
+                Chat on WhatsApp
+              </a>
             </div>
 
-            <!-- САМ WIZARD (Теперь это полноценная форма) -->
-            <form class="booking js-booking-wizard booking-hidden-elem" id="js-booking-form">
-              <div class="booking__main">
-                <!-- Прогресс-бар -->
-                <div class="booking__progress">
-                  <div class="booking__step booking__step_active" data-step="1">1. Selection</div>
-                  <div class="booking__step" data-step="2">2. Details</div>
-                  <div class="booking__step" data-step="3">3. Add-ons</div>
-                  <div class="booking__step" data-step="4">4. Guest Info</div>
+            <div class="booking__intro-card booking__intro-card_form">
+              <div>
+                <svg class="icon" aria-hidden="true">
+                  <use href="{{'assets/sprites/icons.svg#form' | theme}}"></use>
+                </svg>
+                <h3 class="booking__intro-title">Book on Website</h3>
+                <p class="booking__intro-desc">
+                  Select dates, customize your trip with add-ons, and fill out the details yourself.
+                </p>
+              </div>
+              <button type="button" class="btn js-start-wizard">Continue on Website</button>
+            </div>
+          </div>
+        </div>
+
+        <form class="booking__form js-booking-wizard booking__form_hidden" id="js-booking-form" data-request="onStoreBooking">
+          <div class="booking__main">
+            
+            <div class="booking__progress">
+              <div class="booking__step booking__step_active" data-step="1">1. Selection</div>
+              <div class="booking__step" data-step="2">2. Details</div>
+              <div class="booking__step" data-step="3">3. Add-ons</div>
+              <div class="booking__step" data-step="4">4. Guest Info</div>
+            </div>
+
+            <div class="booking__panels">
+              
+              <div class="booking__global-actions js-booking-global-actions" style="display: none;">
+                <button type="button" class="booking__change-btn js-reset-tour">
+                  <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
+                  Choose another category
+                </button>
+              </div>
+
+              <!-- ШАГ 1: Что бронируем -->
+              <div class="booking__panel js-booking-panel" data-panel="1">
+                <h2 class="booking__panel-title">What would you like to book?</h2>
+                <div class="booking__types">
+                  {% for category in tourCategories.where('is_enabled', true).get() %}
+                  <label class="booking-card">
+                    <input
+                      type="radio"
+                      name="booking_type"
+                      value="{{ category.slug }}"
+                      data-item-type="tour"
+                      data-category="{{ category.slug }}"
+                      class="booking-card__input"
+                      {% if loop.first %}checked{% endif %} />
+                    <span class="booking-card__content">
+                      {% if category.icon_id %}
+                      <svg class="icon"><use href="{{ ('assets/sprites/icons.svg#' ~ category.icon_id) | theme }}"></use></svg>
+                      {% endif %}
+                      <span class="booking-card__title">{{ category.title }}</span>
+                      <span class="booking-card__desc">{{ category.description }}</span>
+                    </span>
+                  </label>
+                  {% endfor %}
+
+                  <label class="booking-card">
+                    <input
+                      type="radio"
+                      name="booking_type"
+                      value="sokmo"
+                      data-item-type="accommodation"
+                      class="booking-card__input" />
+                    <span class="booking-card__content">
+                      <svg class="icon"><use href="{{'assets/sprites/icons.svg#tent'|theme}}"></use></svg>
+                      <span class="booking-card__title">Sokmo Lodge</span>
+                      <span class="booking-card__desc">Alpine camp experience</span>
+                    </span>
+                  </label>
+
+                  <label class="booking-card">
+                    <input
+                      type="radio"
+                      name="booking_type"
+                      value="mongu"
+                      data-item-type="accommodation"
+                      class="booking-card__input" />
+                    <span class="booking-card__content">
+                      <svg class="icon"><use href="{{'assets/sprites/icons.svg#hotel'|theme}}"></use></svg>
+                      <span class="booking-card__title">Mongu Hotel</span>
+                      <span class="booking-card__desc">Comfortable city stay</span>
+                    </span>
+                  </label>
                 </div>
 
-                <div class="booking__panels">
-                  <!-- ШАГ 1: Что бронируем -->
-                  <div class="booking__panel js-booking-panel" data-panel="1">
-                    <h2 class="booking__panel-title">What would you like to book?</h2>
-                    <div class="booking__types booking__types_grid-flexible">
-                      <!-- Добавлен data-item-type="tour" -->
-                      <label class="booking-card">
-                        <input
-                          type="radio"
-                          name="booking_type"
-                          value="trekking"
-                          data-item-type="tour"
-                          class="booking-card__input"
-                          checked />
-                        <span class="booking-card__content">
-                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#trekking'|theme }}"></use></svg>
-                          <span class="booking-card__title">Trekking adventures</span>
-                          <span class="booking-card__desc">Guided group & private treks</span>
-                        </span>
-                      </label>
-                      <label class="booking-card">
-                        <input
-                          type="radio"
-                          name="booking_type"
-                          value="horseback"
-                          data-item-type="tour"
-                          class="booking-card__input" />
-                        <span class="booking-card__content">
-                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#horse'|theme}}"></use></svg>
-                          <span class="booking-card__title">Horseback expedition</span>
-                          <span class="booking-card__desc">Nomad mountain trails</span>
-                        </span>
-                      </label>
-                      <label class="booking-card">
-                        <input
-                          type="radio"
-                          name="booking_type"
-                          value="jeep"
-                          data-item-type="tour"
-                          class="booking-card__input" />
-                        <span class="booking-card__content">
-                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#car'|theme}}"></use></svg>
-                          <span class="booking-card__title">Overland jeep journeys</span>
-                          <span class="booking-card__desc">Passes & lake expeditions</span>
-                        </span>
-                      </label>
-                      <label class="booking-card">
-                        <input
-                          type="radio"
-                          name="booking_type"
-                          value="nomadic"
-                          data-item-type="tour"
-                          class="booking-card__input" />
-                        <span class="booking-card__content">
-                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#nomadic'|theme}}"></use></svg>
-                          <span class="booking-card__title">Nomadic heritage</span>
-                          <span class="booking-card__desc">Authentic cultural experiences</span>
-                        </span>
-                      </label>
+                <div class="booking__btn-wrap">
+                  <button type="button" class="btn js-next-step">Continue
+                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
+                  </button>
+                </div>
+              </div>
 
-                      <!-- Добавлен data-item-type="custom" -->
-                      <label class="booking-card">
-                        <input
-                          type="radio"
-                          name="booking_type"
-                          value="custom"
-                          data-item-type="custom"
-                          class="booking-card__input" />
-                        <span class="booking-card__content">
-                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#map'|theme}}"></use></svg>
-                          <span class="booking-card__title">Custom expedition</span>
-                          <span class="booking-card__desc">Pre-designed unique itineraries</span>
-                        </span>
-                      </label>
-
-                      <!-- Добавлен data-item-type="accommodation" -->
-                      <label class="booking-card">
-                        <input
-                          type="radio"
-                          name="booking_type"
-                          value="sokmo"
-                          data-item-type="accommodation"
-                          class="booking-card__input" />
-                        <span class="booking-card__content">
-                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#tent'|theme}}"></use></svg>
-                          <span class="booking-card__title">Sokmo Lodge</span>
-                          <span class="booking-card__desc">Alpine camp experience</span>
-                        </span>
-                      </label>
-                      <label class="booking-card">
-                        <input
-                          type="radio"
-                          name="booking_type"
-                          value="mongu"
-                          data-item-type="accommodation"
-                          class="booking-card__input" />
-                        <span class="booking-card__content">
-                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#hotel'|theme}}"></use></svg>
-                          <span class="booking-card__title">Mongu Hotel</span>
-                          <span class="booking-card__desc">Comfortable city stay</span>
-                        </span>
-                      </label>
-                    </div>
-                    <div class="btn-wrap">
-                      <button type="button" class="btn js-next-step">Continue
-                        <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- ШАГ 2: Даты и гости -->
-                  <div class="booking__panel js-booking-panel booking-hidden-elem" data-panel="2">
-                    <h2 class="booking__panel-title">Select dates & guests</h2>
-                    <div class="form">
-                      <div class="form__row js-tour-select-wrap">
-                        <div class="form__group">
-                          <label class="form__label">Select Tour</label>
-                          <div class="custom-select js-custom-select">
-                            <select name="tour_id" class="custom-select__native js-custom-select-native" hidden>
-                              <option value="" disabled selected data-price="0">Choose a tour...</option>
-                              <option value="ala-archa" data-price="600">Mountaineering in Ala-Archa</option>
-                              <option value="karkyra" data-price="1300">Karkyra Horseback Expedition</option>
-                            </select>
-                            <div class="custom-select__trigger js-custom-select-trigger" tabindex="0">
-                              <span class="custom-select__value js-custom-select-value">Choose a tour...</span>
-                              <svg class="icon custom-select__arrow"><use href="{{'assets/sprites/icons.svg#angle'|theme}}"></use></svg>
-                            </div>
-                            <div class="custom-select__dropdown">
-                              <div class="custom-select__search-wrap">
-                                <input
-                                  type="text"
-                                  class="custom-select__search js-custom-select-search"
-                                  placeholder="Search tour..." />
-                              </div>
-                              <ul class="custom-select__list js-custom-select-list">
-                                <li class="custom-select__option js-custom-select-option" data-value="ala-archa">
-                                  Mountaineering in Ala-Archa
-                                </li>
-                                <li class="custom-select__option js-custom-select-option" data-value="karkyra">
-                                  Karkyra Horseback Expedition
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div class="form__row form__row_col-2">
-                        <div class="form__group">
-                          <label class="form__label"
-                            >Date <span style="font-weight: 400; color: #999">(Optional)</span></label
-                          >
-                          <input type="date" class="form__input" name="booking_date" />
-                        </div>
-                        <div class="form__group">
-                          <label class="form__label">Guests</label>
-                          <div class="pax-counter">
-                            <button type="button" class="pax-counter__btn js-pax-minus">-</button>
-                            <input
-                              type="number"
-                              class="pax-counter__input js-pax-input"
-                              name="guests"
-                              value="1"
-                              readonly />
-                            <button type="button" class="pax-counter__btn js-pax-plus">+</button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="btn-wrap">
-                      <button type="button" class="btn btn_bordered js-prev-step">
-                        <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>Back
-                      </button>
-                      <button type="button" class="btn js-next-step">
-                        Continue<svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- ШАГ 3: Дополнения (Управление видимостью и расчетом через HTML) -->
-                  <div class="booking__panel js-booking-panel booking-hidden-elem" data-panel="3">
-                    <h2 class="booking__panel-title">Enhance your trip</h2>
-                    <div class="booking-addons">
-                      <!-- data-exclude-on: скрывает блок, если выбран этот тип тура -->
-                      <!-- data-calc-type: per_person (умножает на гостей) или fixed (считает 1 раз) -->
-                      <div class="booking-recommendation js-hotel-recommendation js-addon-wrap" data-exclude-on="mongu">
-                        <div class="booking-recommendation__header">
-                          <svg class="icon"><use href="{{'assets/sprites/icons.svg#hotel'|theme}}"></use></svg>
-                          <span>Stay with us in Karakol</span>
-                        </div>
-                        <label class="booking-addon booking-addon_special">
-                          <input
-                            type="checkbox"
-                            name="addon_mongu"
-                            value="80"
-                            data-title="Mongu Hotel Stay"
-                            data-calc-type="per_person"
-                            class="booking-addon__input js-addon-checkbox" />
-                          <span class="booking-addon__content">
-                            <span class="booking-addon__info">
-                              <span class="booking-addon__title"
-                                >Mongu Hotel <span class="booking-addon__badge">Our property</span></span
-                              >
-                              <span class="booking-addon__desc"
-                                >We will be delighted to welcome you at our own hotel before or after your
-                                expedition.</span
-                              >
-                            </span>
-                            <span class="booking-addon__price">+$80</span>
-                          </span>
-                        </label>
-                      </div>
-
-                      <label class="booking-addon js-addon-wrap" data-exclude-on="sokmo,mongu">
-                        <input
-                          type="checkbox"
-                          name="addon_tent"
-                          value="180"
-                          data-title="Single Tent Accommodation"
-                          data-calc-type="per_person"
-                          class="booking-addon__input js-addon-checkbox" />
-                        <span class="booking-addon__content">
-                          <span class="booking-addon__info">
-                            <span class="booking-addon__title">Single Tent Accommodation</span>
-                            <span class="booking-addon__desc">Private tent for the entire trek (per person)</span>
-                          </span>
-                          <span class="booking-addon__price">+$180</span>
-                        </span>
-                      </label>
-
-                      <label class="booking-addon js-addon-wrap">
-                        <input
-                          type="checkbox"
-                          name="addon_transfer"
-                          value="50"
-                          data-title="Airport Transfer"
-                          data-calc-type="fixed"
-                          class="booking-addon__input js-addon-checkbox" />
-                        <span class="booking-addon__content">
-                          <span class="booking-addon__info">
-                            <span class="booking-addon__title">Airport Transfer</span>
-                            <span class="booking-addon__desc">Meet & Greet at Manas Airport (fixed per vehicle)</span>
-                          </span>
-                          <span class="booking-addon__price">+$50</span>
-                        </span>
-                      </label>
-                    </div>
-
-                    <div class="booking-form__group" style="margin-top: 1.5rem">
-                      <label class="booking-form__label">Dietary Requirements</label>
+              <!-- ШАГ 2: Даты и гости -->
+              <div class="booking__panel js-booking-panel booking__panel_hidden" data-panel="2">
+                <h2 class="booking__panel-title">Select dates & guests</h2>
+                
+                <div class="booking__fields">
+                  
+                  <div class="booking__field-row js-tour-select-wrap">
+                    {% set toursList = tours.where('is_active', true).get() %}
+                    <div class="booking__field-group">
+                      <label class="booking__label">Select tour by category</label>
                       <div class="custom-select js-custom-select">
-                        <select name="dietary" class="custom-select__native js-custom-select-native" hidden>
-                          <option value="none" selected>No special requirements</option>
-                          <option value="vegetarian">Vegetarian</option>
-                          <option value="vegan">Vegan</option>
+                        <select name="tour_id" class="custom-select__native js-custom-select-native" hidden>
+                          <option value="" disabled selected data-price="0">Choose a tour...</option>
                         </select>
                         <div class="custom-select__trigger js-custom-select-trigger" tabindex="0">
-                          <span class="custom-select__value js-custom-select-value">No special requirements</span>
+                          <span class="custom-select__value js-custom-select-value">Choose a tour...</span>
                           <svg class="icon custom-select__arrow"><use href="{{'assets/sprites/icons.svg#angle'|theme}}"></use></svg>
                         </div>
                         <div class="custom-select__dropdown">
-                          <ul class="custom-select__list js-custom-select-list">
-                            <li
-                              class="custom-select__option custom-select__option_selected js-custom-select-option"
-                              data-value="none">
-                              No special requirements
-                            </li>
-                            <li class="custom-select__option js-custom-select-option" data-value="vegetarian">
-                              Vegetarian
-                            </li>
-                            <li class="custom-select__option js-custom-select-option" data-value="vegan">Vegan</li>
-                          </ul>
+                          <div class="custom-select__search-wrap">
+                            <input
+                              type="text"
+                              class="custom-select__search js-custom-select-search"
+                              placeholder="Search tour..." />
+                          </div>
+                          <ul class="custom-select__list js-custom-select-list"></ul>
                         </div>
                       </div>
-                    </div>
-
-                    <div class="btn-wrap" style="margin-top: 2rem">
-                      <button type="button" class="btn btn_bordered js-prev-step">
-                        <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>Back
-                      </button>
-                      <button type="button" class="btn js-next-step">
-                        Continue<svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
-                      </button>
                     </div>
                   </div>
 
-                  <!-- ШАГ 4: Данные -->
-                  <div class="booking__panel js-booking-panel booking-hidden-elem" data-panel="4">
-                    <h2 class="booking__panel-title">Your Details</h2>
-                    <div class="form">
-                      <div class="form__row">
-                        <div class="form__group">
-                          <label class="form__label">Full Name</label>
-                          <input type="text" class="form__input" name="full_name" placeholder="John Doe" required />
-                        </div>
-                      </div>
-                      <div class="form__row form__row_col-2">
-                        <div class="form__group">
-                          <label class="form__label">Email Address</label>
-                          <input
-                            type="email"
-                            class="form__input"
-                            name="email"
-                            placeholder="john@example.com"
-                            required />
-                        </div>
-                        <div class="form__group">
-                          <label class="form__label">Phone / WhatsApp</label>
-                          <input type="tel" class="form__input" name="phone" placeholder="+1 234 567 8900" required />
-                        </div>
-                      </div>
-                      <div class="form__row">
-                        <div class="form__group">
-                          <label class="form__label">Additional Comments</label>
-                          <textarea
-                            class="form__input form__input_textarea"
-                            name="comments"
-                            rows="3"
-                            placeholder="Any questions or special requests?"></textarea>
-                        </div>
-                      </div>
+                  <div class="booking__tour-info-badge js-tour-duration-badge" style="display: none;">
+                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#clock'|theme}}"></use></svg>
+                    <span>Tour duration: <strong class="js-tour-duration-val">—</strong></span>
+                  </div>
+
+                  <div class="booking__field-row booking__field-row_col-2">
+                    <div class="booking__field-group">
+                      <label class="booking__label js-date-label">
+                        Start Date
+                      </label>
+                      <input 
+                        type="text" 
+                        class="booking__input js-date-range-picker" 
+                        name="booking_date" 
+                        placeholder="Select start date" 
+                        readonly />
+                      <span class="booking__field-hint js-date-hint">
+                        Base price per person
+                      </span>
                     </div>
-                    <div class="btn-wrap">
-                      <button type="button" class="btn btn_bordered js-prev-step">
-                        <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
-                        Back
-                      </button>
+                    
+                    <div class="booking__field-group">
+                      <label class="booking__label">Guests</label>
+                      <div class="counter">
+                        <button type="button" class="counter__btn js-pax-minus">-</button>
+                        <input
+                          type="number"
+                          class="counter__input js-pax-input"
+                          name="guests"
+                          value="1"
+                          readonly />
+                        <button type="button" class="counter__btn js-pax-plus">+</button>
+                      </div>
                     </div>
                   </div>
+
+                  <div class="booking__field-row">
+                    <label class="booking__checkbox-label">
+                      <input type="checkbox" name="is_flexible_dates" value="1" class="js-flexible-checkbox" />
+                      <span>I haven't decided on exact dates yet</span>
+                    </label>
+                  </div>
+
+                </div>
+
+                <div class="booking__btn-wrap">
+                  <button type="button" class="btn btn_bordered js-prev-step">
+                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>Back
+                  </button>
+                  <button type="button" class="btn js-next-step">
+                    Continue<svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
+                  </button>
                 </div>
               </div>
 
-              <!-- ПРАВАЯ ЧАСТЬ: Итоговая смета -->
-              <aside class="booking__sidebar">
-                <div class="order-summary">
-                  <h3 class="order-summary__title">Booking Summary</h3>
-                  <div class="order-summary__content">
-                    <div class="order-summary__item">
-                      <span class="order-summary__label">Type:</span>
-                      <span class="order-summary__val js-summary-type">Not selected</span>
+              <!-- ШАГ 3: Дополнения -->
+              <div class="booking__panel js-booking-panel booking__panel_hidden" data-panel="3">
+                <h2 class="booking__panel-title">Enhance your trip</h2>
+
+                <div class="booking__addons">
+
+                  <div class="booking-recommendation js-addon-wrap js-hotel-addon" data-exclude-on="mongu">
+                    
+                    <div class="booking-recommendation__header">
+                      <svg class="icon"><use href="{{ 'assets/sprites/icons.svg#hotel' | theme }}"></use></svg>
+                      <span>Recommended before / after your trek</span>
                     </div>
-                    <div class="order-summary__item">
-                      <span class="order-summary__label">Date:</span>
-                      <span class="order-summary__val js-summary-date">—</span>
-                    </div>
-                    <div class="order-summary__item">
-                      <span class="order-summary__label">Guests:</span>
-                      <span class="order-summary__val js-summary-pax">1 pax</span>
-                    </div>
-                    <div class="js-summary-addons-container"></div>
-                    <hr class="order-summary__divider" />
-                    <div class="order-summary__total">
-                      <span>Total:</span>
-                      <span class="order-summary__price js-summary-total">$0</span>
+
+                    <div class="booking-addon booking-addon_special">
+                      <div class="booking-addon__content" style="flex-direction: column; align-items: flex-start; gap: 16px;">
+                        
+                        <div class="booking-addon__info">
+                          <span class="booking-addon__title">
+                            Mongu Hotel Stay
+                            <span class="booking-addon__badge">Popular</span>
+                          </span>
+                          <span class="booking-addon__desc">Comfortable stay in Karakol before or after your trek.</span>
+                        </div>
+
+                        <div class="booking__field-row booking__field-row_col-2" style="width: 100%;">
+                          
+                          <div class="booking__field-group">
+                            <label class="booking__label">Guests in Hotel</label>
+                            <div class="counter">
+                              <button type="button" class="counter__btn js-hotel-pax-minus">-</button>
+                              <input
+                                type="number"
+                                class="counter__input js-hotel-pax-input"
+                                name="addons[mongu_hotel_pax]"
+                                value="0"
+                                min="0"
+                                data-price="50"
+                                data-title="Mongu Hotel Stay"
+                                readonly />
+                              <button type="button" class="counter__btn js-hotel-pax-plus">+</button>
+                            </div>
+                          </div>
+
+                          <div class="booking__field-group">
+                            <label class="booking__label">
+                              Stay Dates <span class="js-hotel-nights-badge" style="font-weight: 400; color: #666;">(0 nights)</span>
+                            </label>
+                            <input 
+                              type="text" 
+                              class="booking__input js-hotel-stay-dates" 
+                              name="addons[mongu_hotel_dates]" 
+                              placeholder="Select check-in & check-out" 
+                              readonly />
+                            <input type="hidden" name="addons[mongu_hotel_nights]" class="js-hotel-nights-input" value="0" />
+                          </div>
+
+                        </div>
+
+                        <div class="booking-addon__hotel-details js-hotel-details" style="width: 100%; display: none; border-top: 1px solid rgba(0,0,0,0.08); padding-top: 12px; margin-top: 2px;">
+                          <div class="booking__field-group">
+                            <label class="booking__label">
+                              Stay Notes / Preferences <span class="booking__label-optional">(Optional)</span>
+                            </label>
+                            <input 
+                              type="text" 
+                              class="booking__input" 
+                              name="addons[mongu_hotel_notes]" 
+                              placeholder="e.g. Early check-in" />
+                          </div>
+                        </div>
+
+                      </div>
                     </div>
                   </div>
 
-                  <a
-                    href="https://wa.me/996555150795"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn order-summary__wa-btn js-whatsapp-fast-btn">
-                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#whatsapp'|theme}}"></use></svg>Book via WhatsApp
-                  </a>
-                  <div class="booking__divider-text"><span>or</span></div>
-                  <!-- Кнопка submit формы для дальнейшей отправки в October CMS -->
-                  <button type="submit" class="btn btn_bordered order-summary__btn js-submit-booking">
-                    Submit Request
-                  </button>
-                  <p class="order-summary__note">No payment required at this step.</p>
+                  {% for addon in globalSettings.addons %}
+                    {% if addon.code != 'mongu_hotel' %}
+                      
+                      {% if addon.input_type == 'checkbox' %}
+                        <label class="booking-addon js-addon-wrap" {% if addon.exclude_on %}data-exclude-on="{{ addon.exclude_on }}"{% endif %}>
+                          <input
+                            type="checkbox"
+                            name="addons[{{ addon.code }}]"
+                            value="1"
+                            data-price="{{ addon.price }}"
+                            data-title="{{ addon.title }}"
+                            class="booking-addon__input js-addon-checkbox" />
+                          <span class="booking-addon__content">
+                            <span class="booking-addon__info">
+                              <span class="booking-addon__title">{{ addon.title }}</span>
+                              <span class="booking-addon__desc">{{ addon.description }}</span>
+                            </span>
+                            <span class="booking-addon__price">+${{ addon.price }}</span>
+                          </span>
+                        </label>
+
+                      {% else %}
+                        <div class="booking-addon js-addon-wrap" {% if addon.exclude_on %}data-exclude-on="{{ addon.exclude_on }}"{% endif %}>
+                          <div class="booking-addon__content booking-addon__content_counter">
+                            <span class="booking-addon__info">
+                              <span class="booking-addon__title">{{ addon.title }}</span>
+                              <span class="booking-addon__desc">{{ addon.description }}</span>
+                            </span>
+                            <div class="booking-addon__right">
+                              <span class="booking-addon__price">+${{ addon.price }}</span>
+                              <div class="counter">
+                                <button type="button" class="counter__btn js-addon-minus">-</button>
+                                <input
+                                  type="number"
+                                  class="counter__input js-addon-counter-input"
+                                  name="addons[{{ addon.code }}]"
+                                  value="0"
+                                  min="0"
+                                  data-price="{{ addon.price }}"
+                                  data-title="{{ addon.title }}"
+                                  readonly />
+                                <button type="button" class="counter__btn js-addon-plus">+</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      {% endif %}
+
+                    {% endif %}
+                  {% endfor %}
+
                 </div>
-              </aside>
-            </form>
+
+                <div class="booking__btn-wrap">
+                  <button type="button" class="btn btn_bordered js-prev-step">
+                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>Back
+                  </button>
+                  <button type="button" class="btn js-next-step">
+                    Continue<svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- ШАГ 4: Контакты -->
+              <div class="booking__panel js-booking-panel booking__panel_hidden" data-panel="4">
+                <h2 class="booking__panel-title">Your Details</h2>
+                <div class="booking__fields">
+                  <div class="booking__field-row">
+                    <div class="booking__field-group">
+                      <label class="booking__label">Full Name</label>
+                      <input type="text" class="booking__input" name="full_name" placeholder="John Doe" required />
+                    </div>
+                  </div>
+                  <div class="booking__field-row booking__field-row_col-2">
+                    <div class="booking__field-group">
+                      <label class="booking__label">Email Address</label>
+                      <input type="email" class="booking__input" name="email" placeholder="john@example.com" required />
+                    </div>
+                    <div class="booking__field-group">
+                      <label class="booking__label">Phone / WhatsApp</label>
+                      <input type="tel" class="booking__input" name="phone" placeholder="+1 234 567 8900" required />
+                    </div>
+                  </div>
+                  <div class="booking__field-row">
+                    <div class="booking__field-group">
+                      <label class="booking__label">Additional Comments</label>
+                      <textarea
+                        class="booking__input booking__input_textarea"
+                        name="comments"
+                        rows="3"
+                        placeholder="Any questions or special requests?"></textarea>
+                    </div>
+                  </div>
+                </div>
+                <div class="booking__btn-wrap">
+                  <button type="button" class="btn btn_bordered js-prev-step">
+                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>Back
+                  </button>
+                </div>
+              </div>
+
+            </div>
           </div>
-        </div>
-      </section>
-    </main>
+
+          <aside class="booking__sidebar">
+            <div class="order-summary">
+              <h3 class="order-summary__title">Booking Summary</h3>
+              <div class="order-summary__content">
+                <div class="order-summary__item">
+                  <span class="order-summary__label">Type:</span>
+                  <span class="order-summary__val js-summary-type">Not selected</span>
+                </div>
+                <div class="order-summary__item">
+                  <span class="order-summary__label">Date:</span>
+                  <span class="order-summary__val js-summary-date">—</span>
+                </div>
+                <div class="order-summary__item">
+                  <span class="order-summary__label">Guests:</span>
+                  <span class="order-summary__val js-summary-pax">1 pax</span>
+                </div>
+                <div class="js-summary-addons-container"></div>
+                <hr class="order-summary__divider" />
+                <div class="order-summary__total">
+                  <span>Total:</span>
+                  <span class="order-summary__price js-summary-total">$0</span>
+                </div>
+              </div>
+
+              <a
+                href="https://wa.me/996555150795"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn order-summary__wa-btn js-whatsapp-fast-btn">
+                <svg class="icon"><use href="{{'assets/sprites/icons.svg#whatsapp'|theme}}"></use></svg>Book via WhatsApp
+              </a>
+              <div class="booking__divider-text"><span>or</span></div>
+              <button type="submit" class="btn btn_bordered order-summary__btn js-submit-booking">
+                Submit Request
+              </button>
+              <p class="order-summary__note">No payment required at this step.</p>
+            </div>
+          </aside>
+
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+{% set toursList = tours.where('is_active', true).get() %}
+{% set data = [] %}
+{% for tour in toursList %}
+  {% set cat = tour.category %}
+  {% set catSlug = cat.slug ?? (cat|first).slug ?? cat ?? '' %}
+  {% set data = data|merge([{
+    slug: tour.slug,
+    title: tour.title,
+    category: catSlug,
+    price: (tour.program_price|replace({'$':'', ',':'', ' ':''}) ?: 0) + 0,
+    duration: tour.duration ?? ''
+  }]) %}
+{% endfor %}
+<script type="application/json" id="tours-data">{{ data|json_encode|raw }}</script>
+
+{% if this.page.id == 'booking' %}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+{% endif %}

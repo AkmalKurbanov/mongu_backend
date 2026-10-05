@@ -1,0 +1,91 @@
+uuid: 48b7f069-2277-4938-921a-21eec5edb7f7
+handle: Orders
+type: stream
+name: Заказы
+drafts: false
+
+primaryNavigation:
+    label: Заказы
+    icon: icon-shopping-cart
+    order: 15
+
+fields:
+    status:
+        label: Статус заказа
+        type: dropdown
+        default: new
+        span: right
+        tab: Основное
+        options:
+            new: Новая заявка
+            approved: Согласовано
+            paid: Оплачено
+            canceled: Отменено
+
+    secure_token:
+        label: Секретный токен (для ссылки)
+        type: text
+        span: full
+        tab: Основное
+
+    client_name:
+        label: Имя клиента
+        type: text
+        span: left
+        tab: Клиент
+    
+    email:
+        label: Email
+        type: text
+        span: right
+        tab: Клиент
+
+    phone:
+        label: Телефон / WhatsApp
+        type: text
+        span: left
+        tab: Клиент
+
+    booking_type:
+        label: Тип бронирования (Тур / Отель)
+        type: text
+        span: right
+        tab: Детали
+
+    tour_slug:
+        label: Slug выбранного тура
+        type: text
+        span: left
+        tab: Детали
+
+    booking_date:
+        label: Дата начала
+        type: text
+        span: right
+        tab: Детали
+
+    guests:
+        label: Количество гостей
+        type: text
+        span: left
+        tab: Детали
+
+    total_price:
+        label: Итоговая сумма ($)
+        type: text
+        span: right
+        tab: Детали
+
+    comments:
+        label: Комментарий клиента
+        type: textarea
+        size: tiny
+        span: full
+        tab: Детали
+
+    addons_summary:
+        label: Выбранные дополнения
+        type: textarea
+        size: tiny
+        span: full
+        tab: Детали

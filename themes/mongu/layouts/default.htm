@@ -29,6 +29,8 @@ handle = "PagesSettings"
     <link rel="preload" href="{{ cssPath | theme }}" as="style" onload="this.onload=null;this.rel='stylesheet';document.body.classList.add('content-loaded')">
     <noscript><link rel="stylesheet" href="{{ cssPath | theme }}"></noscript>
     {# Основные стили страницы (асинхронно) #}
+
+    
     {# Критические стили #}
     {% if this.page.id == 'contacts' %}
       {% partial 'blocks/critical-contacts.htm' %}
@@ -38,6 +40,8 @@ handle = "PagesSettings"
       {% partial 'blocks/critical-base.htm' %}
     {% endif %}
     {# Критические стили #}
+
+    
 
     {% if globalSettings.analytics_code %}
       {{ globalSettings.analytics_code | raw }}
@@ -101,6 +105,6 @@ handle = "PagesSettings"
     {% partial 'site/footer' %}
     {% partial 'blocks/mobile-menu' %}
     {% partial 'blocks/inline-sprite' %}
-
+    {% framework extras %}
   </body>
 </html>

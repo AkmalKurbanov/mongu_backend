@@ -248,6 +248,7 @@ function onStart() {
               type="button"
               class="tour__btn btn js-book-btn"
               data-tour-id="{{ record.slug }}"
+              data-category="{% if record.category and record.category.count() > 0 %}{{ record.category.first().slug }}{% endif %}"
               data-price="{{ record.program_price | replace({'$': '', ' ': ''}) }}"
             >
               Book now
