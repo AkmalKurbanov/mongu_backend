@@ -123,17 +123,31 @@ function onStart() {
           </div>
 
           {# Additional Options & Notes #}
-          {% if order.comments %}
+          {# Additional Options & Notes #}
+          {% if order.addons_summary or order.comments %}
             <div class="checkout__section">
               <h3 class="checkout__section-title">Selected Add-ons & Notes</h3>
               <div class="checkout__addons">
-                <div class="checkout__addons-list">
-                  {% for line in order.comments | split("\n") %}
-                    {% if line | trim is not empty %}
-                      <div class="checkout__addon-item">{{ line }}</div>
-                    {% endif %}
-                  {% endfor %}
-                </div>
+                
+                {# Выбранные доп. услуги #}
+                {% if order.addons_summary %}
+                  <div class="checkout__addons-list" style="margin-bottom: 12px;">
+                    {% for line in order.addons_summary | split("\n") %}
+                      {% if line | trim is not empty %}
+                        <div class="checkout__addon-item" style="padding: 4px 0; font-weight: 500; color: #2d3748;">{{ line }}</div>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+                {# Комментарий клиента #}
+                {% if order.comments %}
+                  <div class="checkout__comment-item" style="background: #f8fafc; padding: 12px 15px; border-left: 3px solid #2c7a7b; border-radius: 4px; margin-top: 8px;">
+                    <strong style="color: #4a5568; display: block; margin-bottom: 4px;">Client Note:</strong>
+                    <span style="color: #64748b;">{{ order.comments | nl2br }}</span>
+                  </div>
+                {% endif %}
+
               </div>
             </div>
           {% endif %}
@@ -143,7 +157,8 @@ function onStart() {
           {# Total Price #}
           <div class="checkout__total">
             <span class="checkout__total-label">Total Amount:</span>
-            {% if order.booking_type in ['sokmo', 'mongu'] or not order.total_price or order.total_price == 0 %}
+            {# Проверяем как системные слаги, так и нормальные названия объектов #}
+            {% if order.booking_type | lower in ['sokmo', 'mongu', 'sokmo lodge', 'mongu hotel'] or not order.total_price or order.total_price == 0 %}
               <span class="checkout__total-price">On request</span>
             {% else %}
               <span class="checkout__total-price">${{ order.total_price | number_format(2, '.', ',') }}</span>

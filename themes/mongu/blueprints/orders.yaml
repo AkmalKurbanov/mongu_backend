@@ -10,82 +10,107 @@ primaryNavigation:
     order: 15
 
 fields:
+    # --- Вкладка 1: Основное и Статус ---
     status:
         label: Статус заказа
         type: dropdown
         default: new
-        span: right
+        span: left
         tab: Основное
         options:
-            new: Новая заявка
-            approved: Согласовано
-            paid: Оплачено
-            canceled: Отменено
+            new: 🆕 Новая заявка
+            approved: 🟡 Согласовано / Ожидает оплаты
+            paid: 🟢 Оплачено
+            canceled: 🔴 Отменено
+
+    total_price:
+        label: Итоговая сумма ($ USD)
+        type: number
+        span: right
+        tab: Основное
+        comment: "Укажите итоговую сумму в долларах. Если оставить 0 или пустым — выведется 'On request'"
 
     secure_token:
-        label: Секретный токен (для ссылки)
+        label: Секретный токен (для ссылки на чек)
         type: text
         span: full
         tab: Основное
+        comment: "Генерируется автоматически при создании. Менеджеру заполнять НЕ нужно!"
 
+    # --- Вкладка 2: Данные клиента ---
     client_name:
-        label: Имя клиента
+        label: Имя и Фамилия клиента
         type: text
         span: left
         tab: Клиент
+        placeholder: "например, John Doe"
     
-    email:
-        label: Email
-        type: text
-        span: right
-        tab: Клиент
-
     phone:
         label: Телефон / WhatsApp
         type: text
-        span: left
-        tab: Клиент
-
-    booking_type:
-        label: Тип бронирования (Тур / Отель)
-        type: text
         span: right
-        tab: Детали
+        tab: Клиент
+        placeholder: "+996 555 123 456"
+        comment: "Основной номер для связи и ссылки на чат"
+
+    email:
+        label: Email
+        type: text
+        span: full
+        tab: Клиент
+        placeholder: "client@example.com"
+
+    # --- Вкладка 3: Детали бронирования ---
+    booking_type:
+        label: Объект / Категория
+        type: dropdown
+        span: left
+        tab: Детали поездки
+        comment: "Выберите объект или категорию тура"
+        options:
+            'Sokmo Lodge': 'Sokmo Lodge'
+            'Mongu Hotel': 'Mongu Hotel'
+            'Trekking & Hiking': 'Trekking & Hiking'
+            'Horse Riding': 'Horse Riding'
+            'Cultural Tours': 'Cultural Tours'
+            'Winter Tours': 'Winter Tours'
 
     tour_slug:
-        label: Slug выбранного тура
+        label: Выбранный тур (Slug)
         type: text
-        span: left
-        tab: Детали
+        span: right
+        tab: Детали поездки
+        comment: "Например: ala-kul-trek. Если это бронь отеля — оставьте пустым"
 
     booking_date:
-        label: Дата начала
-        type: text
-        span: right
-        tab: Детали
-
-    guests:
-        label: Количество гостей
+        label: Даты поездки / Заезда
         type: text
         span: left
-        tab: Детали
+        tab: Детали поездки
+        placeholder: "15.07.2026 - 20.07.2026"
+        comment: "Точные даты или 'Flexible dates / To be agreed'"
 
-    total_price:
-        label: Итоговая сумма ($)
-        type: text
+    guests:
+        label: Количество гостей (pax)
+        type: number
+        min: 1
+        default: 1
         span: right
-        tab: Детали
+        tab: Детали поездки
+
+    # --- Вкладка 4: Допы и Заметки ---
+    addons_summary:
+        label: Выбранные дополнения и отели
+        type: textarea
+        size: small
+        span: full
+        tab: Доп. услуги и Заметки
+        comment: "Указывайте услуги списком. Пример: + Mongu Hotel Stay: 2 guests (2 nights) — $200"
 
     comments:
-        label: Комментарий клиента
+        label: Пожелания клиента / Заметки менеджера
         type: textarea
-        size: tiny
+        size: small
         span: full
-        tab: Детали
-
-    addons_summary:
-        label: Выбранные дополнения
-        type: textarea
-        size: tiny
-        span: full
-        tab: Детали
+        tab: Доп. услуги и Заметки
+        comment: "Особые пожелания, диета, трансфер или условия оплаты"

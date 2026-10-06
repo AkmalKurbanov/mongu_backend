@@ -69,6 +69,14 @@ fields:
         tab: Интеграции
     
     # --- ТАБ: Дополнительные услуги (Addons) ---
+    hotel_price_per_night:
+        label: "Стоимость проживания в отельном номере Mongu ($/чел/ночь)"
+        comment: "Указывается цена за 1 человека за 1 ночь (по умолчанию 50)"
+        type: text
+        default: "50"
+        span: left
+        tab: Доп. услуги
+
     addons:
         label: Дополнительные услуги (Отображаются в форме бронирования)
         type: repeater
@@ -130,7 +138,18 @@ fields:
                     comment: "Используется, если включено выделение как рекомендации"
                     type: text
                     span: left
-                exclude_on:
-                    label: "Исключить для типов (через запятую: sokmo, mongu)"
-                    type: text
+                exclude_categories:
+                    label: "Скрыть для категорий туров:"
+                    comment: "Выберите динамические категории туров"
+                    type: entries
+                    source: Categories
+                    span: left
+
+                exclude_fixed:
+                    label: "Скрыть для проживания:"
+                    comment: "Отметьте объекты размещения"
+                    type: checkboxlist
+                    options:
+                        sokmo: "Sokmo Lodge"
+                        mongu: "Mongu Hotel"
                     span: right

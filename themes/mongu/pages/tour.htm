@@ -353,7 +353,7 @@ function onStart() {
                             </td>
                             <td>{{ item.price }}</td>
                             <td>
-                              <button class="tour-tabs__table-btn btn js-book-btn" type="button" data-date="{{ item.date_start }}">
+                              <button class="tour-tabs__table-btn btn js-book-btn" type="button" data-tour-id="{{ record.slug }}" data-date="{{ item.date_start | date('Y-m-d') }}">
                                 Book now
                               </button>
                             </td>

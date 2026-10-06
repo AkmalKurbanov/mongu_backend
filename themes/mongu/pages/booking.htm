@@ -9,215 +9,14 @@ handle = "Categories"
 handle = "Tours"
 ==
 <?php
-
-use Tailor\Models\EntryRecord;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Http;
-
-protected function sendWhatsApp($phone, $text) {
-    $instanceId = env('WA_INSTANCE_ID');
-    $apiToken  = env('WA_API_TOKEN');
-
-    if (!$instanceId || !$apiToken) {
-        return;
-    }
-
-    $cleanPhone = preg_replace('/[^0-9]/', '', $phone);
-
-    try {
-        Http::timeout(5)->post("https://api.green-api.com/waInstance{$instanceId}/sendMessage/{$apiToken}", [
-            'chatId'  => $cleanPhone . '@c.us',
-            'message' => $text,
-        ]);
-    } catch (\Exception $e) {
-        trace_log('WhatsApp Send Error: ' . $e->getMessage());
-    }
+public function onInit()
+{
+    include_once themes_path('mongu/classes/BookingHelper.php');
 }
 
 public function onStoreBooking()
 {
-    $data = post();
-
-    $rules = [
-        'full_name'    => 'required|string|min:2|max:100',
-        'email'        => 'required|email:rfc,dns',
-        'phone'        => 'required|min:7|regex:/^[\+\d\s\-\(\)]+$/',
-        'booking_type' => 'required',
-    ];
-
-    $validator = Validator::make($data, $rules);
-
-    if ($validator->fails()) {
-        throw new ValidationException($validator);
-    }
-
-    $bookingType = $data['booking_type'] ?? '';
-    $tourSlug = in_array($bookingType, ['sokmo', 'mongu']) ? null : ($data['tour_id'] ?? null);
-
-    $totalPrice = floatval($data['total_price'] ?? 0);
-    if ($totalPrice < 0) {
-        $totalPrice = 0.00;
-    }
-
-    $addonsInput = $data['addons'] ?? [];
-    $addonsTextArray = [];
-    $addonsHtmlArray = [];
-
-    $hotelPax = intval($addonsInput['mongu_hotel_pax'] ?? 0);
-    if ($hotelPax > 0) {
-        $hotelDates = $addonsInput['mongu_hotel_dates'] ?? 'Not specified';
-        $hotelNights = $addonsInput['mongu_hotel_nights'] ?? 0;
-        $hotelNotes = $addonsInput['mongu_hotel_notes'] ?? '';
-        
-        $addonsTextArray[] = "Mongu Hotel Stay: Guests: {$hotelPax}, Dates: {$hotelDates} ({$hotelNights} nights)";
-        $addonsHtmlArray[] = "<li><strong>Mongu Hotel Stay:</strong> Guests: {$hotelPax}, Dates: {$hotelDates} ({$hotelNights} nights)" . (!empty($hotelNotes) ? "<br><em>Notes: {$hotelNotes}</em>" : "") . "</li>";
-    }
-
-    foreach ($addonsInput as $key => $val) {
-        if (in_array($key, ['mongu_hotel_pax', 'mongu_hotel_dates', 'mongu_hotel_nights', 'mongu_hotel_notes'])) {
-            continue;
-        }
-        if (!empty($val) && $val != '0') {
-            $addonsTextArray[] = "Add-on [{$key}]: {$val}";
-            $addonsHtmlArray[] = "<li><strong>Add-on [{$key}]:</strong> {$val}</li>";
-        }
-    }
-
-    $clientComment = trim($data['comments'] ?? '');
-    $fullComments = implode("\n", $addonsTextArray);
-    if (!empty($clientComment)) {
-        if (!empty($fullComments)) {
-            $fullComments .= "\n";
-        }
-        $fullComments .= "Client Comment: " . $clientComment;
-    }
-
-    $secureToken = Str::random(32);
-
-    $isFlexible = !empty($data['is_flexible_dates']);
-    $rawDate = trim($data['booking_date'] ?? '');
-
-    if ($isFlexible) {
-        $bookingDateFormatted = !empty($rawDate) ? e($rawDate) . ' (Flexible)' : 'Flexible / Dates TBD';
-    } else {
-        $bookingDateFormatted = !empty($rawDate) ? e($rawDate) : 'Flexible / TBD';
-    }
-
-    $bookingData = [
-        'client_name'  => e($data['full_name']),
-        'email'        => e($data['email']),
-        'phone'        => e($data['phone']),
-        'booking_type' => e($bookingType),
-        'tour_slug'    => e($tourSlug),
-        'booking_date' => $bookingDateFormatted,
-        'guests'       => intval($data['guests'] ?? 1),
-        'total_price'  => $totalPrice,
-        'comments'     => e($fullComments),
-        'secure_token' => $secureToken,
-        'created_at'   => date('Y-m-d H:i:s')
-    ];
-    
-    $order = \Tailor\Models\EntryRecord::inSection('Orders');
-    $order->title = $bookingData['client_name'] . ' - ' . ($bookingData['tour_slug'] ?: strtoupper($bookingData['booking_type']));
-    $order->slug = Str::slug($bookingData['client_name'] . '-' . time() . '-' . Str::random(4));
-    
-    $order->client_name = $bookingData['client_name'];
-    $order->email = $bookingData['email'];
-    $order->phone = $bookingData['phone'];
-    $order->booking_type = $bookingData['booking_type'];
-    $order->tour_slug = $bookingData['tour_slug'];
-    $order->booking_date = $bookingData['booking_date'];
-    $order->guests = $bookingData['guests'];
-    $order->total_price = $bookingData['total_price'];
-    $order->comments = $bookingData['comments'];
-    $order->secure_token = $bookingData['secure_token'];
-    $order->save();
-
-    $checkoutUrl = url('/checkout/' . $secureToken);
-    $addonsHtmlList = !empty($addonsHtmlArray) ? '<ul style="margin: 0; padding-left: 20px; color: #555;">' . implode('', $addonsHtmlArray) . '</ul>' : '<p style="color: #777; margin: 0;">None selected</p>';
-    $commentBlock = !empty($clientComment) ? '<p style="margin: 10px 0 0 0; color: #555;"><strong>Client Comment:</strong> ' . nl2br(e($clientComment)) . '</p>' : '';
-
-    $adminHtml = '
-    <div style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px; color: #333;">
-      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-        <div style="background-color: #1a1a1a; color: #ffffff; padding: 20px 30px;">
-          <h2 style="margin: 0; font-size: 20px;">New Booking Request</h2>
-        </div>
-        <div style="padding: 30px;">
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr><td style="padding: 8px 0; color: #777; width: 140px;">Client Name:</td><td style="padding: 8px 0; font-weight: bold;">' . $bookingData['client_name'] . '</td></tr>
-            <tr><td style="padding: 8px 0; color: #777;">Email:</td><td style="padding: 8px 0;"><a href="mailto:' . $bookingData['email'] . '" style="color: #0066cc;">' . $bookingData['email'] . '</a></td></tr>
-            <tr><td style="padding: 8px 0; color: #777;">Phone / WA:</td><td style="padding: 8px 0;"><a href="tel:' . $bookingData['phone'] . '" style="color: #0066cc;">' . $bookingData['phone'] . '</a></td></tr>
-            <tr><td style="padding: 8px 0; color: #777;">Booking Type:</td><td style="padding: 8px 0; text-transform: uppercase;">' . $bookingData['booking_type'] . '</td></tr>
-            <tr><td style="padding: 8px 0; color: #777;">Tour Slug:</td><td style="padding: 8px 0;">' . ($bookingData['tour_slug'] ?: '—') . '</td></tr>
-            <tr><td style="padding: 8px 0; color: #777;">Start Date:</td><td style="padding: 8px 0;">' . $bookingData['booking_date'] . '</td></tr>
-            <tr><td style="padding: 8px 0; color: #777;">Guests:</td><td style="padding: 8px 0;">' . $bookingData['guests'] . '</td></tr>
-            <tr><td style="padding: 8px 0; color: #777;">Total Price:</td><td style="padding: 8px 0; font-weight: bold; color: #2c7a7b;">$' . $bookingData['total_price'] . '</td></tr>
-          </table>
-          
-          <div style="background: #f9fafb; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-            <p style="margin: 0 0 8px 0; font-weight: bold; color: #444;">Add-ons & Details:</p>
-            ' . $addonsHtmlList . '
-            ' . $commentBlock . '
-          </div>
-
-          <div style="text-align: center; margin-top: 30px;">
-            <a href="' . $checkoutUrl . '" style="background-color: #2c7a7b; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Open Checkout Page</a>
-          </div>
-        </div>
-      </div>
-    </div>';
-
-    $clientHtml = '
-    <div style="font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px; color: #333;">
-      <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-        <div style="background-color: #2c7a7b; color: #ffffff; padding: 20px 30px;">
-          <h2 style="margin: 0; font-size: 20px;">Booking Request Received</h2>
-        </div>
-        <div style="padding: 30px;">
-          <p style="margin-top: 0; font-size: 16px;">Hello, <strong>' . $bookingData['client_name'] . '</strong>!</p>
-          <p style="color: #555; line-height: 1.5;">Thank you for your request. We have received your booking details and will contact you shortly to confirm everything.</p>
-          
-          <div style="background: #f9fafb; padding: 20px; border-radius: 6px; margin: 20px 0;">
-            <h3 style="margin: 0 0 12px 0; font-size: 15px; color: #2d3748; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">Your Trip Summary</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 6px 0; color: #777; width: 120px;">Start Date:</td><td style="padding: 6px 0; font-weight: bold;">' . $bookingData['booking_date'] . '</td></tr>
-              <tr><td style="padding: 6px 0; color: #777;">Guests:</td><td style="padding: 6px 0; font-weight: bold;">' . $bookingData['guests'] . '</td></tr>
-              <tr><td style="padding: 6px 0; color: #777;">Estimated Total:</td><td style="padding: 6px 0; font-weight: bold; color: #2c7a7b;">$' . $bookingData['total_price'] . '</td></tr>
-            </table>
-            
-            <div style="margin-top: 15px; border-top: 1px solid #e2e8f0; padding-top: 12px;">
-              <p style="margin: 0 0 6px 0; font-size: 14px; font-weight: bold; color: #444;">Selected Options:</p>
-              ' . $addonsHtmlList . '
-            </div>
-          </div>
-
-          <p style="color: #555; line-height: 1.5; text-align: center; margin-bottom: 25px;">You can view and track your booking summary at any time using your personal link below:</p>
-          
-          <div style="text-align: center; margin-bottom: 30px;">
-            <a href="' . $checkoutUrl . '" style="background-color: #2c7a7b; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block; font-size: 15px;">View My Booking & Checkout</a>
-          </div>
-
-          <p style="color: #888; font-size: 13px; text-align: center; margin: 0;">Best regards,<br><strong>Mongu Team</strong></p>
-        </div>
-      </div>
-    </div>';
-
-    Mail::html($adminHtml, function($message) {
-        $message->to(Config::get('mail.from.address'), Config::get('mail.from.name'));
-        $message->subject('New Booking Request - Mongu');
-    });
-
-    Mail::html($clientHtml, function($message) use ($bookingData) {
-        $message->to($bookingData['email'], $bookingData['client_name']);
-        $message->subject('Your Booking Request Received - Mongu');
-    });
-
-    return Redirect::to('/checkout/' . $order->secure_token);
+    return \Themes\Mongu\Classes\BookingHandler::processBooking();
 }
 ?>
 ==
@@ -388,7 +187,7 @@ public function onStoreBooking()
                     </div>
                   </div>
 
-                  <div class="booking__tour-info-badge js-tour-duration-badge" style="display: none;">
+                  <div class="booking__label booking__tour-info-badge js-tour-duration-badge" style="display: none;">
                     <svg class="icon"><use href="{{'assets/sprites/icons.svg#clock'|theme}}"></use></svg>
                     <span>Tour duration: <strong class="js-tour-duration-val">—</strong></span>
                   </div>
@@ -449,6 +248,7 @@ public function onStoreBooking()
 
                 <div class="booking__addons">
 
+                  <!-- Отельный блок Mongu (Спец. кастом с выбором дат) -->
                   <div class="booking-recommendation js-addon-wrap js-hotel-addon" data-exclude-on="mongu">
                     
                     <div class="booking-recommendation__header">
@@ -479,7 +279,7 @@ public function onStoreBooking()
                                 name="addons[mongu_hotel_pax]"
                                 value="0"
                                 min="0"
-                                data-price="50"
+                                data-price="{{ globalSettings.hotel_price_per_night ?: 50 }}"
                                 data-title="Mongu Hotel Stay"
                                 readonly />
                               <button type="button" class="counter__btn js-hotel-pax-plus">+</button>
@@ -518,52 +318,158 @@ public function onStoreBooking()
                     </div>
                   </div>
 
+                  <!-- Динамический вывод всех доп. услуг из Tailor Admin -->
+                  {# 1. Создаем карту ID => slug со строковым префиксом (чтобы Twig |merge не сбрасывал ключи) #}
+                  
+                  
                   {% for addon in globalSettings.addons %}
                     {% if addon.code != 'mongu_hotel' %}
                       
-                      {% if addon.input_type == 'checkbox' %}
-                        <label class="booking-addon js-addon-wrap" {% if addon.exclude_on %}data-exclude-on="{{ addon.exclude_on }}"{% endif %}>
-                          <input
-                            type="checkbox"
-                            name="addons[{{ addon.code }}]"
-                            value="1"
-                            data-price="{{ addon.price }}"
-                            data-title="{{ addon.title }}"
-                            class="booking-addon__input js-addon-checkbox" />
-                          <span class="booking-addon__content">
-                            <span class="booking-addon__info">
-                              <span class="booking-addon__title">{{ addon.title }}</span>
-                              <span class="booking-addon__desc">{{ addon.description }}</span>
-                            </span>
-                            <span class="booking-addon__price">+${{ addon.price }}</span>
-                          </span>
-                        </label>
+                      {# Инициализируем чистый массив исключений для КАЖДОЙ услуги #}
+                      {% set excludeSlugsArr = [] %}
+
+                      {# 1. Преобразуем сохраненные ID (или объекты) в slug-и категорий #}
+                      {% if addon.exclude_categories %}
+                        {% for catItem in addon.exclude_categories %}
+                          {% set targetId = catItem.id ?? catItem %}
+                          {% for cat in tourCategories.get() %}
+                            {% if (cat.id == targetId or cat.slug == targetId) and cat.slug not in excludeSlugsArr %}
+                              {% set excludeSlugsArr = excludeSlugsArr|merge([cat.slug]) %}
+                            {% endif %}
+                          {% endfor %}
+                        {% endfor %}
+                      {% endif %}
+
+                      {# 2. Добавляем фиксированные объекты (sokmo, mongu) #}
+                      {% if addon.exclude_fixed %}
+                        {% for fixedItem in addon.exclude_fixed %}
+                          {% if fixedItem not in excludeSlugsArr %}
+                            {% set excludeSlugsArr = excludeSlugsArr|merge([fixedItem]) %}
+                          {% endif %}
+                        {% endfor %}
+                      {% endif %}
+
+                      {# Формируем финальную строку для JS #}
+                      {% set excludeSlugs = excludeSlugsArr|join(',') %}
+
+                      {% if addon.is_highlighted %}
+                        {# Вариант А: Рекомендованная услуга #}
+                        <div class="booking-recommendation js-addon-wrap" {% if excludeSlugs %}data-exclude-on="{{ excludeSlugs }}"{% endif %}>
+                          {% if addon.highlight_header %}
+                            <div class="booking-recommendation__header">
+                              {% if addon.icon %}
+                                <svg class="icon"><use href="{{ ('assets/sprites/icons.svg#' ~ addon.icon) | theme }}"></use></svg>
+                              {% endif %}
+                              <span>{{ addon.highlight_header }}</span>
+                            </div>
+                          {% endif %}
+
+                          {% if addon.input_type == 'checkbox' %}
+                            <label class="booking-addon booking-addon_special">
+                              <input
+                                type="checkbox"
+                                name="addons[{{ addon.code }}]"
+                                value="1"
+                                data-price="{{ addon.price }}"
+                                data-title="{{ addon.title }}"
+                                class="booking-addon__input js-addon-checkbox" />
+                              <span class="booking-addon__content">
+                                <span class="booking-addon__info">
+                                  <span class="booking-addon__title">
+                                    {{ addon.title }}
+                                    {% if addon.badge_text %}
+                                      <span class="booking-addon__badge">{{ addon.badge_text }}</span>
+                                    {% endif %}
+                                  </span>
+                                  {% if addon.description %}
+                                    <span class="booking-addon__desc">{{ addon.description }}</span>
+                                  {% endif %}
+                                </span>
+                                <span class="booking-addon__price">+${{ addon.price }}</span>
+                              </span>
+                            </label>
+                          {% else %}
+                            <div class="booking-addon booking-addon_special">
+                              <div class="booking-addon__content">
+                                <div class="booking-addon__info">
+                                  <span class="booking-addon__title">
+                                    {{ addon.title }}
+                                    {% if addon.badge_text %}
+                                      <span class="booking-addon__badge">{{ addon.badge_text }}</span>
+                                    {% endif %}
+                                  </span>
+                                  {% if addon.description %}
+                                    <span class="booking-addon__desc">{{ addon.description }}</span>
+                                  {% endif %}
+                                </div>
+                                <div class="booking-addon__right">
+                                  <span class="booking-addon__price">+${{ addon.price }}</span>
+                                  <div class="counter">
+                                    <button type="button" class="counter__btn js-addon-minus">-</button>
+                                    <input
+                                      type="number"
+                                      class="counter__input js-addon-counter-input"
+                                      name="addons[{{ addon.code }}]"
+                                      value="0"
+                                      min="0"
+                                      data-price="{{ addon.price }}"
+                                      data-title="{{ addon.title }}"
+                                      readonly />
+                                    <button type="button" class="counter__btn js-addon-plus">+</button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          {% endif %}
+                        </div>
 
                       {% else %}
-                        <div class="booking-addon js-addon-wrap" {% if addon.exclude_on %}data-exclude-on="{{ addon.exclude_on }}"{% endif %}>
-                          <div class="booking-addon__content booking-addon__content_counter">
-                            <span class="booking-addon__info">
-                              <span class="booking-addon__title">{{ addon.title }}</span>
-                              <span class="booking-addon__desc">{{ addon.description }}</span>
-                            </span>
-                            <div class="booking-addon__right">
+                        {# Вариант Б: Стандартная услуга #}
+                        {% if addon.input_type == 'checkbox' %}
+                          <label class="booking-addon js-addon-wrap" {% if excludeSlugs %}data-exclude-on="{{ excludeSlugs }}"{% endif %}>
+                            <input
+                              type="checkbox"
+                              name="addons[{{ addon.code }}]"
+                              value="1"
+                              data-price="{{ addon.price }}"
+                              data-title="{{ addon.title }}"
+                              class="booking-addon__input js-addon-checkbox" />
+                            <span class="booking-addon__content">
+                              <span class="booking-addon__info">
+                                <span class="booking-addon__title">{{ addon.title }}</span>
+                                <span class="booking-addon__desc">{{ addon.description }}</span>
+                              </span>
                               <span class="booking-addon__price">+${{ addon.price }}</span>
-                              <div class="counter">
-                                <button type="button" class="counter__btn js-addon-minus">-</button>
-                                <input
-                                  type="number"
-                                  class="counter__input js-addon-counter-input"
-                                  name="addons[{{ addon.code }}]"
-                                  value="0"
-                                  min="0"
-                                  data-price="{{ addon.price }}"
-                                  data-title="{{ addon.title }}"
-                                  readonly />
-                                <button type="button" class="counter__btn js-addon-plus">+</button>
+                            </span>
+                          </label>
+
+                        {% else %}
+                          <div class="booking-addon js-addon-wrap" {% if excludeSlugs %}data-exclude-on="{{ excludeSlugs }}"{% endif %}>
+                            <div class="booking-addon__content booking-addon__content_counter">
+                              <span class="booking-addon__info">
+                                <span class="booking-addon__title">{{ addon.title }}</span>
+                                <span class="booking-addon__desc">{{ addon.description }}</span>
+                              </span>
+                              <div class="booking-addon__right">
+                                <span class="booking-addon__price">+${{ addon.price }}</span>
+                                <div class="counter">
+                                  <button type="button" class="counter__btn js-addon-minus">-</button>
+                                  <input
+                                    type="number"
+                                    class="counter__input js-addon-counter-input"
+                                    name="addons[{{ addon.code }}]"
+                                    value="0"
+                                    min="0"
+                                    data-price="{{ addon.price }}"
+                                    data-title="{{ addon.title }}"
+                                    readonly />
+                                  <button type="button" class="counter__btn js-addon-plus">+</button>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
+                        {% endif %}
+
                       {% endif %}
 
                     {% endif %}
@@ -646,8 +552,9 @@ public function onStoreBooking()
                 </div>
               </div>
 
+              {% set clean_phone = globalSettings.whatsapp_number | replace({' ': '', '+': '', '-': ''}) %}
               <a
-                href="https://wa.me/996555150795"
+                href="https://wa.me/{{ clean_phone }}"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="btn order-summary__wa-btn js-whatsapp-fast-btn">
@@ -672,12 +579,13 @@ public function onStoreBooking()
 {% for tour in toursList %}
   {% set cat = tour.category %}
   {% set catSlug = cat.slug ?? (cat|first).slug ?? cat ?? '' %}
+  {% set rawPrice = tour.program_price ? tour.program_price|replace({'$': '', ' ': '', ',': ''}) : 0 %}
   {% set data = data|merge([{
     slug: tour.slug,
     title: tour.title,
     category: catSlug,
-    price: (tour.program_price|replace({'$':'', ',':'', ' ':''}) ?: 0) + 0,
-    duration: tour.duration ?? ''
+    price: rawPrice ? rawPrice + 0 : 0,
+    duration: tour.tour_duration ?? ''
   }]) %}
 {% endfor %}
 <script type="application/json" id="tours-data">{{ data|json_encode|raw }}</script>
