@@ -1,16 +1,51 @@
-<?php namespace Themes\Mongu\Classes;
+<?php namespace App\Classes;
 
 use Tailor\Models\EntryRecord;
 use Tailor\Models\GlobalRecord;
 use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Config;
 
-class BookingHandler
+class BookingHelper
 {
+  public static function getCategoryOptions(): array
+    {
+        return EntryRecord::inSection('Categories')
+            ->pluck('title', 'slug')
+            ->toArray();
+    }
+
+    /**
+     * Опции для выпадающего списка в Tailor (Orders Blueprint)
+     */
+    public static function getAddonsDropdownOptions(): array
+    {
+        $globals = GlobalRecord::findForGlobal('GlobalSettings');
+
+        if (!$globals || empty($globals->addons)) {
+            return [];
+        }
+
+        $options = [];
+        foreach ($globals->addons as $addon) {
+            $title = is_array($addon) ? ($addon['title'] ?? '') : ($addon->title ?? '');
+            $price = is_array($addon) ? ($addon['price'] ?? 0) : ($addon->price ?? 0);
+            
+            if ($title) {
+                $options[$title] = "{$title} (\${$price})";
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * Основной обработчик формы бронирования
+     */
     public static function processBooking()
     {
         $data = post();
@@ -35,9 +70,13 @@ class BookingHandler
         $tourSlug = $isAccommodation ? null : ($data['tour_id'] ?? null);
         $guestsCount = max(1, intval($data['guests'] ?? 1));
 
-        // 1. Человеческое название категории или объекта размещения (БЕЗ СЛАГОВ)
-        $categoryTitle = null;
+        // 1. Определение Категории или Фиксированного Проживания
+        $categoryRecord = null;
+        $accommodationVal = 'none';
+        $categoryTitle = '';
+
         if ($isAccommodation) {
+            $accommodationVal = $bookingType;
             $categoryTitle = match($bookingType) {
                 'sokmo' => 'Sokmo Lodge',
                 'mongu' => 'Mongu Hotel',
@@ -48,8 +87,9 @@ class BookingHandler
             $categoryTitle = $categoryRecord ? $categoryRecord->title : ucwords(str_replace(['-', '_'], ' ', $bookingType));
         }
 
-        // 2. Детали тура (Заголовок, Продолжительность, Базовая цена)
+        // 2. Детали выбранного тура
         $totalPrice = 0.00;
+        $selectedTour = null;
         $tourTitle = null;
         $tourDuration = null;
         $basePricePerPerson = 0.00;
@@ -69,21 +109,23 @@ class BookingHandler
         $addonsInput = $data['addons'] ?? [];
         $addonsTextArray = [];
         $addonsHtmlRows = '';
+        $selectedAddonsRepeater = [];
 
-        // 3. Отель Mongu Hotel Stay
+        // 3. Отдельная обработка проживания Mongu Hotel Stay
         $hotelPrice = floatval($globalSettings->hotel_price_per_night ?? 50);
         if ($hotelPrice <= 0) $hotelPrice = 50.00;
 
         $hotelPax = min($guestsCount, max(0, intval($addonsInput['mongu_hotel_pax'] ?? 0)));
-        if ($hotelPax > 0) {
-            $hotelDates = e($addonsInput['mongu_hotel_dates'] ?? 'Not specified');
-            $hotelNights = max(1, intval($addonsInput['mongu_hotel_nights'] ?? 1));
-            $hotelNotes = e($addonsInput['mongu_hotel_notes'] ?? '');
+        $hotelDates = trim($addonsInput['mongu_hotel_dates'] ?? '');
+        $hotelNights = max(0, intval($addonsInput['mongu_hotel_nights'] ?? 0));
+        $hotelNotes = trim($addonsInput['mongu_hotel_notes'] ?? '');
 
-            $hotelTotal = $hotelPrice * $hotelPax * $hotelNights;
+        if ($hotelPax > 0) {
+            $hotelTotal = $hotelPrice * $hotelPax * max(1, $hotelNights);
             $totalPrice += $hotelTotal;
 
-            $addonsTextArray[] = "Mongu Hotel Stay: {$hotelPax} guests, {$hotelDates} ({$hotelNights} nights) — $" . number_format($hotelTotal, 2) . (!empty($hotelNotes) ? " [Notes: {$hotelNotes}]" : "");
+
+            $addonsTextArray[] = "Mongu Hotel Stay: {$hotelPax} guests, " . ($hotelDates ?: 'Not specified') . " ({$hotelNights} nights) — $" . number_format($hotelTotal, 2) . (!empty($hotelNotes) ? " [Notes: {$hotelNotes}]" : "");
             
             $addonsHtmlRows .= '
             <tr>
@@ -91,7 +133,7 @@ class BookingHandler
                 Mongu Hotel Stay
                 <div style="font-size: 12px; color: #718096; font-weight: normal; margin-top: 3px;">
                   ' . $hotelPax . ' guest(s) × ' . $hotelNights . ' night(s) @ $' . number_format($hotelPrice, 2) . '/night<br>
-                  Stay Dates: ' . $hotelDates . (!empty($hotelNotes) ? '<br><em>Note: ' . $hotelNotes . '</em>' : '') . '
+                  Stay Dates: ' . e($hotelDates ?: 'Not specified') . (!empty($hotelNotes) ? '<br><em>Note: ' . e($hotelNotes) . '</em>' : '') . '
                 </div>
               </td>
               <td style="padding: 10px 0; border-bottom: 1px dashed #e2e8f0; text-align: right; color: #2d3748; font-weight: 600; white-space: nowrap; vertical-align: top;">
@@ -100,70 +142,102 @@ class BookingHandler
             </tr>';
         }
 
-        // 4. Динамические доп. услуги
+        // 4. Динамические доп. услуги из GlobalSettings
         foreach ($addonsInput as $key => $val) {
-            if (in_array($key, ['mongu_hotel_pax', 'mongu_hotel_dates', 'mongu_hotel_nights', 'mongu_hotel_notes'])) continue;
+            if (in_array($key, ['mongu_hotel_pax', 'mongu_hotel_dates', 'mongu_hotel_nights', 'mongu_hotel_notes'])) {
+                continue;
+            }
             
-            if (!empty($val) && $val != '0') {
-                $safeVal = e($val);
+            if (is_numeric($key)) {
+                $targetCode = is_string($val) ? trim($val) : '';
+                $targetVal = 1;
+            } else {
+                $targetCode = trim((string)$key);
+                $targetVal = $val;
+            }
 
-                foreach ($addonsConfig as $cfgAddon) {
-                    if (($cfgAddon['code'] ?? '') === $key) {
-                        
-                        if (self::isAddonExcluded($cfgAddon, $bookingType)) {
-                            continue 2;
-                        }
+            if (empty($targetCode) || empty($targetVal) || $targetVal === '0' || $targetVal === false) {
+                continue;
+            }
 
-                        $addonTitle = e($cfgAddon['title'] ?? $key);
-                        $addonPrice = floatval($cfgAddon['price'] ?? 0);
-                        
-                        if (($cfgAddon['input_type'] ?? '') === 'counter') {
-                            $count = min($guestsCount, max(0, intval($val)));
-                            $itemTotal = $addonPrice * $count;
-                            $totalPrice += $itemTotal;
+            foreach ($addonsConfig as $cfgAddon) {
+                $code = is_array($cfgAddon) ? ($cfgAddon['code'] ?? '') : ($cfgAddon->code ?? '');
 
-                            $addonsTextArray[] = "+ {$addonTitle} ({$count}x) — $" . number_format($itemTotal, 2);
-                            $addonsHtmlRows .= '
-                            <tr>
-                              <td style="padding: 10px 0; border-bottom: 1px dashed #e2e8f0; color: #2d3748;">
-                                ' . $addonTitle . ' <span style="font-size: 12px; color: #718096;">(' . $count . 'x @ $' . number_format($addonPrice, 2) . ')</span>
-                              </td>
-                              <td style="padding: 10px 0; border-bottom: 1px dashed #e2e8f0; text-align: right; color: #2d3748; font-weight: 600; white-space: nowrap;">
-                                +$' . number_format($itemTotal, 2) . '
-                              </td>
-                            </tr>';
-                        } else {
-                            $totalPrice += $addonPrice;
-
-                            $addonsTextArray[] = "+ {$addonTitle} — $" . number_format($addonPrice, 2);
-                            $addonsHtmlRows .= '
-                            <tr>
-                              <td style="padding: 10px 0; border-bottom: 1px dashed #e2e8f0; color: #2d3748;">
-                                ' . $addonTitle . '
-                              </td>
-                              <td style="padding: 10px 0; border-bottom: 1px dashed #e2e8f0; text-align: right; color: #2d3748; font-weight: 600; white-space: nowrap;">
-                                +$' . number_format($addonPrice, 2) . '
-                              </td>
-                            </tr>';
-                        }
-                        break;
+                if ($code === $targetCode) {
+                    if (self::isAddonExcluded($cfgAddon, $bookingType)) {
+                        continue 2;
                     }
+
+                    $addonTitle = is_array($cfgAddon) ? ($cfgAddon['title'] ?? $targetCode) : ($cfgAddon->title ?? $targetCode);
+                    $addonPrice = floatval(is_array($cfgAddon) ? ($cfgAddon['price'] ?? 0) : ($cfgAddon->price ?? 0));
+                    $inputType = is_array($cfgAddon) ? ($cfgAddon['input_type'] ?? '') : ($cfgAddon->input_type ?? '');
+
+                    if ($inputType === 'counter') {
+                        $count = min($guestsCount, max(1, intval($targetVal)));
+                        $itemTotal = $addonPrice * $count;
+                        $totalPrice += $itemTotal;
+
+                        $selectedAddonsRepeater[] = [
+                            'title'       => $addonTitle,
+                            'addon_title' => $addonTitle,
+                            'quantity'    => $count,
+                            'count'       => $count,
+                            'price'       => $itemTotal,
+                            'total_price' => $itemTotal
+                        ];
+
+                        $addonsTextArray[] = "+ {$addonTitle} ({$count}x) — $" . number_format($itemTotal, 2);
+                        $addonsHtmlRows .= '
+                        <tr>
+                          <td style="padding: 10px 0; border-bottom: 1px dashed #e2e8f0; color: #2d3748;">
+                            ' . e($addonTitle) . ' <span style="font-size: 12px; color: #718096;">(' . $count . 'x @ $' . number_format($addonPrice, 2) . ')</span>
+                          </td>
+                          <td style="padding: 10px 0; border-bottom: 1px dashed #e2e8f0; text-align: right; color: #2d3748; font-weight: 600; white-space: nowrap;">
+                            +$' . number_format($itemTotal, 2) . '
+                          </td>
+                        </tr>';
+                    } else {
+                        $totalPrice += $addonPrice;
+
+                        $selectedAddonsRepeater[] = [
+                            'title'       => $addonTitle,
+                            'addon_title' => $addonTitle,
+                            'quantity'    => 1,
+                            'count'       => 1,
+                            'price'       => $addonPrice,
+                            'total_price' => $addonPrice
+                        ];
+
+                        $addonsTextArray[] = "+ {$addonTitle} — $" . number_format($addonPrice, 2);
+                        $addonsHtmlRows .= '
+                        <tr>
+                          <td style="padding: 10px 0; border-bottom: 1px dashed #e2e8f0; color: #2d3748;">
+                            ' . e($addonTitle) . '
+                          </td>
+                          <td style="padding: 10px 0; border-bottom: 1px dashed #e2e8f0; text-align: right; color: #2d3748; font-weight: 600; white-space: nowrap;">
+                            +$' . number_format($addonPrice, 2) . '
+                          </td>
+                        </tr>';
+                    }
+                    break;
                 }
             }
         }
 
         $clientComment = trim(e($data['comments'] ?? ''));
-        $addonsSummary = implode("\n", $addonsTextArray);
-
         $secureToken = Str::random(32);
         $isFlexible = !empty($data['is_flexible_dates']);
-        $rawDate = trim($data['booking_date'] ?? '');
         
-        $bookingDateFormatted = $isFlexible 
-            ? (!empty($rawDate) ? e($rawDate) . ' (Flexible dates)' : 'Flexible dates / To be agreed')
-            : (!empty($rawDate) ? e($rawDate) : 'Open date / To be agreed');
+        $rawDate = trim($data['booking_date'] ?? '');
+        $mainDates = array_map('trim', explode(' to ', $rawDate));
+        $dateStart = !empty($mainDates[0]) ? $mainDates[0] : null;
+        $dateEnd = !empty($mainDates[1]) ? $mainDates[1] : $dateStart;
 
-        // Сохраняем в базу понятные имена
+        $hDates = array_map('trim', explode(' to ', $hotelDates));
+        $hotelStart = !empty($hDates[0]) ? $hDates[0] : null;
+        $hotelEnd = !empty($hDates[1]) ? $hDates[1] : $hotelStart;
+
+        // 5. Сохранение заказа в Tailor Orders
         $order = EntryRecord::inSection('Orders');
         $order->title = e($data['full_name']) . ' - ' . ($tourTitle ?: $categoryTitle);
         $order->slug = Str::slug(e($data['full_name']) . '-' . time() . '-' . Str::random(4));
@@ -171,16 +245,36 @@ class BookingHandler
         $order->client_name = e($data['full_name']);
         $order->email = e($data['email']);
         $order->phone = e($data['phone']);
-        $order->booking_type = $categoryTitle;
-        $order->tour_slug = e($tourSlug);
-        $order->booking_date = $bookingDateFormatted;
+        
+        $order->accommodation = $accommodationVal;
+        if ($selectedTour) {
+            $order->tour = $selectedTour->id;
+        }
+
+        $order->date_start = $dateStart;
+        $order->date_end = $dateEnd;
+        $order->is_flexible_dates = $isFlexible;
         $order->guests = $guestsCount;
+
+        $order->hotel_stay_pax = $hotelPax;
+        $order->hotel_stay_start = $hotelStart;
+        $order->hotel_stay_end = $hotelEnd;
+        $order->hotel_stay_notes = $hotelNotes;
+
         $order->total_price = $totalPrice;
-        $order->addons_summary = $addonsSummary;
-        $order->comments = $clientComment;
         $order->secure_token = $secureToken;
         $order->status = 'new';
+        
         $order->save();
+
+        // Repeater в Tailor — это связанные записи (hasMany), создаём их после save()
+        foreach ($selectedAddonsRepeater as $row) {
+            $order->selected_addons()->create([
+                'title'       => $row['title'],
+                'quantity'    => $row['quantity'],
+                'total_price' => $row['total_price'],
+            ]);
+        }
 
         $checkoutUrl = url('/checkout/' . $secureToken);
 
@@ -200,33 +294,25 @@ class BookingHandler
         return Redirect::to('/checkout/' . $secureToken);
     }
 
-    private static function isAddonExcluded(array $cfgAddon, string $bookingType): bool
+    /**
+     * Проверка на исключения для доп. услуг
+     */
+    private static function isAddonExcluded($cfgAddon, string $bookingType): bool
     {
-        $catRaw = $cfgAddon['exclude_categories'] ?? [];
-        $catSlugs = [];
+        $catRaw = is_array($cfgAddon) 
+            ? ($cfgAddon['exclude_categories'] ?? []) 
+            : ($cfgAddon->exclude_categories ?? []);
 
-        if (!empty($catRaw)) {
-            $catIds = [];
-            foreach ((array)$catRaw as $item) {
-                if (is_numeric($item)) $catIds[] = (int)$item;
-                elseif (is_array($item) && !empty($item['id'])) $catIds[] = (int)$item['id'];
-                elseif (is_object($item) && !empty($item->id)) $catIds[] = (int)$item->id;
-                elseif (is_object($item) && !empty($item->slug)) $catSlugs[] = $item->slug;
-            }
+        $fixedRaw = is_array($cfgAddon) 
+            ? ($cfgAddon['exclude_fixed'] ?? []) 
+            : ($cfgAddon->exclude_fixed ?? []);
 
-            if (!empty($catIds)) {
-                $fetchedSlugs = EntryRecord::inSection('Categories')
-                    ->whereIn('id', $catIds)
-                    ->pluck('slug')
-                    ->toArray();
-                $catSlugs = array_merge($catSlugs, $fetchedSlugs);
-            }
-        }
+        $allExcluded = array_unique(array_merge(
+            Arr::flatten((array)$catRaw),
+            Arr::flatten((array)$fixedRaw)
+        ));
 
-        $fixedSlugs = (array)($cfgAddon['exclude_fixed'] ?? []);
-        $allExcluded = array_unique(array_filter(array_merge($catSlugs, $fixedSlugs)));
-
-        return in_array($bookingType, $allExcluded);
+        return in_array($bookingType, $allExcluded, true);
     }
 
     private static function sendEmails($order, $categoryTitle, $tourTitle, $tourDuration, $basePricePerPerson, $checkoutUrl, $addonsHtmlRows, $clientComment, $globalSettings)
@@ -241,12 +327,15 @@ class BookingHandler
 
         $displayOptionName = $tourTitle ? "{$categoryTitle} — {$tourTitle}" : $categoryTitle;
 
-        $isAccommodation = in_array($order->booking_type, ['Sokmo Lodge', 'Mongu Hotel', 'sokmo', 'mongu']);
+        $isAccommodation = in_array($order->accommodation, ['sokmo', 'mongu']);
         $formattedTotal = ($isAccommodation || !$order->total_price) 
             ? 'On Request' 
             : '$' . number_format($order->total_price, 2);
 
-        // Расчет базового тура
+        $bookingDateDisplay = $order->date_start 
+            ? ($order->date_end && $order->date_end !== $order->date_start ? "{$order->date_start} to {$order->date_end}" : $order->date_start)
+            : 'Flexible / Not specified';
+
         $baseTourRow = '';
         if (!$isAccommodation) {
             if ($tourTitle) {
@@ -280,7 +369,6 @@ class BookingHandler
             }
         }
 
-        // Блок комментария
         $commentHtmlBlock = '';
         if (!empty($clientComment)) {
             $commentHtmlBlock = '
@@ -290,7 +378,6 @@ class BookingHandler
             </div>';
         }
 
-        // Блок доп. услуг
         $addonsTableBlock = '';
         if (!empty($addonsHtmlRows)) {
             $addonsTableBlock = '
@@ -302,9 +389,7 @@ class BookingHandler
             </div>';
         }
 
-        // -------------------------------------------------------------
-        // 1. ПИСЬМО АДМИНИСТРАТОРУ
-        // -------------------------------------------------------------
+        // Письмо админу
         $adminHtml = '
         <!DOCTYPE html>
         <html>
@@ -314,7 +399,6 @@ class BookingHandler
             <tr>
               <td align="center">
                 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 620px; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                  
                   <tr>
                     <td style="background-color: #1a202c; padding: 24px 30px;">
                       <table width="100%" border="0" cellspacing="0" cellpadding="0">
@@ -330,10 +414,8 @@ class BookingHandler
                       </table>
                     </td>
                   </tr>
-
                   <tr>
                     <td style="padding: 30px;">
-                      
                       <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 25px;">
                         <tr>
                           <td width="48%">
@@ -374,7 +456,7 @@ class BookingHandler
                         </tr>' : '') . '
                         <tr>
                           <td style="font-size: 14px; color: #4a5568; padding-bottom: 8px;">Start Date:</td>
-                          <td style="font-size: 14px; color: #1a202c; font-weight: 600; padding-bottom: 8px;">' . e($order->booking_date) . '</td>
+                          <td style="font-size: 14px; color: #1a202c; font-weight: 600; padding-bottom: 8px;">' . e($bookingDateDisplay) . '</td>
                         </tr>
                         <tr>
                           <td style="font-size: 14px; color: #4a5568;">Guests Count:</td>
@@ -402,10 +484,8 @@ class BookingHandler
                           Open Receipt Page
                         </a>
                       </div>
-
                     </td>
                   </tr>
-
                 </table>
               </td>
             </tr>
@@ -413,9 +493,7 @@ class BookingHandler
         </body>
         </html>';
 
-        // -------------------------------------------------------------
-        // 2. ПИСЬМО КЛИЕНТУ
-        // -------------------------------------------------------------
+        // Письмо клиенту
         $clientHtml = '
         <!DOCTYPE html>
         <html>
@@ -425,17 +503,14 @@ class BookingHandler
             <tr>
               <td align="center">
                 <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 620px; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                  
                   <tr>
                     <td style="background-color: #2c7a7b; padding: 30px; text-align: center;">
                       <h1 style="margin: 0 0 6px 0; color: #ffffff; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">' . e($companyName) . '</h1>
                       <p style="margin: 0; color: #e6fffa; font-size: 15px;">Booking Request Received</p>
                     </td>
                   </tr>
-
                   <tr>
                     <td style="padding: 30px;">
-                      
                       <p style="margin-top: 0; font-size: 16px; color: #2d3748; line-height: 1.5;">
                         Hello, <strong>' . e($order->client_name) . '</strong>!
                       </p>
@@ -444,11 +519,9 @@ class BookingHandler
                       </p>
 
                       <div style="border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 25px;">
-                        
                         <div style="background-color: #f8fafc; padding: 14px 20px; border-bottom: 1px solid #e2e8f0;">
                           <strong style="color: #2d3748; font-size: 15px;">Your Booking Summary</strong>
                         </div>
-
                         <div style="padding: 20px;">
                           <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size: 14px; margin-bottom: 15px;">
                             <tr>
@@ -462,7 +535,7 @@ class BookingHandler
                             </tr>' : '') . '
                             <tr>
                               <td style="padding: 6px 0; color: #718096;">Start Date:</td>
-                              <td style="padding: 6px 0; color: #2d3748; font-weight: 600;">' . e($order->booking_date) . '</td>
+                              <td style="padding: 6px 0; color: #2d3748; font-weight: 600;">' . e($bookingDateDisplay) . '</td>
                             </tr>
                             <tr>
                               <td style="padding: 6px 0; color: #718096;">Guests:</td>
@@ -506,10 +579,8 @@ class BookingHandler
                         Have questions or urgent changes? Contact us on WhatsApp:<br>
                         <a href="https://wa.me/' . $cleanCompanyPhone . '" style="color: #25d366; text-decoration: none; font-weight: 700; font-size: 14px;">💬 Chat with ' . e($companyName) . ' Specialist</a>
                       </div>
-
                     </td>
                   </tr>
-
                   <tr>
                     <td style="background-color: #1a202c; padding: 20px 30px; text-align: center; color: #a0aec0; font-size: 12px; line-height: 1.6;">
                       <strong>' . e($companyName) . ' Travel Team</strong><br>
@@ -517,7 +588,6 @@ class BookingHandler
                       Email: <a href="mailto:' . e($companyEmail) . '" style="color: #cbd5e0; text-decoration: none;">' . e($companyEmail) . '</a> | Phone: ' . e($companyPhone) . '
                     </td>
                   </tr>
-
                 </table>
               </td>
             </tr>

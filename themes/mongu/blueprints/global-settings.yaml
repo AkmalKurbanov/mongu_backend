@@ -138,11 +138,13 @@ fields:
                     comment: "Используется, если включено выделение как рекомендации"
                     type: text
                     span: left
+                
+                # ИСПРАВЛЕНИЕ: Переводим на checkboxlist, чтобы избежать WHERE IN ошибок Tailor
                 exclude_categories:
                     label: "Скрыть для категорий туров:"
-                    comment: "Выберите динамические категории туров"
-                    type: entries
-                    source: Categories
+                    comment: "Выберите категории туров, для которых нужно скрыть услугу"
+                    type: checkboxlist
+                    options: App\Classes\BookingHelper::getCategoryOptions
                     span: left
 
                 exclude_fixed:

@@ -9,14 +9,11 @@ handle = "Categories"
 handle = "Tours"
 ==
 <?php
-public function onInit()
-{
-    include_once themes_path('mongu/classes/BookingHelper.php');
-}
+use App\Classes\BookingHelper;
 
-public function onStoreBooking()
+function onStoreBooking()
 {
-    return \Themes\Mongu\Classes\BookingHandler::processBooking();
+    return BookingHelper::processBooking();
 }
 ?>
 ==
@@ -248,7 +245,7 @@ public function onStoreBooking()
 
                 <div class="booking__addons">
 
-                  <!-- Отельный блок Mongu (Спец. кастом с выбором дат) -->
+                  <!-- Отельный блок Mongu -->
                   <div class="booking-recommendation js-addon-wrap js-hotel-addon" data-exclude-on="mongu">
                     
                     <div class="booking-recommendation__header">
@@ -319,18 +316,14 @@ public function onStoreBooking()
                   </div>
 
                   <!-- Динамический вывод всех доп. услуг из Tailor Admin -->
-                  {# 1. Создаем карту ID => slug со строковым префиксом (чтобы Twig |merge не сбрасывал ключи) #}
-                  
-                  
                   {% for addon in globalSettings.addons %}
                     {% if addon.code != 'mongu_hotel' %}
                       
-                      {# Инициализируем чистый массив исключений для КАЖДОЙ услуги #}
                       {% set excludeSlugsArr = [] %}
-
-                      {# 1. Преобразуем сохраненные ID (или объекты) в slug-и категорий #}
-                      {% if addon.exclude_categories %}
-                        {% for catItem in addon.exclude_categories %}
+                      {% set rawExcludeCats = addon.exclude_categories ?? [] %}
+                      
+                      {% if rawExcludeCats %}
+                        {% for catItem in rawExcludeCats %}
                           {% set targetId = catItem.id ?? catItem %}
                           {% for cat in tourCategories.get() %}
                             {% if (cat.id == targetId or cat.slug == targetId) and cat.slug not in excludeSlugsArr %}
@@ -340,7 +333,6 @@ public function onStoreBooking()
                         {% endfor %}
                       {% endif %}
 
-                      {# 2. Добавляем фиксированные объекты (sokmo, mongu) #}
                       {% if addon.exclude_fixed %}
                         {% for fixedItem in addon.exclude_fixed %}
                           {% if fixedItem not in excludeSlugsArr %}
@@ -349,11 +341,9 @@ public function onStoreBooking()
                         {% endfor %}
                       {% endif %}
 
-                      {# Формируем финальную строку для JS #}
                       {% set excludeSlugs = excludeSlugsArr|join(',') %}
 
                       {% if addon.is_highlighted %}
-                        {# Вариант А: Рекомендованная услуга #}
                         <div class="booking-recommendation js-addon-wrap" {% if excludeSlugs %}data-exclude-on="{{ excludeSlugs }}"{% endif %}>
                           {% if addon.highlight_header %}
                             <div class="booking-recommendation__header">
@@ -424,7 +414,6 @@ public function onStoreBooking()
                         </div>
 
                       {% else %}
-                        {# Вариант Б: Стандартная услуга #}
                         {% if addon.input_type == 'checkbox' %}
                           <label class="booking-addon js-addon-wrap" {% if excludeSlugs %}data-exclude-on="{{ excludeSlugs }}"{% endif %}>
                             <input
@@ -442,7 +431,6 @@ public function onStoreBooking()
                               <span class="booking-addon__price">+${{ addon.price }}</span>
                             </span>
                           </label>
-
                         {% else %}
                           <div class="booking-addon js-addon-wrap" {% if excludeSlugs %}data-exclude-on="{{ excludeSlugs }}"{% endif %}>
                             <div class="booking-addon__content booking-addon__content_counter">
@@ -469,7 +457,6 @@ public function onStoreBooking()
                             </div>
                           </div>
                         {% endif %}
-
                       {% endif %}
 
                     {% endif %}

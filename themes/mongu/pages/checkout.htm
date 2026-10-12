@@ -8,16 +8,10 @@ use Tailor\Models\EntryRecord;
 
 function onStart() {
     $token = $this->param('token');
-    
     if ($token) {
-        $order = EntryRecord::inSection('Orders')
+        $this['order'] = EntryRecord::inSection('Orders')
             ->where('secure_token', $token)
             ->first();
-
-        $this['order'] = $order;
-        $this['tour'] = ($order && $order->tour_slug)
-            ? EntryRecord::inSection('Tours')->where('slug', $order->tour_slug)->first()
-            : null;
     }
 }
 ?>
@@ -98,19 +92,27 @@ function onStart() {
           </div>
 
           {# Trip Details #}
-          <div class="checkout__section">
-            <h3 class="checkout__section-title">Trip Details</h3>
-            <div class="checkout__grid">
-              <div class="checkout__info-item">
-                <span class="checkout__label">Booking Type:</span>
-                <span class="checkout__value">{{ order.booking_type | replace({'-': ' ', '_': ' '}) | title }}</span>
-              </div>
-              {% if tour %}
-              <div class="checkout__info-item">
-                <span class="checkout__label">Tour:</span>
-                <span class="checkout__value">{{ tour.title }}</span>
-              </div>
-              {% endif %}
+          <div class="checkout__info-item">
+  <span class="checkout__label">Booking Type:</span>
+  <span class="checkout__value">
+    {% if order.category %}
+      {{ order.category.title }}
+    {% elseif order.accommodation == 'sokmo' %}
+      Sokmo Lodge
+    {% elseif order.accommodation == 'mongu' %}
+      Mongu Hotel
+    {% else %}
+      Accommodation
+    {% endif %}
+  </span>
+</div>
+
+{% if order.tour %}
+<div class="checkout__info-item">
+  <span class="checkout__label">Tour:</span>
+  <span class="checkout__value">{{ order.tour.title }}</span>
+</div>
+{% endif %}
               <div class="checkout__info-item">
                 <span class="checkout__label">Date:</span>
                 <span class="checkout__value">{{ order.booking_date | default('Open Date / TBD') }}</span>
