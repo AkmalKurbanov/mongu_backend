@@ -92,52 +92,48 @@ function onStart() {
           </div>
 
           {# Trip Details #}
-          <div class="checkout__info-item">
-  <span class="checkout__label">Booking Type:</span>
-  <span class="checkout__value">
-    {% if order.category %}
-      {{ order.category.title }}
-    {% elseif order.accommodation == 'sokmo' %}
-      Sokmo Lodge
-    {% elseif order.accommodation == 'mongu' %}
-      Mongu Hotel
-    {% else %}
-      Accommodation
-    {% endif %}
-  </span>
-</div>
-
-{% if order.tour %}
-<div class="checkout__info-item">
-  <span class="checkout__label">Tour:</span>
-  <span class="checkout__value">{{ order.tour.title }}</span>
-</div>
-{% endif %}
+          <div class="checkout__section">
+            <h3 class="checkout__section-title">Trip Details</h3>
+            <div class="checkout__grid">
+              {% if order.tour %}
+                <div class="checkout__info-item">
+                  <span class="checkout__label">Tour:</span>
+                  <span class="checkout__value">{{ order.tour.title }}</span>
+                </div>
+              {% endif %}
               <div class="checkout__info-item">
-                <span class="checkout__label">Date:</span>
-                <span class="checkout__value">{{ order.booking_date | default('Open Date / TBD') }}</span>
+                <span class="checkout__label">Start Date:</span>
+                <span class="checkout__value">{% if order.date_start %}{{ order.date_start | date('Y-m-d') }}{% else %}Open Date / TBD{% endif %}</span>
               </div>
               <div class="checkout__info-item">
                 <span class="checkout__label">Guests:</span>
                 <span class="checkout__value">{{ order.guests }} {{ order.guests == 1 ? 'person' : 'people' }}</span>
               </div>
+              {% if order.hotel_stay_pax %}
+                <div class="checkout__info-item">
+                  <span class="checkout__label">Mongu Hotel:</span>
+                  <span class="checkout__value">
+                    {{ order.hotel_stay_pax }} {{ order.hotel_stay_pax == 1 ? 'guest' : 'guests' }}{% if order.hotel_stay_start %}, {{ order.hotel_stay_start | date('Y-m-d') }}{% if order.hotel_stay_end and order.hotel_stay_end != order.hotel_stay_start %} — {{ order.hotel_stay_end | date('Y-m-d') }}{% endif %}{% endif %}
+                  </span>
+                </div>
+              {% endif %}
             </div>
           </div>
 
           {# Additional Options & Notes #}
-          {# Additional Options & Notes #}
-          {% if order.addons_summary or order.comments %}
+          {% if order.selected_addons|length or order.comments %}
             <div class="checkout__section">
               <h3 class="checkout__section-title">Selected Add-ons & Notes</h3>
               <div class="checkout__addons">
                 
-                {# Выбранные доп. услуги #}
-                {% if order.addons_summary %}
+                {# Выбранные доп. услуги (repeater selected_addons) #}
+                {% if order.selected_addons|length %}
                   <div class="checkout__addons-list" style="margin-bottom: 12px;">
-                    {% for line in order.addons_summary | split("\n") %}
-                      {% if line | trim is not empty %}
-                        <div class="checkout__addon-item" style="padding: 4px 0; font-weight: 500; color: #2d3748;">{{ line }}</div>
-                      {% endif %}
+                    {% for item in order.selected_addons %}
+                      <div class="checkout__addon-item" style="padding: 4px 0; font-weight: 500; color: #2d3748;">
+                        {{ item.title }}{% if item.quantity %} ({{ item.quantity }}x){% endif %}
+                        {% if item.total_price %}— ${{ item.total_price | number_format(2, '.', ',') }}{% endif %}
+                      </div>
                     {% endfor %}
                   </div>
                 {% endif %}
@@ -159,8 +155,7 @@ function onStart() {
           {# Total Price #}
           <div class="checkout__total">
             <span class="checkout__total-label">Total Amount:</span>
-            {# Проверяем как системные слаги, так и нормальные названия объектов #}
-            {% if order.booking_type | lower in ['sokmo', 'mongu', 'sokmo lodge', 'mongu hotel'] or not order.total_price or order.total_price == 0 %}
+            {% if not order.total_price or order.total_price == 0 %}
               <span class="checkout__total-price">On request</span>
             {% else %}
               <span class="checkout__total-price">${{ order.total_price | number_format(2, '.', ',') }}</span>

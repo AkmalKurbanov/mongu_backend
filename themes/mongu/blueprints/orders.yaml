@@ -56,24 +56,13 @@ fields:
         span: full
         tab: Клиент
 
-    # --- Вкладка 3: Детали бронирования ---
-    accommodation:
-        label: Проживание
-        type: dropdown
-        span: left
-        tab: Детали поездки
-
-        options:
-            none: "— Не выбрано —"
-            sokmo: "Sokmo Lodge"
-            mongu: "Mongu Hotel"
-
+    # --- Вкладка 3: Детали тура ---
     tour:
         label: Выбранный тур
         type: entries
         source: Tours
         maxItems: 1
-        span: right
+        span: left
         tab: Детали поездки
 
     guests:
@@ -81,7 +70,7 @@ fields:
         type: number
         min: 1
         default: 1
-        span: left
+        span: right
         tab: Детали поездки
 
     is_flexible_dates:
@@ -97,9 +86,7 @@ fields:
         span: left
         tab: Детали поездки
 
-    
-
-    # --- Вкладка 4: Отель Mongu ---
+    # --- Вкладка 4: Отель Mongu (доп. услуга к туру: до/после трека) ---
     hotel_stay_pax:
         label: "Mongu Hotel: Гостей"
         type: number

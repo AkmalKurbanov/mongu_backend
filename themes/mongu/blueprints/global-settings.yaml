@@ -146,12 +146,3 @@ fields:
                     type: checkboxlist
                     options: App\Classes\BookingHelper::getCategoryOptions
                     span: left
-
-                exclude_fixed:
-                    label: "Скрыть для проживания:"
-                    comment: "Отметьте объекты размещения"
-                    type: checkboxlist
-                    options:
-                        sokmo: "Sokmo Lodge"
-                        mongu: "Mongu Hotel"
-                    span: right

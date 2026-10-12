@@ -66,26 +66,12 @@ class BookingHelper
         $addonsConfig = $globalSettings->addons ?? [];
 
         $bookingType = $data['booking_type'] ?? '';
-        $isAccommodation = in_array($bookingType, ['sokmo', 'mongu']);
-        $tourSlug = $isAccommodation ? null : ($data['tour_id'] ?? null);
+        $tourSlug = $data['tour_id'] ?? null;
         $guestsCount = max(1, intval($data['guests'] ?? 1));
 
-        // 1. Определение Категории или Фиксированного Проживания
-        $categoryRecord = null;
-        $accommodationVal = 'none';
-        $categoryTitle = '';
-
-        if ($isAccommodation) {
-            $accommodationVal = $bookingType;
-            $categoryTitle = match($bookingType) {
-                'sokmo' => 'Sokmo Lodge',
-                'mongu' => 'Mongu Hotel',
-                default => 'Accommodation'
-            };
-        } else {
-            $categoryRecord = EntryRecord::inSection('Categories')->where('slug', $bookingType)->first();
-            $categoryTitle = $categoryRecord ? $categoryRecord->title : ucwords(str_replace(['-', '_'], ' ', $bookingType));
-        }
+        // 1. Определение категории тура
+        $categoryRecord = EntryRecord::inSection('Categories')->where('slug', $bookingType)->first();
+        $categoryTitle = $categoryRecord ? $categoryRecord->title : ucwords(str_replace(['-', '_'], ' ', $bookingType));
 
         // 2. Детали выбранного тура
         $totalPrice = 0.00;
@@ -94,7 +80,7 @@ class BookingHelper
         $tourDuration = null;
         $basePricePerPerson = 0.00;
 
-        if (!$isAccommodation && $tourSlug) {
+        if ($tourSlug) {
             $selectedTour = EntryRecord::inSection('Tours')->where('slug', $tourSlug)->first();
             if ($selectedTour) {
                 $tourTitle = $selectedTour->title;
@@ -111,7 +97,7 @@ class BookingHelper
         $addonsHtmlRows = '';
         $selectedAddonsRepeater = [];
 
-        // 3. Отдельная обработка проживания Mongu Hotel Stay
+        // 3. Доп. услуга: проживание в Mongu Hotel до/после тура (отдельные поля hotel_stay_*)
         $hotelPrice = floatval($globalSettings->hotel_price_per_night ?? 50);
         if ($hotelPrice <= 0) $hotelPrice = 50.00;
 
@@ -228,10 +214,7 @@ class BookingHelper
         $secureToken = Str::random(32);
         $isFlexible = !empty($data['is_flexible_dates']);
         
-        $rawDate = trim($data['booking_date'] ?? '');
-        $mainDates = array_map('trim', explode(' to ', $rawDate));
-        $dateStart = !empty($mainDates[0]) ? $mainDates[0] : null;
-        $dateEnd = !empty($mainDates[1]) ? $mainDates[1] : $dateStart;
+        $dateStart = trim($data['booking_date'] ?? '') ?: null;
 
         $hDates = array_map('trim', explode(' to ', $hotelDates));
         $hotelStart = !empty($hDates[0]) ? $hDates[0] : null;
@@ -246,13 +229,11 @@ class BookingHelper
         $order->email = e($data['email']);
         $order->phone = e($data['phone']);
         
-        $order->accommodation = $accommodationVal;
         if ($selectedTour) {
             $order->tour = $selectedTour->id;
         }
 
         $order->date_start = $dateStart;
-        $order->date_end = $dateEnd;
         $order->is_flexible_dates = $isFlexible;
         $order->guests = $guestsCount;
 
@@ -299,20 +280,13 @@ class BookingHelper
      */
     private static function isAddonExcluded($cfgAddon, string $bookingType): bool
     {
-        $catRaw = is_array($cfgAddon) 
-            ? ($cfgAddon['exclude_categories'] ?? []) 
+        $catRaw = is_array($cfgAddon)
+            ? ($cfgAddon['exclude_categories'] ?? [])
             : ($cfgAddon->exclude_categories ?? []);
 
-        $fixedRaw = is_array($cfgAddon) 
-            ? ($cfgAddon['exclude_fixed'] ?? []) 
-            : ($cfgAddon->exclude_fixed ?? []);
+        $excluded = Arr::flatten((array)$catRaw);
 
-        $allExcluded = array_unique(array_merge(
-            Arr::flatten((array)$catRaw),
-            Arr::flatten((array)$fixedRaw)
-        ));
-
-        return in_array($bookingType, $allExcluded, true);
+        return in_array($bookingType, $excluded, true);
     }
 
     private static function sendEmails($order, $categoryTitle, $tourTitle, $tourDuration, $basePricePerPerson, $checkoutUrl, $addonsHtmlRows, $clientComment, $globalSettings)
@@ -327,48 +301,44 @@ class BookingHelper
 
         $displayOptionName = $tourTitle ? "{$categoryTitle} — {$tourTitle}" : $categoryTitle;
 
-        $isAccommodation = in_array($order->accommodation, ['sokmo', 'mongu']);
-        $formattedTotal = ($isAccommodation || !$order->total_price) 
+        $formattedTotal = !$order->total_price
             ? 'On Request' 
             : '$' . number_format($order->total_price, 2);
 
-        $bookingDateDisplay = $order->date_start 
-            ? ($order->date_end && $order->date_end !== $order->date_start ? "{$order->date_start} to {$order->date_end}" : $order->date_start)
+        $bookingDateDisplay = $order->date_start
+            ? date('M j, Y', strtotime((string) $order->date_start))
             : 'Flexible / Not specified';
 
         $baseTourRow = '';
-        if (!$isAccommodation) {
-            if ($tourTitle) {
-                $baseTotal = $basePricePerPerson * $order->guests;
-                $baseTourRow = '
-                <tr>
-                  <td style="padding: 10px 0; border-bottom: 1px solid #edf2f7; color: #2d3748; font-weight: 600;">
-                    ' . e($tourTitle) . '
-                    <div style="font-size: 12px; color: #718096; font-weight: normal; margin-top: 3px;">
-                      Category: ' . e($categoryTitle) . ($tourDuration ? ' | Duration: ' . e($tourDuration) : '') . '<br>
-                      Base Rate: $' . number_format($basePricePerPerson, 2) . ' × ' . $order->guests . ' pax
-                    </div>
-                  </td>
-                  <td style="padding: 10px 0; border-bottom: 1px solid #edf2f7; text-align: right; color: #2d3748; font-weight: 600; white-space: nowrap; vertical-align: top;">
-                    $' . number_format($baseTotal, 2) . '
-                  </td>
-                </tr>';
-            } else {
-                $baseTourRow = '
-                <tr>
-                  <td style="padding: 10px 0; border-bottom: 1px solid #edf2f7; color: #2d3748; font-weight: 600;">
-                    Category Request: ' . e($categoryTitle) . '
-                    <div style="font-size: 12px; color: #718096; font-weight: normal; margin-top: 3px;">
-                      Specific tour program to be agreed with manager (' . $order->guests . ' pax)
-                    </div>
-                  </td>
-                  <td style="padding: 10px 0; border-bottom: 1px solid #edf2f7; text-align: right; color: #2d3748; font-weight: 600; white-space: nowrap; vertical-align: top;">
-                    On Request
-                  </td>
-                </tr>';
-            }
+        if ($tourTitle) {
+            $baseTotal = $basePricePerPerson * $order->guests;
+            $baseTourRow = '
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #edf2f7; color: #2d3748; font-weight: 600;">
+                ' . e($tourTitle) . '
+                <div style="font-size: 12px; color: #718096; font-weight: normal; margin-top: 3px;">
+                  Category: ' . e($categoryTitle) . ($tourDuration ? ' | Duration: ' . e($tourDuration) : '') . '<br>
+                  Base Rate: $' . number_format($basePricePerPerson, 2) . ' × ' . $order->guests . ' pax
+                </div>
+              </td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #edf2f7; text-align: right; color: #2d3748; font-weight: 600; white-space: nowrap; vertical-align: top;">
+                $' . number_format($baseTotal, 2) . '
+              </td>
+            </tr>';
+        } else {
+            $baseTourRow = '
+            <tr>
+              <td style="padding: 10px 0; border-bottom: 1px solid #edf2f7; color: #2d3748; font-weight: 600;">
+                Category Request: ' . e($categoryTitle) . '
+                <div style="font-size: 12px; color: #718096; font-weight: normal; margin-top: 3px;">
+                  Specific tour program to be agreed with manager (' . $order->guests . ' pax)
+                </div>
+              </td>
+              <td style="padding: 10px 0; border-bottom: 1px solid #edf2f7; text-align: right; color: #2d3748; font-weight: 600; white-space: nowrap; vertical-align: top;">
+                On Request
+              </td>
+            </tr>';
         }
-
         $commentHtmlBlock = '';
         if (!empty($clientComment)) {
             $commentHtmlBlock = '

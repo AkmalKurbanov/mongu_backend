@@ -1,0 +1,102 @@
+uuid: 57f2da1b-73f1-4af9-81c6-e22438e9610b
+handle: StayBookings
+type: stream
+name: Бронирование проживания
+drafts: false
+
+primaryNavigation:
+    label: Проживание
+    icon: icon-bed
+    order: 16
+
+fields:
+    # --- Вкладка 1: Основное и Статус ---
+    status:
+        label: Статус заявки
+        type: dropdown
+        default: new
+        span: left
+        tab: Основное
+        options:
+            new: 🆕 Новая заявка
+            approved: 🟡 Согласовано / Ожидает оплаты
+            paid: 🟢 Оплачено
+            canceled: 🔴 Отменено
+
+    total_price:
+        label: Итоговая сумма ($ USD)
+        type: number
+        span: right
+        tab: Основное
+        comment: "Укажите итоговую сумму. Если 0 — клиенту выведется 'On request'"
+
+    secure_token:
+        label: Секретный токен (для чека)
+        type: text
+        span: full
+        tab: Основное
+        readOnly: true
+
+    # --- Вкладка 2: Данные клиента ---
+    client_name:
+        label: Имя и Фамилия клиента
+        type: text
+        span: left
+        tab: Клиент
+
+    phone:
+        label: Телефон / WhatsApp
+        type: text
+        span: right
+        tab: Клиент
+
+    email:
+        label: Email
+        type: text
+        span: full
+        tab: Клиент
+
+    # --- Вкладка 3: Проживание ---
+    property:
+        label: Объект размещения
+        type: dropdown
+        span: left
+        tab: Проживание
+        options:
+            sokmo: "Sokmo Lodge"
+            mongu: "Mongu Hotel"
+
+    guests:
+        label: Количество гостей
+        type: number
+        min: 1
+        default: 1
+        span: right
+        tab: Проживание
+
+    check_in:
+        label: Дата заезда
+        type: datepicker
+        mode: date
+        span: left
+        tab: Проживание
+
+    check_out:
+        label: Дата выезда
+        type: datepicker
+        mode: date
+        span: right
+        tab: Проживание
+
+    is_flexible_dates:
+        label: Неточные / Гибкие даты
+        type: switch
+        span: full
+        tab: Проживание
+
+    notes:
+        label: Пожелания клиента
+        type: textarea
+        size: small
+        span: full
+        tab: Проживание

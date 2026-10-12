@@ -117,33 +117,16 @@ function onStoreBooking()
                   </label>
                   {% endfor %}
 
-                  <label class="booking-card">
-                    <input
-                      type="radio"
-                      name="booking_type"
-                      value="sokmo"
-                      data-item-type="accommodation"
-                      class="booking-card__input" />
+                  <a href="" class="booking-card">
                     <span class="booking-card__content">
-                      <svg class="icon"><use href="{{'assets/sprites/icons.svg#tent'|theme}}"></use></svg>
-                      <span class="booking-card__title">Sokmo Lodge</span>
-                      <span class="booking-card__desc">Alpine camp experience</span>
+                      
+                      <svg class="icon"><use href="{{ ('assets/sprites/icons.svg#hotel') | theme }}"></use></svg>
+                      
+                      <span class="booking-card__title">Accomodation</span>
+                      <span class="booking-card__desc">{{ category.description }}</span>
                     </span>
-                  </label>
+                  </a>
 
-                  <label class="booking-card">
-                    <input
-                      type="radio"
-                      name="booking_type"
-                      value="mongu"
-                      data-item-type="accommodation"
-                      class="booking-card__input" />
-                    <span class="booking-card__content">
-                      <svg class="icon"><use href="{{'assets/sprites/icons.svg#hotel'|theme}}"></use></svg>
-                      <span class="booking-card__title">Mongu Hotel</span>
-                      <span class="booking-card__desc">Comfortable city stay</span>
-                    </span>
-                  </label>
                 </div>
 
                 <div class="booking__btn-wrap">
@@ -246,7 +229,7 @@ function onStoreBooking()
                 <div class="booking__addons">
 
                   <!-- Отельный блок Mongu -->
-                  <div class="booking-recommendation js-addon-wrap js-hotel-addon" data-exclude-on="mongu">
+                  <div class="booking-recommendation js-addon-wrap js-hotel-addon">
                     
                     <div class="booking-recommendation__header">
                       <svg class="icon"><use href="{{ 'assets/sprites/icons.svg#hotel' | theme }}"></use></svg>
@@ -330,14 +313,6 @@ function onStoreBooking()
                               {% set excludeSlugsArr = excludeSlugsArr|merge([cat.slug]) %}
                             {% endif %}
                           {% endfor %}
-                        {% endfor %}
-                      {% endif %}
-
-                      {% if addon.exclude_fixed %}
-                        {% for fixedItem in addon.exclude_fixed %}
-                          {% if fixedItem not in excludeSlugsArr %}
-                            {% set excludeSlugsArr = excludeSlugsArr|merge([fixedItem]) %}
-                          {% endif %}
                         {% endfor %}
                       {% endif %}
 
