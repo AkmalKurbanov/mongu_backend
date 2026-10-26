@@ -20,6 +20,7 @@ fields:
         options:
             new: 🆕 Новая заявка
             approved: 🟡 Согласовано / Ожидает оплаты
+            payment_pending: ⏳ Платёж обрабатывается
             paid: 🟢 Оплачено
             canceled: 🔴 Отменено
 
@@ -29,6 +30,14 @@ fields:
         span: right
         tab: Основное
         comment: "Укажите итоговую сумму. Если 0 — выведется 'On request'"
+
+    tour_snapshot_price:
+        label: "Снимок: Цена тура за 1 чел. ($)"
+        type: number
+        span: left
+        tab: Основное
+        readOnly: true
+        comment: "Фиксируется автоматически при создании заявки (защита от изменения цен в каталоге)"
 
     secure_token:
         label: Секретный токен (для чека)
@@ -138,3 +147,37 @@ fields:
                     label: Стоимость ($)
                     type: number
                     span: full
+
+  # --- Банковский эквайринг ---
+    currency:
+        label: Валюта
+        type: dropdown
+        default: USD
+        span: left
+        tab: Основное
+        options:
+            USD: USD ($)
+            KGS: KGS (сом)
+            EUR: EUR (€)
+
+    payment_url:
+        label: Ссылка на оплату банка
+        type: text
+        span: full
+        tab: Основное
+        comment: "Генерируется автоматически или вставляется вручную"
+
+    transaction_id:
+        label: ID транзакции / инвойса в банке
+        type: text
+        span: left
+        tab: Основное
+        readOnly: true
+
+    payment_method:
+        label: Провайдер оплаты
+        type: text
+        span: right
+        tab: Основное
+        readOnly: true
+        comment: "Например: FreedomPay, DemirBank, Stripe, Manual Link"

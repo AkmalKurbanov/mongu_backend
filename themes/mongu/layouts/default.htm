@@ -1,110 +1,79 @@
-##
-[global globalSettings]
-handle = "GlobalSettings"
-
+## 
+[global globalSettings] 
+handle = "GlobalSettings" 
 [global pagesSettings]
-handle = "PagesSettings"
-
+handle = "PagesSettings" 
 ==
 <!doctype html>
 <html lang="en">
-  <head>
-    {% partial 'site/meta.htm' %}
-    {% partial 'site/links.htm' %}
-    {# JSON-LD #}
-    {% if finalSchema %}
-    <script type="application/ld+json">
-      {{ finalSchema | raw }}
-    </script>
-    {% endif %}
-    {# JSON-LD #}
-    {# Уникальный скрипт страницы #}
-    {% set jsFile = this.page.page_js | default(this.page.id ~ '.js') %}
-    {% set jsPath = 'assets/js/' ~ jsFile %}
-    <script type="module" src="{{ jsPath | theme }}"></script>
-    {# Уникальный скрипт страницы #}
-    {# Основные стили страницы (асинхронно) #}
-    {% set cssFile = this.page.page_css_file | default(this.page.id ~ '.css') %}
-    {% set cssPath = 'assets/css/' ~ cssFile %}
-    <link rel="preload" href="{{ cssPath | theme }}" as="style" onload="this.onload=null;this.rel='stylesheet';document.body.classList.add('content-loaded')">
-    <noscript><link rel="stylesheet" href="{{ cssPath | theme }}"></noscript>
-    {# Основные стили страницы (асинхронно) #}
-
-    
-    {# Критические стили #}
-    {% if this.page.id == 'contacts' %}
-      {% partial 'blocks/critical-contacts.htm' %}
-    {% elseif this.page.id == 'about' %}
-      {% partial 'blocks/critical-about.htm' %}
-    {% else %}
-      {% partial 'blocks/critical-base.htm' %}
-    {% endif %}
-    {# Критические стили #}
-
-    
-
-    {% if globalSettings.analytics_code %}
-      {{ globalSettings.analytics_code | raw }}
-    {% endif %}
-    
-  </head>
-  <body>
-    
-    {% partial 'blocks/scroll-top-btn.htm' %}
-    
-    {% partial 'site/header' headerType=this.page.headerType %}
-
-    {# Словарь страниц (ID страницы : базовое имя поля) --- #}
-    {% set heroMap = {
-        'categories': 'hero_tours',
-        'accommodations': 'hero_accommodations',
-        'hotel': 'hero_hotel',
-        'lodge': 'hero_lodge',
-        'destination': 'hero_destination',
-        'destinations': 'hero_destination',
-        'about': 'hero_about',
-        'guide': 'guide_hero',
-        'contacts': 'hero_contacts',
-        'booking': 'hero_booking'
-    } %}
-
-    {# Получаем имя поля из словаря. Если страницы там нет — будет null #}
-    {% set field = heroMap[this.page.id] %}
-
-    {# --- Динамическое извлечение из pagesSettings --- #}
-    {% set rawImageObj = field ? attribute(pagesSettings, field) : null %}
-    {% set rawImage = rawImageObj.path ?? (rawImageObj is iterable ? rawImageObj.first().path ?? rawImageObj[0] : rawImageObj) %}
-    
-    {% set rawPosition = field ? attribute(pagesSettings, field ~ '_position') : null %}
-    {% set rawCaption = field ? attribute(pagesSettings, field ~ '_caption') : null %}
-
-    
-    {% set finalHeroImage = record.hero ?: record.preview ?: this.page.dynamicHeroImage ?: (this.page.staticHeroImage and (this.page.staticHeroImage.path or this.page.staticHeroImage|length) ? this.page.staticHeroImage : rawImage) %}
-    
-    {% set finalHeroPosition = record.hero_position ?: record.preview_position ?: this.page.dynamicHeroPosition ?: rawPosition ?: 'center-bg' %}
-    
-    {% set finalHeroTitle = record.title ?: this.page.dynamicHeroTitle ?: this.page.title %}
-    
-    {% set finalHeroAlt = record.hero_caption ?: record.preview_caption ?: this.page.dynamicHeroAlt ?: rawCaption ?: finalHeroTitle %}
-    {% if this.page.id == 'index' %}
-        {% partial 'blocks/hero-index' heroFolder='index' %}
-    {% elseif this.page.id == 'lodge-stub' %}
-        {% partial 'blocks/hero-index' heroFolder='lodge-stub' %}
-    {% elseif this.page.id == 'tour' or this.page.id == 'article' or this.page.id == 'lodge-stub' %}
-        
-    {% else %}
-        {% partial 'blocks/hero-inside'  
-            heroImageObj=finalHeroImage 
-            heroPosition=finalHeroPosition
-            heroImageAlt=finalHeroAlt
-            heroTitle=finalHeroTitle
-        %}
-    {% endif %}
-  
-    {% page %}
-    {% partial 'site/footer' %}
-    {% partial 'blocks/mobile-menu' %}
-    {% partial 'blocks/inline-sprite' %}
-    {% framework extras %}
-  </body>
+    <head>
+        {% partial 'site/meta.htm' %} {% partial 'site/links.htm' %} {# JSON-LD
+        #} {% if finalSchema %}
+        <script type="application/ld+json">
+            {{ finalSchema | raw }}
+        </script>
+        {% endif %} {# JSON-LD #} {# Уникальный скрипт страницы #} {% set jsFile
+        = this.page.page_js | default(this.page.id ~ '.js') %} {% set jsPath =
+        'assets/js/' ~ jsFile %}
+        <script type="module" src="{{ jsPath | theme }}"></script>
+        {# Уникальный скрипт страницы #} {# Основные стили страницы (асинхронно)
+        #} {% set cssFile = this.page.page_css | default(this.page.id ~ '.css')
+        %} {% set cssPath = 'assets/css/' ~ cssFile %}
+        <link
+            rel="preload"
+            href="{{ cssPath | theme }}"
+            as="style"
+            onload="
+                this.onload = null;
+                this.rel = 'stylesheet';
+                document.body.classList.add('content-loaded');
+            "
+        />
+        <noscript
+            ><link rel="stylesheet" href="{{ cssPath | theme }}"
+        /></noscript>
+        {# Основные стили страницы (асинхронно) #} {# Критические стили #} {% if
+        this.page.id == 'contacts' %} {% partial 'blocks/critical-contacts.htm'
+        %} {% elseif this.page.id == 'about' %} {% partial
+        'blocks/critical-about.htm' %} {% else %} {% partial
+        'blocks/critical-base.htm' %} {% endif %} {# Критические стили #} {% if
+        globalSettings.analytics_code %} {{ globalSettings.analytics_code | raw
+        }} {% endif %}
+    </head>
+    <body>
+        {% partial 'blocks/scroll-top-btn.htm' %} {% partial 'site/header'
+        headerType=this.page.headerType %} {# Словарь страниц (ID страницы :
+        базовое имя поля) --- #} {% set heroMap = { 'categories': 'hero_tours',
+        'accommodations': 'hero_accommodations', 'hotel': 'hero_hotel', 'lodge':
+        'hero_lodge', 'destination': 'hero_destination', 'destinations':
+        'hero_destination', 'about': 'hero_about', 'guide': 'guide_hero',
+        'contacts': 'hero_contacts', 'booking': 'hero_booking' } %} {# Получаем
+        имя поля из словаря. Если страницы там нет — будет null #} {% set field
+        = heroMap[this.page.id] %} {# --- Динамическое извлечение из
+        pagesSettings --- #} {% set rawImageObj = field ?
+        attribute(pagesSettings, field) : null %} {% set rawImage =
+        rawImageObj.path ?? (rawImageObj is iterable ? rawImageObj.first().path
+        ?? rawImageObj[0] : rawImageObj) %} {% set rawPosition = field ?
+        attribute(pagesSettings, field ~ '_position') : null %} {% set
+        rawCaption = field ? attribute(pagesSettings, field ~ '_caption') : null
+        %} {% set finalHeroImage = record.hero ?: record.preview ?:
+        this.page.dynamicHeroImage ?: (this.page.staticHeroImage and
+        (this.page.staticHeroImage.path or this.page.staticHeroImage|length) ?
+        this.page.staticHeroImage : rawImage) %} {% set finalHeroPosition =
+        record.hero_position ?: record.preview_position ?:
+        this.page.dynamicHeroPosition ?: rawPosition ?: 'center-bg' %} {% set
+        finalHeroTitle = record.title ?: this.page.dynamicHeroTitle ?:
+        this.page.title %} {% set finalHeroAlt = record.hero_caption ?:
+        record.preview_caption ?: this.page.dynamicHeroAlt ?: rawCaption ?:
+        finalHeroTitle %} {% if this.page.id == 'index' %} {% partial
+        'blocks/hero-index' heroFolder='index' %} {% elseif this.page.id ==
+        'lodge-stub' %} {% partial 'blocks/hero-index' heroFolder='lodge-stub'
+        %} {% elseif this.page.id == 'tour' or this.page.id == 'article' or
+        this.page.id == 'lodge-stub' %} {% else %} {% partial
+        'blocks/hero-inside' heroImageObj=finalHeroImage
+        heroPosition=finalHeroPosition heroImageAlt=finalHeroAlt
+        heroTitle=finalHeroTitle %} {% endif %} {% page %} {% partial
+        'site/footer' %} {% partial 'blocks/mobile-menu' %} {% partial
+        'blocks/inline-sprite' %} {% framework extras %}
+    </body>
 </html>

@@ -1,0 +1,37 @@
+uuid: a7c6b086-7297-41bf-bd7e-a64ad418a813
+handle: Lodgings
+type: stream
+name: Объекты проживания
+drafts: false
+
+primaryNavigation:
+    label: Объекты проживания
+    icon: icon-home
+    order: 17
+
+fields:
+    description:
+        label: Краткое описание
+        comment: "Показывается на карточке при выборе места"
+        type: text
+        span: full
+
+    icon_id:
+        label: Иконка (ID из спрайта, напр. hotel, tent)
+        type: text
+        span: left
+
+    price_per_night:
+        label: Цена за ночь ($)
+        comment: "Только цифра. Пусто или 0 — цена «по запросу», менеджер согласует её позже"
+        type: text
+        span: right
+
+    price_basis:
+        label: Как считать цену
+        type: dropdown
+        default: per_person
+        span: full
+        options:
+            per_person: "За человека за ночь"
+            per_unit: "За номер / палатку за ночь (не зависит от числа гостей)"

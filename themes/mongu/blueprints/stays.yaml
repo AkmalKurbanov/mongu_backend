@@ -10,9 +10,9 @@ primaryNavigation:
     order: 16
 
 fields:
-    # --- Вкладка 1: Основное и Статус ---
+    # --- Вкладка 1: Основное, статус, цена и оплата ---
     status:
-        label: Статус заявки
+        label: Статус заказа
         type: dropdown
         default: new
         span: left
@@ -20,6 +20,7 @@ fields:
         options:
             new: 🆕 Новая заявка
             approved: 🟡 Согласовано / Ожидает оплаты
+            payment_pending: ⏳ Платёж обрабатывается
             paid: 🟢 Оплачено
             canceled: 🔴 Отменено
 
@@ -28,12 +29,27 @@ fields:
         type: number
         span: right
         tab: Основное
-        comment: "Укажите итоговую сумму. Если 0 — клиенту выведется 'On request'"
+        comment: "Считается автоматически, если у объекта указана цена. 0 — клиенту выведется 'On request'. После согласования с менеджером впишите итог сюда."
+
+    lodging_snapshot_price:
+        label: "Снимок: Цена за ночь ($)"
+        type: number
+        span: left
+        tab: Основное
+        readOnly: true
+        comment: "Зафиксированная стоимость объекта на момент брони"  
+
+    manager_notes:
+        label: Заметки менеджера (клиент не видит)
+        type: textarea
+        size: small
+        span: full
+        tab: Основное
 
     secure_token:
         label: Секретный токен (для чека)
         type: text
-        span: full
+        span: left
         tab: Основное
         readOnly: true
 
@@ -57,14 +73,12 @@ fields:
         tab: Клиент
 
     # --- Вкладка 3: Проживание ---
-    property:
+    lodging:
         label: Объект размещения
         type: dropdown
         span: left
         tab: Проживание
-        options:
-            sokmo: "Sokmo Lodge"
-            mongu: "Mongu Hotel"
+        options: App\Classes\StayHelper::getLodgingOptions
 
     guests:
         label: Количество гостей
@@ -88,10 +102,16 @@ fields:
         span: right
         tab: Проживание
 
+    nights:
+        label: Ночей
+        type: number
+        span: left
+        tab: Проживание
+
     is_flexible_dates:
         label: Неточные / Гибкие даты
         type: switch
-        span: full
+        span: right
         tab: Проживание
 
     notes:
@@ -100,3 +120,37 @@ fields:
         size: small
         span: full
         tab: Проживание
+
+    # --- Банковский эквайринг ---
+    currency:
+        label: Валюта
+        type: dropdown
+        default: USD
+        span: right
+        tab: Основное
+        options:
+            USD: USD ($)
+            KGS: KGS (сом)
+            EUR: EUR (€)
+
+    payment_url:
+        label: Ссылка на оплату банка
+        type: text
+        span: full
+        tab: Основное
+        comment: "Генерируется автоматически или вставляется вручную"
+
+    transaction_id:
+        label: ID транзакции / инвойса в банке
+        type: text
+        span: left
+        tab: Основное
+        readOnly: true
+
+    payment_method:
+        label: Провайдер оплаты
+        type: text
+        span: right
+        tab: Основное
+        readOnly: true
+        comment: "Например: FreedomPay, DemirBank, Stripe, Manual Link"

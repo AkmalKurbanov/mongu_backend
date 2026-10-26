@@ -97,7 +97,7 @@ class BookingHelper
         $addonsHtmlRows = '';
         $selectedAddonsRepeater = [];
 
-        // 3. Доп. услуга: проживание в Mongu Hotel до/после тура (отдельные поля hotel_stay_*)
+        // 3. Доп. услуга: проживание в Mongu Hotel до/после тура
         $hotelPrice = floatval($globalSettings->hotel_price_per_night ?? 50);
         if ($hotelPrice <= 0) $hotelPrice = 50.00;
 
@@ -109,7 +109,6 @@ class BookingHelper
         if ($hotelPax > 0) {
             $hotelTotal = $hotelPrice * $hotelPax * max(1, $hotelNights);
             $totalPrice += $hotelTotal;
-
 
             $addonsTextArray[] = "Mongu Hotel Stay: {$hotelPax} guests, " . ($hotelDates ?: 'Not specified') . " ({$hotelNights} nights) — $" . number_format($hotelTotal, 2) . (!empty($hotelNotes) ? " [Notes: {$hotelNotes}]" : "");
             
@@ -210,7 +209,8 @@ class BookingHelper
             }
         }
 
-        $clientComment = trim(e($data['comments'] ?? ''));
+        // Убираем двойное экранирование при сохранении в БД (оставляем «чистый» текст)
+        $clientComment = trim($data['comments'] ?? $data['notes'] ?? '');
         $secureToken = Str::random(32);
         $isFlexible = !empty($data['is_flexible_dates']);
         
@@ -220,17 +220,18 @@ class BookingHelper
         $hotelStart = !empty($hDates[0]) ? $hDates[0] : null;
         $hotelEnd = !empty($hDates[1]) ? $hDates[1] : $hotelStart;
 
-        // 5. Сохранение заказа в Tailor Orders
+        // 5. Сохранение заказа в Tailor Orders без лишнего e()
         $order = EntryRecord::inSection('Orders');
-        $order->title = e($data['full_name']) . ' - ' . ($tourTitle ?: $categoryTitle);
-        $order->slug = Str::slug(e($data['full_name']) . '-' . time() . '-' . Str::random(4));
+        $order->title = trim($data['full_name']) . ' - ' . ($tourTitle ?: $categoryTitle);
+        $order->slug = Str::slug(trim($data['full_name']) . '-' . time() . '-' . Str::random(4));
         
-        $order->client_name = e($data['full_name']);
-        $order->email = e($data['email']);
-        $order->phone = e($data['phone']);
+        $order->client_name = trim($data['full_name']);
+        $order->email = trim($data['email']);
+        $order->phone = trim($data['phone']);
         
         if ($selectedTour) {
             $order->tour = $selectedTour->id;
+            $order->tour_snapshot_price = $basePricePerPerson;
         }
 
         $order->date_start = $dateStart;
@@ -246,9 +247,13 @@ class BookingHelper
         $order->secure_token = $secureToken;
         $order->status = 'new';
         
+        // Если у модели Orders есть поле для комментариев, сохраняем его корректно
+        if (isset($order->comments)) {
+            $order->comments = $clientComment;
+        }
+        
         $order->save();
 
-        // Repeater в Tailor — это связанные записи (hasMany), создаём их после save()
         foreach ($selectedAddonsRepeater as $row) {
             $order->selected_addons()->create([
                 'title'       => $row['title'],
@@ -275,9 +280,6 @@ class BookingHelper
         return Redirect::to('/checkout/' . $secureToken);
     }
 
-    /**
-     * Проверка на исключения для доп. услуг
-     */
     private static function isAddonExcluded($cfgAddon, string $bookingType): bool
     {
         $catRaw = is_array($cfgAddon)
@@ -294,7 +296,9 @@ class BookingHelper
         $companyName = $globalSettings->website_name ?? 'Mongu';
         $companyPhone = $globalSettings->whatsapp_number ?? '+996 123 456 789';
         $cleanCompanyPhone = preg_replace('/[^0-9]/', '', $companyPhone);
-        $companyEmail = $globalSettings->email_address ?? Config::get('mail.from.address');
+        
+        // Исправлено: теперь адрес админа берется из настроек GlobalSettings с фоллбеком на конфиг почты
+        $adminEmail = $globalSettings->email_address ?? Config::get('mail.from.address');
 
         $cleanClientPhone = preg_replace('/[^0-9]/', '', $order->phone);
         $clientWaUrl = "https://wa.me/{$cleanClientPhone}";
@@ -339,12 +343,13 @@ class BookingHelper
               </td>
             </tr>';
         }
+        
         $commentHtmlBlock = '';
         if (!empty($clientComment)) {
             $commentHtmlBlock = '
             <div style="margin-top: 20px; padding: 15px; background-color: #fffaf0; border-left: 4px solid #dd6b20; border-radius: 4px;">
               <strong style="color: #c05621; font-size: 13px; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Client Special Comment:</strong>
-              <div style="color: #7b341e; font-size: 14px; line-height: 1.5;">' . nl2br($clientComment) . '</div>
+              <div style="color: #7b341e; font-size: 14px; line-height: 1.5;">' . nl2br(e($clientComment)) . '</div>
             </div>';
         }
 
@@ -555,7 +560,7 @@ class BookingHelper
                     <td style="background-color: #1a202c; padding: 20px 30px; text-align: center; color: #a0aec0; font-size: 12px; line-height: 1.6;">
                       <strong>' . e($companyName) . ' Travel Team</strong><br>
                       ' . e($globalSettings->address ?? 'Karakol, Kyrgyzstan') . '<br>
-                      Email: <a href="mailto:' . e($companyEmail) . '" style="color: #cbd5e0; text-decoration: none;">' . e($companyEmail) . '</a> | Phone: ' . e($companyPhone) . '
+                      Email: <a href="mailto:' . e($globalSettings->email_address ?? '') . '" style="color: #cbd5e0; text-decoration: none;">' . e($globalSettings->email_address ?? '') . '</a> | Phone: ' . e($companyPhone) . '
                     </td>
                   </tr>
                 </table>
@@ -569,9 +574,10 @@ class BookingHelper
         $fromName  = Config::get('mail.from.name', $companyName);
 
         try {
-            Mail::html($adminHtml, function($message) use ($order, $fromEmail, $fromName, $displayOptionName) {
+            // Исправлено: письмо админу уходит на $adminEmail вместо системного noreply
+            Mail::html($adminHtml, function($message) use ($order, $fromEmail, $fromName, $displayOptionName, $adminEmail) {
                 $message->from($fromEmail, $fromName);
-                $message->to(Config::get('mail.from.address'), Config::get('mail.from.name'));
+                $message->to($adminEmail);
                 $message->subject('⚡ New Request: ' . $order->client_name . ' (' . $displayOptionName . ')');
             });
 
@@ -583,5 +589,76 @@ class BookingHelper
         } catch (\Throwable $e) {
             trace_log('Booking email notification error: ' . $e->getMessage());
         }
+    }
+
+    public static function getPaymentPayload($order): array
+    {
+        $items = [];
+
+        if ($order->tour) {
+            $tourPrice = floatval($order->tour_snapshot_price ?? 0);
+            if ($tourPrice <= 0) {
+                // Фоллбек на случай старых заказов без снимка
+                $tour = \Tailor\Models\EntryRecord::inSection('Tours')->find($order->tour);
+                $tourPrice = floatval(preg_replace('/[^0-9.]/', '', $tour->program_price ?? '0'));
+            }
+
+            if ($tourPrice > 0) {
+                $tourObj = \Tailor\Models\EntryRecord::inSection('Tours')->find($order->tour);
+                $items[] = [
+                    'name'     => 'Тур: ' . ($tourObj->title ?? 'Основная программа'),
+                    'price'    => $tourPrice,
+                    'quantity' => $order->guests,
+                    'total'    => $tourPrice * $order->guests,
+                ];
+            }
+        }
+
+        if ($order->hotel_stay_pax > 0) {
+            $globalSettings = GlobalRecord::findForGlobal('GlobalSettings');
+            $hotelPrice = floatval($globalSettings->hotel_price_per_night ?? 50);
+            if ($hotelPrice <= 0) {
+                $hotelPrice = 50.00;
+            }
+
+            $hotelNights = 1;
+            if (!empty($order->hotel_stay_start) && !empty($order->hotel_stay_end)) {
+                $nightsDiff = (new \DateTime($order->hotel_stay_start))->diff(new \DateTime($order->hotel_stay_end))->days;
+                $hotelNights = max(1, $nightsDiff);
+            }
+
+            $hotelTotal = $hotelPrice * $order->hotel_stay_pax * $hotelNights;
+
+            $items[] = [
+                'name'     => "Проживание в Mongu Hotel ({$hotelNights} ноч.)",
+                'price'    => $hotelPrice,
+                'quantity' => $order->hotel_stay_pax * $hotelNights,
+                'total'    => $hotelTotal,
+            ];
+        }
+
+        foreach ($order->selected_addons as $addon) {
+            $items[] = [
+                'name'     => $addon->title,
+                'price'    => floatval($addon->total_price / max(1, $addon->quantity)),
+                'quantity' => intval($addon->quantity),
+                'total'    => floatval($addon->total_price),
+            ];
+        }
+
+        return [
+            'order_id'       => $order->id,
+            'order_number'   => $order->title,
+            'secure_token'   => $order->secure_token,
+            'amount'         => floatval($order->total_price),
+            'currency'       => $order->currency ?? 'USD',
+            'client_name'    => $order->client_name,
+            'client_email'   => $order->email,
+            'client_phone'   => $order->phone,
+            'description'    => "Оплата заказа #{$order->id} - {$order->client_name}",
+            'items'          => $items,
+            'success_url'    => url('/checkout/' . $order->secure_token . '?status=success'),
+            'failure_url'    => url('/checkout/' . $order->secure_token . '?status=error'),
+        ];
     }
 }

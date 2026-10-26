@@ -1,0 +1,177 @@
+url = "/stay"
+layout = "default"
+title = "Book a Stay"
+page_css = "booking.css"
+
+[collection lodgings]
+handle = "Lodgings"
+
+
+==
+<?php
+use App\Classes\StayHelper;
+
+function onStoreStay()
+{
+    return StayHelper::processStay();
+}
+?>
+==
+{% set preselect = input('lodging') %}
+<main class="main-content">
+  <div class="breadcrumbs">
+    <div class="container">
+      <nav aria-label="breadcrumbs">
+        <ul class="breadcrumbs__list">
+          <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'index' | page}}">Home</a></li>
+          <li class="breadcrumbs__item" aria-current="page">Book a Stay</li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <section class="section-padding-bottom">
+    <div class="container">
+      <div class="title-wrap">
+        <h2 class="title">Book your stay</h2>
+      </div>
+
+      <div class="booking">
+        <form class="booking__form" id="js-stay-form" data-request="onStoreStay" data-request-validate>
+          <div class="booking__main">
+            <div class="booking__panels">
+              <div class="booking__panel">
+
+                <h2 class="booking__panel-title">Where would you like to stay?</h2>
+                {% set lodgingList = lodgings.where('is_enabled', true).get() %}
+                {% if lodgingList|length %}
+                <div class="booking__types">
+                  {% for lodging in lodgingList %}
+                    {% set priceNum = lodging.price_per_night ? (lodging.price_per_night|replace({'$': '', ' ': '', ',': ''}) + 0) : 0 %}
+                    {% set basis = lodging.price_basis ?: 'per_person' %}
+                    <label class="booking-card">
+                      <input type="radio" name="lodging" value="{{ lodging.slug }}" class="booking-card__input"
+                             data-title="{{ lodging.title }}" data-price="{{ priceNum }}" data-basis="{{ basis }}"
+                             {% if preselect ? preselect == lodging.slug : loop.first %}checked{% endif %} />
+                      <span class="booking-card__content">
+                        <svg class="icon"><use href="{{ ('assets/sprites/icons.svg#' ~ (lodging.icon_id ?: 'hotel')) | theme }}"></use></svg>
+                        <span class="booking-card__title">{{ lodging.title }}</span>
+                        {% if lodging.description %}<span class="booking-card__desc">{{ lodging.description }}</span>{% endif %}
+                        <span class="booking-card__desc">
+                          {% if priceNum %}from ${{ priceNum }} / night{{ basis == 'per_person' ? ' per person' : '' }}{% else %}Price on request{% endif %}
+                        </span>
+                      </span>
+                    </label>
+                  {% endfor %}
+                </div>
+                {% else %}
+                  <p class="booking__intro-desc">Accommodation options will appear here soon. Meanwhile, contact us on WhatsApp.</p>
+                {% endif %}
+
+                <h2 class="booking__panel-title" style="margin-top: 32px;">Dates & guests</h2>
+                <div class="booking__fields">
+                  <div class="booking__field-row booking__field-row_col-2">
+                    <div class="booking__field-group">
+                      <label class="booking__label">
+                        Check-in &rarr; Check-out
+                        <span class="js-stay-nights" style="font-weight: 400; color: #666;"></span>
+                      </label>
+                      <input type="text" class="booking__input js-stay-dates"
+                             placeholder="Select check-in & check-out" readonly />
+                      <input type="hidden" name="check_in" />
+                      <input type="hidden" name="check_out" />
+                    </div>
+
+                    <div class="booking__field-group">
+                      <label class="booking__label">Guests</label>
+                      <div class="counter">
+                        <button type="button" class="counter__btn js-guests-minus">-</button>
+                        <input type="number" class="counter__input js-guests-input" name="guests" value="1" readonly />
+                        <button type="button" class="counter__btn js-guests-plus">+</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="booking__field-row">
+                    <label class="booking__checkbox-label">
+                      <input type="checkbox" name="is_flexible_dates" value="1" class="js-stay-flexible" />
+                      <span>I haven't decided on exact dates yet</span>
+                    </label>
+                  </div>
+                </div>
+
+                <h2 class="booking__panel-title" style="margin-top: 32px;">Your details</h2>
+                <div class="booking__fields">
+                  <div class="booking__field-row">
+                    <div class="booking__field-group">
+                      <label class="booking__label">Full Name</label>
+                      <input type="text" class="booking__input" name="full_name" placeholder="John Doe" required />
+                    </div>
+                  </div>
+                  <div class="booking__field-row booking__field-row_col-2">
+                    <div class="booking__field-group">
+                      <label class="booking__label">Email Address</label>
+                      <input type="email" class="booking__input" name="email" placeholder="john@example.com" required />
+                    </div>
+                    <div class="booking__field-group">
+                      <label class="booking__label">Phone / WhatsApp</label>
+                      <input type="tel" class="booking__input" name="phone" placeholder="+1 234 567 8900" required />
+                    </div>
+                  </div>
+                  <div class="booking__field-row">
+                    <div class="booking__field-group">
+                      <label class="booking__label">Additional Comments</label>
+                      <textarea class="booking__input booking__input_textarea" name="comments" rows="3"
+                                placeholder="Room preferences, arrival time, special requests…"></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <div data-validate-error style="display: none; color: #c53030; margin-top: 12px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <aside class="booking__sidebar">
+            <div class="order-summary">
+              <h3 class="order-summary__title">Stay Summary</h3>
+              <div class="order-summary__content">
+                <div class="order-summary__item">
+                  <span class="order-summary__label">Place:</span>
+                  <span class="order-summary__val js-sum-place">Not selected</span>
+                </div>
+                <div class="order-summary__item">
+                  <span class="order-summary__label">Dates:</span>
+                  <span class="order-summary__val js-sum-dates">—</span>
+                </div>
+                <div class="order-summary__item">
+                  <span class="order-summary__label">Guests:</span>
+                  <span class="order-summary__val js-sum-guests">1 pax</span>
+                </div>
+                <hr class="order-summary__divider" />
+                <div class="order-summary__total">
+                  <span>Total:</span>
+                  <span class="order-summary__price order-summary__price_on-request js-sum-total">On request</span>
+                </div>
+              </div>
+
+              {% set clean_phone = globalSettings.whatsapp_number | replace({' ': '', '+': '', '-': ''}) %}
+              <a href="https://wa.me/{{ clean_phone }}" target="_blank" rel="noopener noreferrer"
+                 class="btn order-summary__wa-btn js-stay-wa">
+                <svg class="icon"><use href="{{'assets/sprites/icons.svg#whatsapp'|theme}}"></use></svg>Book via WhatsApp
+              </a>
+              <div class="booking__divider-text"><span>or</span></div>
+              <button type="submit" class="btn btn_bordered order-summary__btn js-submit-stay">Submit Request</button>
+              <p class="order-summary__note js-sum-note">No payment required at this step. Our manager confirms availability and the final price, then sends payment details.</p>
+            </div>
+          </aside>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+{% if this.page.id == 'stay' %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+{% endif %}

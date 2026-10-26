@@ -8,10 +8,15 @@ use Tailor\Models\EntryRecord;
 
 function onStart() {
     $token = $this->param('token');
+    
     if ($token) {
         $this['order'] = EntryRecord::inSection('Orders')
             ->where('secure_token', $token)
             ->first();
+
+        // Безопасный перехват параметра status (только success или error)
+        $status = strtolower(trim((string) get('status', '')));
+        $this['bank_status'] = in_array($status, ['success', 'error'], true) ? $status : null;
     }
 }
 ?>
@@ -162,27 +167,48 @@ function onStart() {
             {% endif %}
           </div>
 
-          {# Bank / Order Status Notice #}
-          {% if orderStatus == 'new' %}
-            <div class="checkout__notice checkout__notice_pending">
-              Your request has been registered in our system and is pending manager verification. Payment instructions will be provided once details are verified.
+          {# Итоговые уведомления и статусы оплаты #}
+          {% if bank_status == 'success' and orderStatus != 'paid' %}
+            
+            <div class="checkout__notice checkout__notice_pending" style="background: #e6fffa; color: #234e52; border-left: 4px solid #319795; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
+              <strong>Payment submitted for verification!</strong> We received response from the bank and are waiting for confirmation. Please refresh the page in a few seconds.
             </div>
-          {% elseif orderStatus == 'approved' %}
-            <div class="checkout__notice checkout__notice_pending">
-              Your booking is approved. Please proceed with payment according to the instructions provided by our manager.
-            </div>
-          {% elseif orderStatus == 'paid' %}
-            <div class="checkout__notice checkout__notice_success">
-              Payment confirmed. Thank you! Your booking is fully secured and active.
-            </div>
-          {% elseif orderStatus == 'canceled' %}
+
+          {% elseif bank_status == 'error' %}
+
             <div class="checkout__notice checkout__notice_error" style="background: #fff5f5; color: #c53030; border-left: 4px solid #e53e3e; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
-              This booking request has been cancelled. If you have any questions, please contact support.
+              <strong>Payment error.</strong> The bank declined the transaction or session expired. Please try again or contact support.
             </div>
+
           {% else %}
-            <div class="checkout__notice checkout__notice_pending">
-              Our manager will contact you shortly to confirm the details.
-            </div>
+
+            {% if orderStatus == 'new' %}
+              <div class="checkout__notice checkout__notice_pending">
+                Your request has been registered in our system and is pending manager verification. Payment instructions will be provided once details are verified.
+              </div>
+            {% elseif orderStatus == 'approved' %}
+              <div class="checkout__notice checkout__notice_pending">
+                Your booking is approved. Please proceed with payment according to the instructions provided by our manager.
+              </div>
+              {% if order.payment_url %}
+                <div style="margin-top: 20px; text-align: center;">
+                  <a class="btn" href="{{ order.payment_url }}" target="_blank" rel="noopener noreferrer">Pay online</a>
+                </div>
+              {% endif %}
+            {% elseif orderStatus == 'payment_pending' %}
+              <div class="checkout__notice checkout__notice_pending">
+                Your payment is currently being processed by the bank. Please wait a few moments.
+              </div>
+            {% elseif orderStatus == 'paid' %}
+              <div class="checkout__notice checkout__notice_success">
+                Payment confirmed. Thank you! Your booking is fully secured and active.
+              </div>
+            {% elseif orderStatus == 'canceled' %}
+              <div class="checkout__notice checkout__notice_error" style="background: #fff5f5; color: #c53030; border-left: 4px solid #e53e3e; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
+                This booking request has been cancelled. If you have any questions, please contact support.
+              </div>
+            {% endif %}
+
           {% endif %}
 
         </div>

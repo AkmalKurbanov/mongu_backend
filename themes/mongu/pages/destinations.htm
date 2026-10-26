@@ -1,41 +1,43 @@
-##
-url = "/destinations"
-layout = "default"
-title = "Destinations"
-page_css_file = "mosaic-grid.css"
-page_js = "core.js"
-
-[collection destinations]
-handle = "Destinations"
+## 
+url = "/destinations" 
+layout = "default" 
+title = "Destinations" 
+page_css = "mosaic-grid.css" 
+page_js = "core.js" 
+[collection destinations] 
+handle = "Destinations" 
 ==
 <main class="main-content">
-      <div class="container">
+    <div class="container">
         <nav aria-label="Хлебные крошки" class="breadcrumbs">
-          <ul class="breadcrumbs__list">
-            <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'index' | page}}">Home</a></li>
-            <li class="breadcrumbs__item" aria-current="page">{{this.page.title}}</li>
-          </ul>
+            <ul class="breadcrumbs__list">
+                <li class="breadcrumbs__item">
+                    <a class="breadcrumbs__link" href="{{'index' | page}}"
+                        >Home</a
+                    >
+                </li>
+                <li class="breadcrumbs__item" aria-current="page">
+                    {{this.page.title}}
+                </li>
+            </ul>
         </nav>
-      </div>
+    </div>
 
-      <section class="section-padding-bottom">
+    <section class="section-padding-bottom">
         <div class="container">
-          <div class="title-wrap">
-            <h2 class="title title_centered">Explore Central Asian Ranges</h2>
-            <p class="subtitle">From high-altitude alpine lakes to wild gorges and ancient nomadic paths</p>
-          </div>
+            <div class="title-wrap">
+                <h2 class="title title_centered">
+                    Explore Central Asian Ranges
+                </h2>
+                <p class="subtitle">
+                    From high-altitude alpine lakes to wild gorges and ancient
+                    nomadic paths
+                </p>
+            </div>
 
-          
-            {% partial 'blocks/mosaic-grid' 
-              items=destinations 
-              link_page='destination' 
-              icon_sprite='maps.svg' 
-              btn_text='Explore region' 
-            %}
-                    
-          
-          
-          
+            {% partial 'blocks/mosaic-grid' items=destinations
+            link_page='destination' icon_sprite='maps.svg' btn_text='Explore
+            region' %}
         </div>
-      </section>
-    </main>
+    </section>
+</main>

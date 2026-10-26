@@ -1,558 +1,1020 @@
-url = "/booking"
-layout = "default"
-title = "Booking"
-
-[collection tourCategories]
-handle = "Categories"
-
+url = "/booking" 
+layout = "default" 
+title = "Booking" 
+[collection tourCategories] 
+handle = "Categories" 
 [collection tours]
-handle = "Tours"
+ handle = "Tours" 
 ==
-<?php
-use App\Classes\BookingHelper;
-
-function onStoreBooking()
-{
-    return BookingHelper::processBooking();
-}
-?>
+<?php 
+use App\Classes\BookingHelper; 
+function onStoreBooking() { 
+  return BookingHelper::processBooking(); 
+  } 
+?> 
 ==
 <main class="main-content">
-  <div class="breadcrumbs">
-    <div class="container">
-      <nav aria-label="breadcrumbs">
-        <ul class="breadcrumbs__list">
-          <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'index' | page}}">Home</a></li>
-          <li class="breadcrumbs__item" aria-current="page">Booking</li>
-        </ul>
-      </nav>
-    </div>
-  </div>
-
-  <section class="section-padding-bottom">
-    <div class="container">
-      <div class="title-wrap">
-        <h2 class="title">Create your journey</h2>
-      </div>
-
-      <div class="booking js-booking-container">
-        
-        <div class="booking__intro js-booking-intro">
-          <div class="booking__intro-grid">
-            <div class="booking__intro-card booking__intro-card_wa">
-              <div>
-                <svg class="icon" aria-hidden="true">
-                  <use href="{{'assets/sprites/icons.svg#whatsapp' | theme}}"></use>
-                </svg>
-                <h3 class="booking__intro-title">Fast booking via WhatsApp</h3>
-                <p class="booking__intro-desc">
-                  Get instant confirmation and chat with our trip specialist in 1 click.
-                </p>
-              </div>
-              {% set clean_phone = globalSettings.whatsapp_number | replace({' ': '', '+': '', '-': ''}) %}
-              <a
-                href="https://wa.me/{{ clean_phone }}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn btn_light js-whatsapp-fast-btn">
-                Chat on WhatsApp
-              </a>
-            </div>
-
-            <div class="booking__intro-card booking__intro-card_form">
-              <div>
-                <svg class="icon" aria-hidden="true">
-                  <use href="{{'assets/sprites/icons.svg#form' | theme}}"></use>
-                </svg>
-                <h3 class="booking__intro-title">Book on Website</h3>
-                <p class="booking__intro-desc">
-                  Select dates, customize your trip with add-ons, and fill out the details yourself.
-                </p>
-              </div>
-              <button type="button" class="btn js-start-wizard">Continue on Website</button>
-            </div>
-          </div>
+    <div class="breadcrumbs">
+        <div class="container">
+            <nav aria-label="breadcrumbs">
+                <ul class="breadcrumbs__list">
+                    <li class="breadcrumbs__item">
+                        <a class="breadcrumbs__link" href="{{'index' | page}}"
+                            >Home</a
+                        >
+                    </li>
+                    <li class="breadcrumbs__item" aria-current="page">
+                        Booking
+                    </li>
+                </ul>
+            </nav>
         </div>
-
-        <form class="booking__form js-booking-wizard booking__form_hidden" id="js-booking-form" data-request="onStoreBooking">
-          <div class="booking__main">
-            
-            <div class="booking__progress">
-              <div class="booking__step booking__step_active" data-step="1">1. Selection</div>
-              <div class="booking__step" data-step="2">2. Details</div>
-              <div class="booking__step" data-step="3">3. Add-ons</div>
-              <div class="booking__step" data-step="4">4. Guest Info</div>
-            </div>
-
-            <div class="booking__panels">
-              
-              <div class="booking__global-actions js-booking-global-actions" style="display: none;">
-                <button type="button" class="booking__change-btn js-reset-tour">
-                  <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
-                  Choose another category
-                </button>
-              </div>
-
-              <!-- ШАГ 1: Что бронируем -->
-              <div class="booking__panel js-booking-panel" data-panel="1">
-                <h2 class="booking__panel-title">What would you like to book?</h2>
-                <div class="booking__types">
-                  {% for category in tourCategories.where('is_enabled', true).get() %}
-                  <label class="booking-card">
-                    <input
-                      type="radio"
-                      name="booking_type"
-                      value="{{ category.slug }}"
-                      data-item-type="tour"
-                      data-category="{{ category.slug }}"
-                      class="booking-card__input"
-                      {% if loop.first %}checked{% endif %} />
-                    <span class="booking-card__content">
-                      {% if category.icon_id %}
-                      <svg class="icon"><use href="{{ ('assets/sprites/icons.svg#' ~ category.icon_id) | theme }}"></use></svg>
-                      {% endif %}
-                      <span class="booking-card__title">{{ category.title }}</span>
-                      <span class="booking-card__desc">{{ category.description }}</span>
-                    </span>
-                  </label>
-                  {% endfor %}
-
-                  <a href="" class="booking-card">
-                    <span class="booking-card__content">
-                      
-                      <svg class="icon"><use href="{{ ('assets/sprites/icons.svg#hotel') | theme }}"></use></svg>
-                      
-                      <span class="booking-card__title">Accomodation</span>
-                      <span class="booking-card__desc">{{ category.description }}</span>
-                    </span>
-                  </a>
-
-                </div>
-
-                <div class="booking__btn-wrap">
-                  <button type="button" class="btn js-next-step">Continue
-                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- ШАГ 2: Даты и гости -->
-              <div class="booking__panel js-booking-panel booking__panel_hidden" data-panel="2">
-                <h2 class="booking__panel-title">Select dates & guests</h2>
-                
-                <div class="booking__fields">
-                  
-                  <div class="booking__field-row js-tour-select-wrap">
-                    {% set toursList = tours.where('is_active', true).get() %}
-                    <div class="booking__field-group">
-                      <label class="booking__label">Select tour by category</label>
-                      <div class="custom-select js-custom-select">
-                        <select name="tour_id" class="custom-select__native js-custom-select-native" hidden>
-                          <option value="" disabled selected data-price="0">Choose a tour...</option>
-                        </select>
-                        <div class="custom-select__trigger js-custom-select-trigger" tabindex="0">
-                          <span class="custom-select__value js-custom-select-value">Choose a tour...</span>
-                          <svg class="icon custom-select__arrow"><use href="{{'assets/sprites/icons.svg#angle'|theme}}"></use></svg>
-                        </div>
-                        <div class="custom-select__dropdown">
-                          <div class="custom-select__search-wrap">
-                            <input
-                              type="text"
-                              class="custom-select__search js-custom-select-search"
-                              placeholder="Search tour..." />
-                          </div>
-                          <ul class="custom-select__list js-custom-select-list"></ul>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="booking__label booking__tour-info-badge js-tour-duration-badge" style="display: none;">
-                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#clock'|theme}}"></use></svg>
-                    <span>Tour duration: <strong class="js-tour-duration-val">—</strong></span>
-                  </div>
-
-                  <div class="booking__field-row booking__field-row_col-2">
-                    <div class="booking__field-group">
-                      <label class="booking__label js-date-label">
-                        Start Date
-                      </label>
-                      <input 
-                        type="text" 
-                        class="booking__input js-date-range-picker" 
-                        name="booking_date" 
-                        placeholder="Select start date" 
-                        readonly />
-                      <span class="booking__field-hint js-date-hint">
-                        Base price per person
-                      </span>
-                    </div>
-                    
-                    <div class="booking__field-group">
-                      <label class="booking__label">Guests</label>
-                      <div class="counter">
-                        <button type="button" class="counter__btn js-pax-minus">-</button>
-                        <input
-                          type="number"
-                          class="counter__input js-pax-input"
-                          name="guests"
-                          value="1"
-                          readonly />
-                        <button type="button" class="counter__btn js-pax-plus">+</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="booking__field-row">
-                    <label class="booking__checkbox-label">
-                      <input type="checkbox" name="is_flexible_dates" value="1" class="js-flexible-checkbox" />
-                      <span>I haven't decided on exact dates yet</span>
-                    </label>
-                  </div>
-
-                </div>
-
-                <div class="booking__btn-wrap">
-                  <button type="button" class="btn btn_bordered js-prev-step">
-                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>Back
-                  </button>
-                  <button type="button" class="btn js-next-step">
-                    Continue<svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- ШАГ 3: Дополнения -->
-              <div class="booking__panel js-booking-panel booking__panel_hidden" data-panel="3">
-                <h2 class="booking__panel-title">Enhance your trip</h2>
-
-                <div class="booking__addons">
-
-                  <!-- Отельный блок Mongu -->
-                  <div class="booking-recommendation js-addon-wrap js-hotel-addon">
-                    
-                    <div class="booking-recommendation__header">
-                      <svg class="icon"><use href="{{ 'assets/sprites/icons.svg#hotel' | theme }}"></use></svg>
-                      <span>Recommended before / after your trek</span>
-                    </div>
-
-                    <div class="booking-addon booking-addon_special">
-                      <div class="booking-addon__content" style="flex-direction: column; align-items: flex-start; gap: 16px;">
-                        
-                        <div class="booking-addon__info">
-                          <span class="booking-addon__title">
-                            Mongu Hotel Stay
-                            <span class="booking-addon__badge">Popular</span>
-                          </span>
-                          <span class="booking-addon__desc">Comfortable stay in Karakol before or after your trek.</span>
-                        </div>
-
-                        <div class="booking__field-row booking__field-row_col-2" style="width: 100%;">
-                          
-                          <div class="booking__field-group">
-                            <label class="booking__label">Guests in Hotel</label>
-                            <div class="counter">
-                              <button type="button" class="counter__btn js-hotel-pax-minus">-</button>
-                              <input
-                                type="number"
-                                class="counter__input js-hotel-pax-input"
-                                name="addons[mongu_hotel_pax]"
-                                value="0"
-                                min="0"
-                                data-price="{{ globalSettings.hotel_price_per_night ?: 50 }}"
-                                data-title="Mongu Hotel Stay"
-                                readonly />
-                              <button type="button" class="counter__btn js-hotel-pax-plus">+</button>
-                            </div>
-                          </div>
-
-                          <div class="booking__field-group">
-                            <label class="booking__label">
-                              Stay Dates <span class="js-hotel-nights-badge" style="font-weight: 400; color: #666;">(0 nights)</span>
-                            </label>
-                            <input 
-                              type="text" 
-                              class="booking__input js-hotel-stay-dates" 
-                              name="addons[mongu_hotel_dates]" 
-                              placeholder="Select check-in & check-out" 
-                              readonly />
-                            <input type="hidden" name="addons[mongu_hotel_nights]" class="js-hotel-nights-input" value="0" />
-                          </div>
-
-                        </div>
-
-                        <div class="booking-addon__hotel-details js-hotel-details" style="width: 100%; display: none; border-top: 1px solid rgba(0,0,0,0.08); padding-top: 12px; margin-top: 2px;">
-                          <div class="booking__field-group">
-                            <label class="booking__label">
-                              Stay Notes / Preferences <span class="booking__label-optional">(Optional)</span>
-                            </label>
-                            <input 
-                              type="text" 
-                              class="booking__input" 
-                              name="addons[mongu_hotel_notes]" 
-                              placeholder="e.g. Early check-in" />
-                          </div>
-                        </div>
-
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Динамический вывод всех доп. услуг из Tailor Admin -->
-                  {% for addon in globalSettings.addons %}
-                    {% if addon.code != 'mongu_hotel' %}
-                      
-                      {% set excludeSlugsArr = [] %}
-                      {% set rawExcludeCats = addon.exclude_categories ?? [] %}
-                      
-                      {% if rawExcludeCats %}
-                        {% for catItem in rawExcludeCats %}
-                          {% set targetId = catItem.id ?? catItem %}
-                          {% for cat in tourCategories.get() %}
-                            {% if (cat.id == targetId or cat.slug == targetId) and cat.slug not in excludeSlugsArr %}
-                              {% set excludeSlugsArr = excludeSlugsArr|merge([cat.slug]) %}
-                            {% endif %}
-                          {% endfor %}
-                        {% endfor %}
-                      {% endif %}
-
-                      {% set excludeSlugs = excludeSlugsArr|join(',') %}
-
-                      {% if addon.is_highlighted %}
-                        <div class="booking-recommendation js-addon-wrap" {% if excludeSlugs %}data-exclude-on="{{ excludeSlugs }}"{% endif %}>
-                          {% if addon.highlight_header %}
-                            <div class="booking-recommendation__header">
-                              {% if addon.icon %}
-                                <svg class="icon"><use href="{{ ('assets/sprites/icons.svg#' ~ addon.icon) | theme }}"></use></svg>
-                              {% endif %}
-                              <span>{{ addon.highlight_header }}</span>
-                            </div>
-                          {% endif %}
-
-                          {% if addon.input_type == 'checkbox' %}
-                            <label class="booking-addon booking-addon_special">
-                              <input
-                                type="checkbox"
-                                name="addons[{{ addon.code }}]"
-                                value="1"
-                                data-price="{{ addon.price }}"
-                                data-title="{{ addon.title }}"
-                                class="booking-addon__input js-addon-checkbox" />
-                              <span class="booking-addon__content">
-                                <span class="booking-addon__info">
-                                  <span class="booking-addon__title">
-                                    {{ addon.title }}
-                                    {% if addon.badge_text %}
-                                      <span class="booking-addon__badge">{{ addon.badge_text }}</span>
-                                    {% endif %}
-                                  </span>
-                                  {% if addon.description %}
-                                    <span class="booking-addon__desc">{{ addon.description }}</span>
-                                  {% endif %}
-                                </span>
-                                <span class="booking-addon__price">+${{ addon.price }}</span>
-                              </span>
-                            </label>
-                          {% else %}
-                            <div class="booking-addon booking-addon_special">
-                              <div class="booking-addon__content">
-                                <div class="booking-addon__info">
-                                  <span class="booking-addon__title">
-                                    {{ addon.title }}
-                                    {% if addon.badge_text %}
-                                      <span class="booking-addon__badge">{{ addon.badge_text }}</span>
-                                    {% endif %}
-                                  </span>
-                                  {% if addon.description %}
-                                    <span class="booking-addon__desc">{{ addon.description }}</span>
-                                  {% endif %}
-                                </div>
-                                <div class="booking-addon__right">
-                                  <span class="booking-addon__price">+${{ addon.price }}</span>
-                                  <div class="counter">
-                                    <button type="button" class="counter__btn js-addon-minus">-</button>
-                                    <input
-                                      type="number"
-                                      class="counter__input js-addon-counter-input"
-                                      name="addons[{{ addon.code }}]"
-                                      value="0"
-                                      min="0"
-                                      data-price="{{ addon.price }}"
-                                      data-title="{{ addon.title }}"
-                                      readonly />
-                                    <button type="button" class="counter__btn js-addon-plus">+</button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          {% endif %}
-                        </div>
-
-                      {% else %}
-                        {% if addon.input_type == 'checkbox' %}
-                          <label class="booking-addon js-addon-wrap" {% if excludeSlugs %}data-exclude-on="{{ excludeSlugs }}"{% endif %}>
-                            <input
-                              type="checkbox"
-                              name="addons[{{ addon.code }}]"
-                              value="1"
-                              data-price="{{ addon.price }}"
-                              data-title="{{ addon.title }}"
-                              class="booking-addon__input js-addon-checkbox" />
-                            <span class="booking-addon__content">
-                              <span class="booking-addon__info">
-                                <span class="booking-addon__title">{{ addon.title }}</span>
-                                <span class="booking-addon__desc">{{ addon.description }}</span>
-                              </span>
-                              <span class="booking-addon__price">+${{ addon.price }}</span>
-                            </span>
-                          </label>
-                        {% else %}
-                          <div class="booking-addon js-addon-wrap" {% if excludeSlugs %}data-exclude-on="{{ excludeSlugs }}"{% endif %}>
-                            <div class="booking-addon__content booking-addon__content_counter">
-                              <span class="booking-addon__info">
-                                <span class="booking-addon__title">{{ addon.title }}</span>
-                                <span class="booking-addon__desc">{{ addon.description }}</span>
-                              </span>
-                              <div class="booking-addon__right">
-                                <span class="booking-addon__price">+${{ addon.price }}</span>
-                                <div class="counter">
-                                  <button type="button" class="counter__btn js-addon-minus">-</button>
-                                  <input
-                                    type="number"
-                                    class="counter__input js-addon-counter-input"
-                                    name="addons[{{ addon.code }}]"
-                                    value="0"
-                                    min="0"
-                                    data-price="{{ addon.price }}"
-                                    data-title="{{ addon.title }}"
-                                    readonly />
-                                  <button type="button" class="counter__btn js-addon-plus">+</button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        {% endif %}
-                      {% endif %}
-
-                    {% endif %}
-                  {% endfor %}
-
-                </div>
-
-                <div class="booking__btn-wrap">
-                  <button type="button" class="btn btn_bordered js-prev-step">
-                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>Back
-                  </button>
-                  <button type="button" class="btn js-next-step">
-                    Continue<svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- ШАГ 4: Контакты -->
-              <div class="booking__panel js-booking-panel booking__panel_hidden" data-panel="4">
-                <h2 class="booking__panel-title">Your Details</h2>
-                <div class="booking__fields">
-                  <div class="booking__field-row">
-                    <div class="booking__field-group">
-                      <label class="booking__label">Full Name</label>
-                      <input type="text" class="booking__input" name="full_name" placeholder="John Doe" required />
-                    </div>
-                  </div>
-                  <div class="booking__field-row booking__field-row_col-2">
-                    <div class="booking__field-group">
-                      <label class="booking__label">Email Address</label>
-                      <input type="email" class="booking__input" name="email" placeholder="john@example.com" required />
-                    </div>
-                    <div class="booking__field-group">
-                      <label class="booking__label">Phone / WhatsApp</label>
-                      <input type="tel" class="booking__input" name="phone" placeholder="+1 234 567 8900" required />
-                    </div>
-                  </div>
-                  <div class="booking__field-row">
-                    <div class="booking__field-group">
-                      <label class="booking__label">Additional Comments</label>
-                      <textarea
-                        class="booking__input booking__input_textarea"
-                        name="comments"
-                        rows="3"
-                        placeholder="Any questions or special requests?"></textarea>
-                    </div>
-                  </div>
-                </div>
-                <div class="booking__btn-wrap">
-                  <button type="button" class="btn btn_bordered js-prev-step">
-                    <svg class="icon"><use href="{{'assets/sprites/icons.svg#arrow'|theme}}"></use></svg>Back
-                  </button>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <aside class="booking__sidebar">
-            <div class="order-summary">
-              <h3 class="order-summary__title">Booking Summary</h3>
-              <div class="order-summary__content">
-                <div class="order-summary__item">
-                  <span class="order-summary__label">Type:</span>
-                  <span class="order-summary__val js-summary-type">Not selected</span>
-                </div>
-                <div class="order-summary__item">
-                  <span class="order-summary__label">Date:</span>
-                  <span class="order-summary__val js-summary-date">—</span>
-                </div>
-                <div class="order-summary__item">
-                  <span class="order-summary__label">Guests:</span>
-                  <span class="order-summary__val js-summary-pax">1 pax</span>
-                </div>
-                <div class="js-summary-addons-container"></div>
-                <hr class="order-summary__divider" />
-                <div class="order-summary__total">
-                  <span>Total:</span>
-                  <span class="order-summary__price js-summary-total">$0</span>
-                </div>
-              </div>
-
-              {% set clean_phone = globalSettings.whatsapp_number | replace({' ': '', '+': '', '-': ''}) %}
-              <a
-                href="https://wa.me/{{ clean_phone }}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn order-summary__wa-btn js-whatsapp-fast-btn">
-                <svg class="icon"><use href="{{'assets/sprites/icons.svg#whatsapp'|theme}}"></use></svg>Book via WhatsApp
-              </a>
-              <div class="booking__divider-text"><span>or</span></div>
-              <button type="submit" class="btn btn_bordered order-summary__btn js-submit-booking">
-                Submit Request
-              </button>
-              <p class="order-summary__note">No payment required at this step.</p>
-            </div>
-          </aside>
-
-        </form>
-      </div>
     </div>
-  </section>
+
+    <section class="section-padding-bottom">
+        <div class="container">
+            <div class="title-wrap">
+                <h2 class="title">Create your journey</h2>
+            </div>
+
+            <div class="booking js-booking-container">
+                <div class="booking__intro js-booking-intro">
+                    <div class="booking__intro-grid">
+                        <div class="booking__intro-card booking__intro-card_wa">
+                            <div>
+                                <svg class="icon" aria-hidden="true">
+                                    <use
+                                        href="{{'assets/sprites/icons.svg#whatsapp' | theme}}"
+                                    ></use>
+                                </svg>
+                                <h3 class="booking__intro-title">
+                                    Fast booking via WhatsApp
+                                </h3>
+                                <p class="booking__intro-desc">
+                                    Get instant confirmation and chat with our
+                                    trip specialist in 1 click.
+                                </p>
+                            </div>
+                            {% set clean_phone = globalSettings.whatsapp_number
+                            | replace({' ': '', '+': '', '-': ''}) %}
+                            <a
+                                href="https://wa.me/{{ clean_phone }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="btn btn_light js-whatsapp-fast-btn"
+                            >
+                                Chat on WhatsApp
+                            </a>
+                        </div>
+
+                        <div
+                            class="booking__intro-card booking__intro-card_form"
+                        >
+                            <div>
+                                <svg class="icon" aria-hidden="true">
+                                    <use
+                                        href="{{'assets/sprites/icons.svg#form' | theme}}"
+                                    ></use>
+                                </svg>
+                                <h3 class="booking__intro-title">
+                                    Book on Website
+                                </h3>
+                                <p class="booking__intro-desc">
+                                    Select dates, customize your trip with
+                                    add-ons, and fill out the details yourself.
+                                </p>
+                            </div>
+                            <button type="button" class="btn js-start-wizard">
+                                Continue on Website
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <form
+                    class="booking__form js-booking-wizard booking__form_hidden"
+                    id="js-booking-form"
+                    data-request="onStoreBooking"
+                >
+                    <div class="booking__main">
+                        <div class="booking__progress">
+                            <div
+                                class="booking__step booking__step_active"
+                                data-step="1"
+                            >
+                                1. Selection
+                            </div>
+                            <div class="booking__step" data-step="2">
+                                2. Details
+                            </div>
+                            <div class="booking__step" data-step="3">
+                                3. Add-ons
+                            </div>
+                            <div class="booking__step" data-step="4">
+                                4. Guest Info
+                            </div>
+                        </div>
+
+                        <div class="booking__panels">
+                            <div
+                                class="booking__global-actions js-booking-global-actions"
+                                style="display: none"
+                            >
+                                <button
+                                    type="button"
+                                    class="booking__change-btn js-reset-tour"
+                                >
+                                    <svg class="icon">
+                                        <use
+                                            href="{{'assets/sprites/icons.svg#arrow'|theme}}"
+                                        ></use>
+                                    </svg>
+                                    Choose another category
+                                </button>
+                            </div>
+
+                            <!-- ШАГ 1: Что бронируем -->
+                            <div
+                                class="booking__panel js-booking-panel"
+                                data-panel="1"
+                            >
+                                <h2 class="booking__panel-title">
+                                    What would you like to book?
+                                </h2>
+                                <div class="booking__types">
+                                    {% for category in
+                                    tourCategories.where('is_enabled',
+                                    true).get() %}
+                                    <label class="booking-card">
+                                        <input
+                                            type="radio"
+                                            name="booking_type"
+                                            value="{{ category.slug }}"
+                                            data-item-type="tour"
+                                            data-category="{{ category.slug }}"
+                                            class="booking-card__input"
+                                            {%
+                                            if
+                                            loop.first
+                                            %}checked{%
+                                            endif
+                                            %}
+                                        />
+                                        <span class="booking-card__content">
+                                            {% if category.icon_id %}
+                                            <svg class="icon">
+                                                <use
+                                                    href="{{ ('assets/sprites/icons.svg#' ~ category.icon_id) | theme }}"
+                                                ></use>
+                                            </svg>
+                                            {% endif %}
+                                            <span class="booking-card__title"
+                                                >{{ category.title }}</span
+                                            >
+                                            <span class="booking-card__desc"
+                                                >{{ category.description
+                                                }}</span
+                                            >
+                                        </span>
+                                    </label>
+                                    {% endfor %} {# Проживание — отдельный
+                                    сценарий бронирования, ведёт на /stay #}
+                                    <a
+                                        class="booking-card"
+                                        href="{{ 'stay' | page }}"
+                                        style="
+                                            text-decoration: none;
+                                            color: inherit;
+                                        "
+                                    >
+                                        <span class="booking-card__content">
+                                            <svg class="icon">
+                                                <use
+                                                    href="{{ 'assets/sprites/icons.svg#hotel' | theme }}"
+                                                ></use>
+                                            </svg>
+                                            <span class="booking-card__title"
+                                                >Accommodation</span
+                                            >
+                                            <span class="booking-card__desc"
+                                                >Stay at our lodges & camps — no
+                                                tour needed</span
+                                            >
+                                        </span>
+                                    </a>
+                                </div>
+
+                                <div class="booking__btn-wrap">
+                                    <button
+                                        type="button"
+                                        class="btn js-next-step"
+                                    >
+                                        Continue
+                                        <svg class="icon">
+                                            <use
+                                                href="{{'assets/sprites/icons.svg#arrow'|theme}}"
+                                            ></use>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- ШАГ 2: Даты и гости -->
+                            <div
+                                class="booking__panel js-booking-panel booking__panel_hidden"
+                                data-panel="2"
+                            >
+                                <h2 class="booking__panel-title">
+                                    Select dates & guests
+                                </h2>
+
+                                <div class="booking__fields">
+                                    <div
+                                        class="booking__field-row js-tour-select-wrap"
+                                    >
+                                        {% set toursList =
+                                        tours.where('is_active', true).get() %}
+                                        <div class="booking__field-group">
+                                            <label class="booking__label"
+                                                >Select tour by category</label
+                                            >
+                                            <div
+                                                class="custom-select js-custom-select"
+                                            >
+                                                <select
+                                                    name="tour_id"
+                                                    class="custom-select__native js-custom-select-native"
+                                                    hidden
+                                                >
+                                                    <option
+                                                        value=""
+                                                        disabled
+                                                        selected
+                                                        data-price="0"
+                                                    >
+                                                        Choose a tour...
+                                                    </option>
+                                                </select>
+                                                <div
+                                                    class="custom-select__trigger js-custom-select-trigger"
+                                                    tabindex="0"
+                                                >
+                                                    <span
+                                                        class="custom-select__value js-custom-select-value"
+                                                        >Choose a tour...</span
+                                                    >
+                                                    <svg
+                                                        class="icon custom-select__arrow"
+                                                    >
+                                                        <use
+                                                            href="{{'assets/sprites/icons.svg#angle'|theme}}"
+                                                        ></use>
+                                                    </svg>
+                                                </div>
+                                                <div
+                                                    class="custom-select__dropdown"
+                                                >
+                                                    <div
+                                                        class="custom-select__search-wrap"
+                                                    >
+                                                        <input
+                                                            type="text"
+                                                            class="custom-select__search js-custom-select-search"
+                                                            placeholder="Search tour..."
+                                                        />
+                                                    </div>
+                                                    <ul
+                                                        class="custom-select__list js-custom-select-list"
+                                                    ></ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div
+                                        class="booking__label booking__tour-info-badge js-tour-duration-badge"
+                                        style="display: none"
+                                    >
+                                        <svg class="icon">
+                                            <use
+                                                href="{{'assets/sprites/icons.svg#clock'|theme}}"
+                                            ></use>
+                                        </svg>
+                                        <span
+                                            >Tour duration:
+                                            <strong class="js-tour-duration-val"
+                                                >—</strong
+                                            ></span
+                                        >
+                                    </div>
+
+                                    <div
+                                        class="booking__field-row booking__field-row_col-2"
+                                    >
+                                        <div class="booking__field-group">
+                                            <label
+                                                class="booking__label js-date-label"
+                                            >
+                                                Start Date
+                                            </label>
+                                            <input
+                                                type="text"
+                                                class="booking__input js-date-range-picker"
+                                                name="booking_date"
+                                                placeholder="Select start date"
+                                                readonly
+                                            />
+                                            <span
+                                                class="booking__field-hint js-date-hint"
+                                            >
+                                                Base price per person
+                                            </span>
+                                        </div>
+
+                                        <div class="booking__field-group">
+                                            <label class="booking__label"
+                                                >Guests</label
+                                            >
+                                            <div class="counter">
+                                                <button
+                                                    type="button"
+                                                    class="counter__btn js-pax-minus"
+                                                >
+                                                    -
+                                                </button>
+                                                <input
+                                                    type="number"
+                                                    class="counter__input js-pax-input"
+                                                    name="guests"
+                                                    value="1"
+                                                    readonly
+                                                />
+                                                <button
+                                                    type="button"
+                                                    class="counter__btn js-pax-plus"
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="booking__field-row">
+                                        <label class="booking__checkbox-label">
+                                            <input
+                                                type="checkbox"
+                                                name="is_flexible_dates"
+                                                value="1"
+                                                class="js-flexible-checkbox"
+                                            />
+                                            <span
+                                                >I haven't decided on exact
+                                                dates yet</span
+                                            >
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="booking__btn-wrap">
+                                    <button
+                                        type="button"
+                                        class="btn btn_bordered js-prev-step"
+                                    >
+                                        <svg class="icon">
+                                            <use
+                                                href="{{'assets/sprites/icons.svg#arrow'|theme}}"
+                                            ></use></svg
+                                        >Back
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="btn js-next-step"
+                                    >
+                                        Continue<svg class="icon">
+                                            <use
+                                                href="{{'assets/sprites/icons.svg#arrow'|theme}}"
+                                            ></use>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- ШАГ 3: Дополнения -->
+                            <div
+                                class="booking__panel js-booking-panel booking__panel_hidden"
+                                data-panel="3"
+                            >
+                                <h2 class="booking__panel-title">
+                                    Enhance your trip
+                                </h2>
+
+                                <div class="booking__addons">
+                                    <!-- Отельный блок Mongu -->
+                                    <div
+                                        class="booking-recommendation js-addon-wrap js-hotel-addon"
+                                    >
+                                        <div
+                                            class="booking-recommendation__header"
+                                        >
+                                            <svg class="icon">
+                                                <use
+                                                    href="{{ 'assets/sprites/icons.svg#hotel' | theme }}"
+                                                ></use>
+                                            </svg>
+                                            <span
+                                                >Recommended before / after your
+                                                trek</span
+                                            >
+                                        </div>
+
+                                        <div
+                                            class="booking-addon booking-addon_special"
+                                        >
+                                            <div
+                                                class="booking-addon__content"
+                                                style="
+                                                    flex-direction: column;
+                                                    align-items: flex-start;
+                                                    gap: 16px;
+                                                "
+                                            >
+                                                <div
+                                                    class="booking-addon__info"
+                                                >
+                                                    <span
+                                                        class="booking-addon__title"
+                                                    >
+                                                        Mongu Hotel Stay
+                                                        <span
+                                                            class="booking-addon__badge"
+                                                            >Popular</span
+                                                        >
+                                                    </span>
+                                                    <span
+                                                        class="booking-addon__desc"
+                                                        >Comfortable stay in
+                                                        Karakol before or after
+                                                        your trek.</span
+                                                    >
+                                                </div>
+
+                                                <div
+                                                    class="booking__field-row booking__field-row_col-2"
+                                                    style="width: 100%"
+                                                >
+                                                    <div
+                                                        class="booking__field-group"
+                                                    >
+                                                        <label
+                                                            class="booking__label"
+                                                            >Guests in
+                                                            Hotel</label
+                                                        >
+                                                        <div class="counter">
+                                                            <button
+                                                                type="button"
+                                                                class="counter__btn js-hotel-pax-minus"
+                                                            >
+                                                                -
+                                                            </button>
+                                                            <input
+                                                                type="number"
+                                                                class="counter__input js-hotel-pax-input"
+                                                                name="addons[mongu_hotel_pax]"
+                                                                value="0"
+                                                                min="0"
+                                                                data-price="{{ globalSettings.hotel_price_per_night ?: 50 }}"
+                                                                data-title="Mongu Hotel Stay"
+                                                                readonly
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                class="counter__btn js-hotel-pax-plus"
+                                                            >
+                                                                +
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    <div
+                                                        class="booking__field-group"
+                                                    >
+                                                        <label
+                                                            class="booking__label"
+                                                        >
+                                                            Stay Dates
+                                                            <span
+                                                                class="js-hotel-nights-badge"
+                                                                style="
+                                                                    font-weight: 400;
+                                                                    color: #666;
+                                                                "
+                                                                >(0
+                                                                nights)</span
+                                                            >
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            class="booking__input js-hotel-stay-dates"
+                                                            name="addons[mongu_hotel_dates]"
+                                                            placeholder="Select check-in & check-out"
+                                                            readonly
+                                                        />
+                                                        <input
+                                                            type="hidden"
+                                                            name="addons[mongu_hotel_nights]"
+                                                            class="js-hotel-nights-input"
+                                                            value="0"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div
+                                                    class="booking-addon__hotel-details js-hotel-details"
+                                                    style="
+                                                        width: 100%;
+                                                        display: none;
+                                                        border-top: 1px solid
+                                                            rgba(0, 0, 0, 0.08);
+                                                        padding-top: 12px;
+                                                        margin-top: 2px;
+                                                    "
+                                                >
+                                                    <div
+                                                        class="booking__field-group"
+                                                    >
+                                                        <label
+                                                            class="booking__label"
+                                                        >
+                                                            Stay Notes /
+                                                            Preferences
+                                                            <span
+                                                                class="booking__label-optional"
+                                                                >(Optional)</span
+                                                            >
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            class="booking__input"
+                                                            name="addons[mongu_hotel_notes]"
+                                                            placeholder="e.g. Early check-in"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Динамический вывод всех доп. услуг из Tailor Admin -->
+                                    {% for addon in globalSettings.addons %} {%
+                                    if addon.code != 'mongu_hotel' %} {% set
+                                    excludeSlugsArr = [] %} {% set
+                                    rawExcludeCats = addon.exclude_categories ??
+                                    [] %} {% if rawExcludeCats %} {% for catItem
+                                    in rawExcludeCats %} {% set targetId =
+                                    catItem.id ?? catItem %} {% for cat in
+                                    tourCategories.get() %} {% if (cat.id ==
+                                    targetId or cat.slug == targetId) and
+                                    cat.slug not in excludeSlugsArr %} {% set
+                                    excludeSlugsArr =
+                                    excludeSlugsArr|merge([cat.slug]) %} {%
+                                    endif %} {% endfor %} {% endfor %} {% endif
+                                    %} {% set excludeSlugs =
+                                    excludeSlugsArr|join(',') %} {% if
+                                    addon.is_highlighted %}
+                                    <div
+                                        class="booking-recommendation js-addon-wrap"
+                                        {%
+                                        if
+                                        excludeSlugs
+                                        %}data-exclude-on="{{ excludeSlugs }}"
+                                        {%
+                                        endif
+                                        %}
+                                    >
+                                        {% if addon.highlight_header %}
+                                        <div
+                                            class="booking-recommendation__header"
+                                        >
+                                            {% if addon.icon %}
+                                            <svg class="icon">
+                                                <use
+                                                    href="{{ ('assets/sprites/icons.svg#' ~ addon.icon) | theme }}"
+                                                ></use>
+                                            </svg>
+                                            {% endif %}
+                                            <span
+                                                >{{ addon.highlight_header
+                                                }}</span
+                                            >
+                                        </div>
+                                        {% endif %} {% if addon.input_type ==
+                                        'checkbox' %}
+                                        <label
+                                            class="booking-addon booking-addon_special"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                name="addons[{{ addon.code }}]"
+                                                value="1"
+                                                data-price="{{ addon.price }}"
+                                                data-title="{{ addon.title }}"
+                                                class="booking-addon__input js-addon-checkbox"
+                                            />
+                                            <span
+                                                class="booking-addon__content"
+                                            >
+                                                <span
+                                                    class="booking-addon__info"
+                                                >
+                                                    <span
+                                                        class="booking-addon__title"
+                                                    >
+                                                        {{ addon.title }} {% if
+                                                        addon.badge_text %}
+                                                        <span
+                                                            class="booking-addon__badge"
+                                                            >{{ addon.badge_text
+                                                            }}</span
+                                                        >
+                                                        {% endif %}
+                                                    </span>
+                                                    {% if addon.description %}
+                                                    <span
+                                                        class="booking-addon__desc"
+                                                        >{{ addon.description
+                                                        }}</span
+                                                    >
+                                                    {% endif %}
+                                                </span>
+                                                <span
+                                                    class="booking-addon__price"
+                                                    >+${{ addon.price }}</span
+                                                >
+                                            </span>
+                                        </label>
+                                        {% else %}
+                                        <div
+                                            class="booking-addon booking-addon_special"
+                                        >
+                                            <div class="booking-addon__content">
+                                                <div
+                                                    class="booking-addon__info"
+                                                >
+                                                    <span
+                                                        class="booking-addon__title"
+                                                    >
+                                                        {{ addon.title }} {% if
+                                                        addon.badge_text %}
+                                                        <span
+                                                            class="booking-addon__badge"
+                                                            >{{ addon.badge_text
+                                                            }}</span
+                                                        >
+                                                        {% endif %}
+                                                    </span>
+                                                    {% if addon.description %}
+                                                    <span
+                                                        class="booking-addon__desc"
+                                                        >{{ addon.description
+                                                        }}</span
+                                                    >
+                                                    {% endif %}
+                                                </div>
+                                                <div
+                                                    class="booking-addon__right"
+                                                >
+                                                    <span
+                                                        class="booking-addon__price"
+                                                        >+${{ addon.price
+                                                        }}</span
+                                                    >
+                                                    <div class="counter">
+                                                        <button
+                                                            type="button"
+                                                            class="counter__btn js-addon-minus"
+                                                        >
+                                                            -
+                                                        </button>
+                                                        <input
+                                                            type="number"
+                                                            class="counter__input js-addon-counter-input"
+                                                            name="addons[{{ addon.code }}]"
+                                                            value="0"
+                                                            min="0"
+                                                            data-price="{{ addon.price }}"
+                                                            data-title="{{ addon.title }}"
+                                                            readonly
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            class="counter__btn js-addon-plus"
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+
+                                    {% else %} {% if addon.input_type ==
+                                    'checkbox' %}
+                                    <label
+                                        class="booking-addon js-addon-wrap"
+                                        {%
+                                        if
+                                        excludeSlugs
+                                        %}data-exclude-on="{{ excludeSlugs }}"
+                                        {%
+                                        endif
+                                        %}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            name="addons[{{ addon.code }}]"
+                                            value="1"
+                                            data-price="{{ addon.price }}"
+                                            data-title="{{ addon.title }}"
+                                            class="booking-addon__input js-addon-checkbox"
+                                        />
+                                        <span class="booking-addon__content">
+                                            <span class="booking-addon__info">
+                                                <span
+                                                    class="booking-addon__title"
+                                                    >{{ addon.title }}</span
+                                                >
+                                                <span
+                                                    class="booking-addon__desc"
+                                                    >{{ addon.description
+                                                    }}</span
+                                                >
+                                            </span>
+                                            <span class="booking-addon__price"
+                                                >+${{ addon.price }}</span
+                                            >
+                                        </span>
+                                    </label>
+                                    {% else %}
+                                    <div
+                                        class="booking-addon js-addon-wrap"
+                                        {%
+                                        if
+                                        excludeSlugs
+                                        %}data-exclude-on="{{ excludeSlugs }}"
+                                        {%
+                                        endif
+                                        %}
+                                    >
+                                        <div
+                                            class="booking-addon__content booking-addon__content_counter"
+                                        >
+                                            <span class="booking-addon__info">
+                                                <span
+                                                    class="booking-addon__title"
+                                                    >{{ addon.title }}</span
+                                                >
+                                                <span
+                                                    class="booking-addon__desc"
+                                                    >{{ addon.description
+                                                    }}</span
+                                                >
+                                            </span>
+                                            <div class="booking-addon__right">
+                                                <span
+                                                    class="booking-addon__price"
+                                                    >+${{ addon.price }}</span
+                                                >
+                                                <div class="counter">
+                                                    <button
+                                                        type="button"
+                                                        class="counter__btn js-addon-minus"
+                                                    >
+                                                        -
+                                                    </button>
+                                                    <input
+                                                        type="number"
+                                                        class="counter__input js-addon-counter-input"
+                                                        name="addons[{{ addon.code }}]"
+                                                        value="0"
+                                                        min="0"
+                                                        data-price="{{ addon.price }}"
+                                                        data-title="{{ addon.title }}"
+                                                        readonly
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        class="counter__btn js-addon-plus"
+                                                    >
+                                                        +
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %} {% endif %} {% endif %} {%
+                                    endfor %}
+                                </div>
+
+                                <div class="booking__btn-wrap">
+                                    <button
+                                        type="button"
+                                        class="btn btn_bordered js-prev-step"
+                                    >
+                                        <svg class="icon">
+                                            <use
+                                                href="{{'assets/sprites/icons.svg#arrow'|theme}}"
+                                            ></use></svg
+                                        >Back
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="btn js-next-step"
+                                    >
+                                        Continue<svg class="icon">
+                                            <use
+                                                href="{{'assets/sprites/icons.svg#arrow'|theme}}"
+                                            ></use>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- ШАГ 4: Контакты -->
+                            <div
+                                class="booking__panel js-booking-panel booking__panel_hidden"
+                                data-panel="4"
+                            >
+                                <h2 class="booking__panel-title">
+                                    Your Details
+                                </h2>
+                                <div class="booking__fields">
+                                    <div class="booking__field-row">
+                                        <div class="booking__field-group">
+                                            <label class="booking__label"
+                                                >Full Name</label
+                                            >
+                                            <input
+                                                type="text"
+                                                class="booking__input"
+                                                name="full_name"
+                                                placeholder="John Doe"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="booking__field-row booking__field-row_col-2"
+                                    >
+                                        <div class="booking__field-group">
+                                            <label class="booking__label"
+                                                >Email Address</label
+                                            >
+                                            <input
+                                                type="email"
+                                                class="booking__input"
+                                                name="email"
+                                                placeholder="john@example.com"
+                                                required
+                                            />
+                                        </div>
+                                        <div class="booking__field-group">
+                                            <label class="booking__label"
+                                                >Phone / WhatsApp</label
+                                            >
+                                            <input
+                                                type="tel"
+                                                class="booking__input"
+                                                name="phone"
+                                                placeholder="+1 234 567 8900"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                    <div class="booking__field-row">
+                                        <div class="booking__field-group">
+                                            <label class="booking__label"
+                                                >Additional Comments</label
+                                            >
+                                            <textarea
+                                                class="booking__input booking__input_textarea"
+                                                name="comments"
+                                                rows="3"
+                                                placeholder="Any questions or special requests?"
+                                            ></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="booking__btn-wrap">
+                                    <button
+                                        type="button"
+                                        class="btn btn_bordered js-prev-step"
+                                    >
+                                        <svg class="icon">
+                                            <use
+                                                href="{{'assets/sprites/icons.svg#arrow'|theme}}"
+                                            ></use></svg
+                                        >Back
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside class="booking__sidebar">
+                        <div class="order-summary">
+                            <h3 class="order-summary__title">
+                                Booking Summary
+                            </h3>
+                            <div class="order-summary__content">
+                                <div class="order-summary__item">
+                                    <span class="order-summary__label"
+                                        >Type:</span
+                                    >
+                                    <span
+                                        class="order-summary__val js-summary-type"
+                                        >Not selected</span
+                                    >
+                                </div>
+                                <div class="order-summary__item">
+                                    <span class="order-summary__label"
+                                        >Date:</span
+                                    >
+                                    <span
+                                        class="order-summary__val js-summary-date"
+                                        >—</span
+                                    >
+                                </div>
+                                <div class="order-summary__item">
+                                    <span class="order-summary__label"
+                                        >Guests:</span
+                                    >
+                                    <span
+                                        class="order-summary__val js-summary-pax"
+                                        >1 pax</span
+                                    >
+                                </div>
+                                <div class="js-summary-addons-container"></div>
+                                <hr class="order-summary__divider" />
+                                <div class="order-summary__total">
+                                    <span>Total:</span>
+                                    <span
+                                        class="order-summary__price js-summary-total"
+                                        >$0</span
+                                    >
+                                </div>
+                            </div>
+
+                            {% set clean_phone = globalSettings.whatsapp_number
+                            | replace({' ': '', '+': '', '-': ''}) %}
+                            <a
+                                href="https://wa.me/{{ clean_phone }}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="btn order-summary__wa-btn js-whatsapp-fast-btn"
+                            >
+                                <svg class="icon">
+                                    <use
+                                        href="{{'assets/sprites/icons.svg#whatsapp'|theme}}"
+                                    ></use></svg
+                                >Book via WhatsApp
+                            </a>
+                            <div class="booking__divider-text">
+                                <span>or</span>
+                            </div>
+                            <button
+                                type="submit"
+                                class="btn btn_bordered order-summary__btn js-submit-booking"
+                            >
+                                Submit Request
+                            </button>
+                            <p class="order-summary__note">
+                                No payment required at this step.
+                            </p>
+                        </div>
+                    </aside>
+                </form>
+            </div>
+        </div>
+    </section>
 </main>
 
-{% set toursList = tours.where('is_active', true).get() %}
-{% set data = [] %}
-{% for tour in toursList %}
-  {% set cat = tour.category %}
-  {% set catSlug = cat.slug ?? (cat|first).slug ?? cat ?? '' %}
-  {% set rawPrice = tour.program_price ? tour.program_price|replace({'$': '', ' ': '', ',': ''}) : 0 %}
-  {% set data = data|merge([{
-    slug: tour.slug,
-    title: tour.title,
-    category: catSlug,
-    price: rawPrice ? rawPrice + 0 : 0,
-    duration: tour.tour_duration ?? ''
-  }]) %}
-{% endfor %}
-<script type="application/json" id="tours-data">{{ data|json_encode|raw }}</script>
+{% set toursList = tours.where('is_active', true).get() %} {% set data = [] %}
+{% for tour in toursList %} {% set cat = tour.category %} {% set catSlug =
+cat.slug ?? (cat|first).slug ?? cat ?? '' %} {% set rawPrice =
+tour.program_price ? tour.program_price|replace({'$': '', ' ': '', ',': ''}) : 0
+%} {% set data = data|merge([{ slug: tour.slug, title: tour.title, category:
+catSlug, price: rawPrice ? rawPrice + 0 : 0, duration: tour.tour_duration ?? ''
+}]) %} {% endfor %}
+<script type="application/json" id="tours-data">
+    {{ data|json_encode|raw }}
+</script>
 
 {% if this.page.id == 'booking' %}
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 {% endif %}

@@ -1,0 +1,184 @@
+url = "/stay-checkout/:token"
+layout = "default"
+title = "Stay Request"
+page_css = "checkout.css"
+page_js = "core.js"
+==
+<?php
+use Tailor\Models\EntryRecord;
+
+function onStart() {
+    $token = $this->param('token');
+    
+    if ($token) {
+        $this['order'] = EntryRecord::inSection('Orders')
+            ->where('secure_token', $token)
+            ->first();
+
+        // Безопасный перехват параметра status (только success или error)
+        $status = strtolower(trim((string) get('status', '')));
+        $this['bank_status'] = in_array($status, ['success', 'error'], true) ? $status : null;
+    }
+}
+?>
+==
+<main class="main-content section-padding-bottom">
+  <div class="breadcrumbs">
+    <div class="container">
+      <nav aria-label="breadcrumbs">
+        <ul class="breadcrumbs__list">
+          <li class="breadcrumbs__item"><a class="breadcrumbs__link" href="{{'index' | page}}">Home</a></li>
+          <li class="breadcrumbs__item" aria-current="page">Stay Request</li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="title-wrap title-wrap_centered">
+      <h2 class="title title_centered">Your stay request and current status</h2>
+    </div>
+
+    {% if stay %}
+      {% set stayStatus = stay.status | default('new') %}
+      <div class="checkout">
+        <div class="checkout__alert">
+          <svg class="icon" aria-hidden="true">
+            <use href="{{'assets/sprites/icons.svg#mail' | theme}}"></use>
+          </svg>
+          <div>
+            <strong>Confirmation email sent!</strong><br>
+            We have sent a copy of this request to <strong>{{ stay.email }}</strong>. You can return to this page anytime via the link in the email.
+          </div>
+        </div>
+
+        <div class="checkout__card">
+          <div class="checkout__header">
+            <span class="checkout__number">{{ stay.title }}</span>
+            <span class="checkout__status checkout__status_{{ stayStatus }}">
+              {% if stayStatus == 'new' %}New / Awaiting Review
+              {% elseif stayStatus == 'approved' %}Approved
+              {% elseif stayStatus == 'paid' %}Paid & Verified
+              {% elseif stayStatus == 'canceled' %}Cancelled
+              {% else %}{{ stayStatus | replace({'_': ' '}) | capitalize }}{% endif %}
+            </span>
+          </div>
+
+          <div class="checkout__section">
+            <h3 class="checkout__section-title">Customer Information</h3>
+            <div class="checkout__grid">
+              <div class="checkout__info-item">
+                <span class="checkout__label">Full Name:</span>
+                <span class="checkout__value">{{ stay.client_name }}</span>
+              </div>
+              <div class="checkout__info-item">
+                <span class="checkout__label">Email:</span>
+                <span class="checkout__value"><a href="mailto:{{ stay.email }}">{{ stay.email }}</a></span>
+              </div>
+              <div class="checkout__info-item">
+                <span class="checkout__label">Phone:</span>
+                <span class="checkout__value"><a href="tel:{{ stay.phone }}">{{ stay.phone }}</a></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="checkout__section">
+            <h3 class="checkout__section-title">Stay Details</h3>
+            <div class="checkout__grid">
+              <div class="checkout__info-item">
+                <span class="checkout__label">Place:</span>
+                <span class="checkout__value">{{ lodging ? lodging.title : stay.lodging }}</span>
+              </div>
+              <div class="checkout__info-item">
+                <span class="checkout__label">Check-in:</span>
+                <span class="checkout__value">{% if stay.check_in %}{{ stay.check_in | date('Y-m-d') }}{% else %}Flexible / TBD{% endif %}</span>
+              </div>
+              {% if stay.check_out %}
+                <div class="checkout__info-item">
+                  <span class="checkout__label">Check-out:</span>
+                  <span class="checkout__value">{{ stay.check_out | date('Y-m-d') }}</span>
+                </div>
+              {% endif %}
+              {% if stay.nights %}
+                <div class="checkout__info-item">
+                  <span class="checkout__label">Nights:</span>
+                  <span class="checkout__value">{{ stay.nights }}</span>
+                </div>
+              {% endif %}
+              <div class="checkout__info-item">
+                <span class="checkout__label">Guests:</span>
+                <span class="checkout__value">{{ stay.guests }} {{ stay.guests == 1 ? 'person' : 'people' }}</span>
+              </div>
+            </div>
+            {% if stay.notes %}
+              <div class="checkout__comment-item" style="background: #f8fafc; padding: 12px 15px; border-left: 3px solid #2c7a7b; border-radius: 4px; margin-top: 12px;">
+                <strong style="color: #4a5568; display: block; margin-bottom: 4px;">Your Note:</strong>
+                <span style="color: #64748b;">{{ stay.notes | nl2br }}</span>
+              </div>
+            {% endif %}
+          </div>
+
+          <hr class="checkout__divider" />
+
+          <div class="checkout__total">
+            <span class="checkout__total-label">Total Amount:</span>
+            {% if not stay.total_price or stay.total_price == 0 %}
+              <span class="checkout__total-price">On request</span>
+            {% else %}
+              <span class="checkout__total-price">${{ stay.total_price | number_format(2, '.', ',') }}</span>
+            {% endif %}
+          </div>
+
+          {# Итоговые уведомления и статусы оплаты #}
+          {% if bank_status == 'success' and stayStatus != 'paid' %}
+
+            <div class="checkout__notice checkout__notice_pending" style="background: #e6fffa; color: #234e52; border-left: 4px solid #319795; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
+              <strong>Payment submitted for verification!</strong> We received response from the bank and are waiting for confirmation. Please refresh the page in a few seconds.
+            </div>
+
+          {% elseif bank_status == 'error' %}
+
+            <div class="checkout__notice checkout__notice_error" style="background: #fff5f5; color: #c53030; border-left: 4px solid #e53e3e; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
+              <strong>Payment error.</strong> The bank declined the transaction or session expired. Please try again or contact support.
+            </div>
+
+          {% else %}
+
+            {% if stayStatus == 'new' %}
+              <div class="checkout__notice checkout__notice_pending">
+                Your request has been registered. Our manager will check availability and contact you with the price and payment details.
+              </div>
+            {% elseif stayStatus == 'approved' %}
+              <div class="checkout__notice checkout__notice_pending">
+                Your stay is approved. Please proceed with payment according to the instructions from our manager.
+              </div>
+              {% if stay.payment_url %}
+                <div style="margin-top: 20px; text-align: center;">
+                  <a class="btn" href="{{ stay.payment_url }}" target="_blank" rel="noopener noreferrer">Pay online</a>
+                </div>
+              {% endif %}
+            {% elseif stayStatus == 'payment_pending' %}
+              <div class="checkout__notice checkout__notice_pending">
+                Your payment is currently being processed by the bank. Please wait a few moments.
+              </div>
+            {% elseif stayStatus == 'paid' %}
+              <div class="checkout__notice checkout__notice_success">
+                Payment confirmed. Thank you! Your stay is fully secured.
+              </div>
+            {% elseif stayStatus == 'canceled' %}
+              <div class="checkout__notice checkout__notice_error" style="background: #fff5f5; color: #c53030; border-left: 4px solid #e53e3e; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
+                This request has been cancelled. If you have any questions, please contact us.
+              </div>
+            {% endif %}
+
+          {% endif %}
+        </div>
+      </div>
+    {% else %}
+      <div class="checkout__empty">
+        <h2 class="title">Request Not Found</h2>
+        <p class="subtitle">Please check the URL or contact us for assistance.</p>
+      </div>
+    {% endif %}
+  </div>
+</main>
