@@ -181,3 +181,36 @@ fields:
         tab: Основное
         readOnly: true
         comment: "Например: FreedomPay, DemirBank, Stripe, Manual Link"
+
+    # --- Добавлено: комментарий клиента (раньше терялся — поля не было) ---
+    comments:
+        label: Комментарий клиента
+        type: textarea
+        size: small
+        span: full
+        tab: Доп. услуги и Заметки
+
+    # --- Добавлено: ночи в Mongu Hotel, посчитанные сервером по датам ---
+    hotel_stay_nights:
+        label: "Mongu Hotel: Ночей"
+        type: number
+        min: 0
+        span: full
+        tab: Отель Mongu
+        readOnly: true
+        comment: "Считается автоматически по датам заезда/выезда"
+
+    # --- Добавлено: на какую сумму выпущена автоссылка (для перевыпуска при смене суммы) ---
+    payment_link_amount:
+        label: "Снимок: сумма, на которую выпущена ссылка"
+        type: number
+        span: left
+        tab: Основное
+        readOnly: true
+
+    payment_link_currency:
+        label: "Снимок: валюта ссылки"
+        type: text
+        span: right
+        tab: Основное
+        readOnly: true

@@ -9,7 +9,19 @@ handle = "Lodgings"
 
 ==
 <?php
+use Tailor\Models\EntryRecord;
 use App\Classes\StayHelper;
+use App\Classes\BookingHelper;
+
+function onStart()
+{
+    // Цены считаются тем же парсером, что и при создании заявки, — Twig, JS и сервер видят одно и то же число
+    $prices = [];
+    foreach (EntryRecord::inSection('Lodgings')->where('is_enabled', true)->get() as $item) {
+        $prices[$item->slug] = BookingHelper::parsePrice($item->price_per_night);
+    }
+    $this['lodgingPrices'] = $prices;
+}
 
 function onStoreStay()
 {
@@ -47,7 +59,7 @@ function onStoreStay()
                 {% if lodgingList|length %}
                 <div class="booking__types">
                   {% for lodging in lodgingList %}
-                    {% set priceNum = lodging.price_per_night ? (lodging.price_per_night|replace({'$': '', ' ': '', ',': ''}) + 0) : 0 %}
+                    {% set priceNum = lodgingPrices[lodging.slug] ?? 0 %}
                     {% set basis = lodging.price_basis ?: 'per_person' %}
                     <label class="booking-card">
                       <input type="radio" name="lodging" value="{{ lodging.slug }}" class="booking-card__input"
@@ -127,6 +139,11 @@ function onStoreStay()
                   </div>
                 </div>
 
+                {# Honeypot: скрыто от людей, боты его заполняют (см. StayHelper::processStay) #}
+                <div style="position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden;" aria-hidden="true">
+                  <label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" value="" /></label>
+                </div>
+
                 <div data-validate-error style="display: none; color: #c53030; margin-top: 12px;"></div>
               </div>
             </div>
@@ -172,6 +189,9 @@ function onStoreStay()
 </main>
 
 {% if this.page.id == 'stay' %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+{# Версия закреплена + SRI: браузер откажется выполнять файл, если CDN отдаст что-то другое #}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css"
+      integrity="sha384-RkASv+6KfBMW9eknReJIJ6b3UnjKOKC5bOUaNgIY778NFbQ8MtWq9Lr/khUgqtTt" crossorigin="anonymous" />
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"
+        integrity="sha384-5JqMv4L/Xa0hfvtF06qboNdhvuYXUku9ZrhZh3bSk8VXF0A/RuSLHpLsSV9Zqhl6" crossorigin="anonymous"></script>
 {% endif %}

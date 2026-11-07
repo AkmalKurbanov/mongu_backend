@@ -8,17 +8,24 @@ page_js = "core.js"
 use Tailor\Models\EntryRecord;
 
 function onStart() {
+    // Страница с персональными данными по секретной ссылке — не для поисковиков
+    header('X-Robots-Tag: noindex, nofollow');
+
     $token = $this->param('token');
-    
     if ($token) {
-        $this['order'] = EntryRecord::inSection('Orders')
+        $stay = EntryRecord::inSection('StayBookings')
             ->where('secure_token', $token)
             ->first();
-
-        // Безопасный перехват параметра status (только success или error)
-        $status = strtolower(trim((string) get('status', '')));
-        $this['bank_status'] = in_array($status, ['success', 'error'], true) ? $status : null;
+        $this['stay'] = $stay;
+        $this['lodging'] = $stay
+            ? EntryRecord::inSection('Lodgings')->where('slug', $stay->lodging)->first()
+            : null;
     }
+
+    // Параметр status из success_url / failure_url банка (раньше здесь не разбирался,
+    // и баннеры «Payment submitted» / «Payment error» не показывались)
+    $status = strtolower(trim((string) get('status', '')));
+    $this['bank_status'] = in_array($status, ['success', 'error'], true) ? $status : null;
 }
 ?>
 ==
@@ -48,7 +55,7 @@ function onStart() {
           </svg>
           <div>
             <strong>Confirmation email sent!</strong><br>
-            We have sent a copy of this request to <strong>{{ stay.email }}</strong>. You can return to this page anytime via the link in the email.
+            We sent a copy of this request to <strong>{{ stay.email }}</strong> (check your spam folder if you can't find it). You can return to this page anytime via this link.
           </div>
         </div>
 
@@ -118,60 +125,7 @@ function onStart() {
             {% endif %}
           </div>
 
-          <hr class="checkout__divider" />
-
-          <div class="checkout__total">
-            <span class="checkout__total-label">Total Amount:</span>
-            {% if not stay.total_price or stay.total_price == 0 %}
-              <span class="checkout__total-price">On request</span>
-            {% else %}
-              <span class="checkout__total-price">${{ stay.total_price | number_format(2, '.', ',') }}</span>
-            {% endif %}
-          </div>
-
-          {# Итоговые уведомления и статусы оплаты #}
-          {% if bank_status == 'success' and stayStatus != 'paid' %}
-
-            <div class="checkout__notice checkout__notice_pending" style="background: #e6fffa; color: #234e52; border-left: 4px solid #319795; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
-              <strong>Payment submitted for verification!</strong> We received response from the bank and are waiting for confirmation. Please refresh the page in a few seconds.
-            </div>
-
-          {% elseif bank_status == 'error' %}
-
-            <div class="checkout__notice checkout__notice_error" style="background: #fff5f5; color: #c53030; border-left: 4px solid #e53e3e; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
-              <strong>Payment error.</strong> The bank declined the transaction or session expired. Please try again or contact support.
-            </div>
-
-          {% else %}
-
-            {% if stayStatus == 'new' %}
-              <div class="checkout__notice checkout__notice_pending">
-                Your request has been registered. Our manager will check availability and contact you with the price and payment details.
-              </div>
-            {% elseif stayStatus == 'approved' %}
-              <div class="checkout__notice checkout__notice_pending">
-                Your stay is approved. Please proceed with payment according to the instructions from our manager.
-              </div>
-              {% if stay.payment_url %}
-                <div style="margin-top: 20px; text-align: center;">
-                  <a class="btn" href="{{ stay.payment_url }}" target="_blank" rel="noopener noreferrer">Pay online</a>
-                </div>
-              {% endif %}
-            {% elseif stayStatus == 'payment_pending' %}
-              <div class="checkout__notice checkout__notice_pending">
-                Your payment is currently being processed by the bank. Please wait a few moments.
-              </div>
-            {% elseif stayStatus == 'paid' %}
-              <div class="checkout__notice checkout__notice_success">
-                Payment confirmed. Thank you! Your stay is fully secured.
-              </div>
-            {% elseif stayStatus == 'canceled' %}
-              <div class="checkout__notice checkout__notice_error" style="background: #fff5f5; color: #c53030; border-left: 4px solid #e53e3e; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
-                This request has been cancelled. If you have any questions, please contact us.
-              </div>
-            {% endif %}
-
-          {% endif %}
+          {% partial 'checkout-notice' record=stay status=stayStatus bank_status=bank_status kind='stay' %}
         </div>
       </div>
     {% else %}

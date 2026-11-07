@@ -23,8 +23,9 @@ fields:
 
     price_per_night:
         label: Цена за ночь ($)
-        comment: "Только цифра. Пусто или 0 — цена «по запросу», менеджер согласует её позже"
-        type: text
+        comment: "Только число. Пусто или 0 — цена «по запросу», менеджер согласует её позже"
+        type: number
+        min: 0
         span: right
 
     price_basis:

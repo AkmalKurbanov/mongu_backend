@@ -16,38 +16,38 @@ use Illuminate\Support\Facades\Config;
  */
 class StayHelper
 {
-  public static function getPaymentPayload($stay): array
+    public static function getPaymentPayload($stay): array
     {
-        $unitPrice = floatval($stay->lodging_snapshot_price ?? 0);
-        $nights = intval($stay->nights ?? 1);
-        $guests = intval($stay->guests ?? 1);
+        $total   = floatval($stay->total_price);
+        $lodging = EntryRecord::inSection('Lodgings')->where('slug', $stay->lodging)->first();
+        $place   = $lodging->title ?? $stay->lodging;
 
-        $items = [];
-        if ($unitPrice > 0) {
-            $lodging = \Tailor\Models\EntryRecord::inSection('Lodgings')->where('slug', $stay->lodging)->first();
-            $items[] = [
-                'name'     => 'Проживание: ' . ($lodging->title ?? $stay->lodging),
-                'price'    => $unitPrice,
-                'quantity' => $nights * $guests,
-                'total'    => floatval($stay->total_price),
-            ];
-        }
+        // Итог мог быть вручную изменён менеджером (stays.yaml) — отправляем одну позицию на total_price,
+        // чтобы сумма и состав платежа не расходились (в т.ч. для тарифа «за номер», где guests не множитель).
+        $name = Str::limit('Проживание: ' . $place . ($stay->nights ? ', ' . intval($stay->nights) . ' ноч.' : ''), 120, '');
 
         return [
-            'order_id'       => $stay->id,
+            // S-<id>: id у Orders и StayBookings пересекаются, см. PaymentService::makeReference
+            'order_id'       => PaymentService::makeReference('StayBookings', $stay->id),
             'order_number'   => $stay->title,
             'secure_token'   => $stay->secure_token,
-            'amount'         => floatval($stay->total_price),
-            'currency'       => $stay->currency ?? 'USD',
+            'amount'         => $total,
+            'currency'       => $stay->currency ?: 'USD',
             'client_name'    => $stay->client_name,
             'client_email'   => $stay->email,
             'client_phone'   => $stay->phone,
             'description'    => "Оплата бронирования #{$stay->id} - {$stay->client_name}",
-            'items'          => $items,
+            'items'          => [[
+                'name'     => $name,
+                'price'    => $total,
+                'quantity' => 1,
+                'total'    => $total,
+            ]],
             'success_url'    => url('/stay-checkout/' . $stay->secure_token . '?status=success'),
             'failure_url'    => url('/stay-checkout/' . $stay->secure_token . '?status=error'),
         ];
     }
+
     /**
      * Опции выпадающего списка «Объект размещения» в админке (StayBookings)
      */
@@ -61,6 +61,12 @@ class StayHelper
     public static function processStay()
     {
         $data = post();
+
+        // Honeypot: бот получает «успех», ничего не сохраняется и письма не отправляются
+        if (BookingHelper::isHoneypotTripped($data)) {
+            return Redirect::to('/');
+        }
+
         $isFlexible = !empty($data['is_flexible_dates']);
         $datesRule = $isFlexible ? 'nullable' : 'required';
 
@@ -68,7 +74,8 @@ class StayHelper
             'full_name' => 'required|string|min:2|max:100',
             'email'     => 'required|email:rfc',
             'phone'     => ['required', 'min:7', 'regex:/^[\+\d\s\-\(\)]+$/'],
-            'lodging'   => 'required',
+            'lodging'   => 'required|string',
+            'comments'  => 'nullable|string|max:2000',
             'guests'    => 'nullable|integer|min:1|max:30',
             'check_in'  => "{$datesRule}|date_format:Y-m-d|after_or_equal:today",
             'check_out' => "{$datesRule}|date_format:Y-m-d|after:check_in",
@@ -78,8 +85,12 @@ class StayHelper
             throw new ValidationException($validator);
         }
 
+        BookingHelper::throttle('stay', (string) $data['email']);
+
+        // is_enabled: форма показывает только включённые объекты, и сервер обязан проверять то же самое
         $lodging = EntryRecord::inSection('Lodgings')
             ->where('slug', (string) $data['lodging'])
+            ->where('is_enabled', true)
             ->first();
 
         if (!$lodging) {
@@ -97,7 +108,7 @@ class StayHelper
             : 0;
 
         // Цена: если у объекта указана — считаем, если нет — 0 (= "On request", менеджер допишет в админке)
-        $unitPrice = floatval(preg_replace('/[^0-9.]/', '', (string) $lodging->price_per_night));
+        $unitPrice = BookingHelper::parsePrice($lodging->price_per_night);
         $basis     = $lodging->price_basis ?: 'per_person';
         $total     = ($unitPrice > 0 && $nights > 0)
             ? $unitPrice * $nights * ($basis === 'per_unit' ? 1 : $guests)

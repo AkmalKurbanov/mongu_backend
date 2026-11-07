@@ -154,3 +154,18 @@ fields:
         tab: Основное
         readOnly: true
         comment: "Например: FreedomPay, DemirBank, Stripe, Manual Link"
+
+    # --- Добавлено: на какую сумму выпущена автоссылка (для перевыпуска при смене суммы) ---
+    payment_link_amount:
+        label: "Снимок: сумма, на которую выпущена ссылка"
+        type: number
+        span: left
+        tab: Основное
+        readOnly: true
+
+    payment_link_currency:
+        label: "Снимок: валюта ссылки"
+        type: text
+        span: right
+        tab: Основное
+        readOnly: true

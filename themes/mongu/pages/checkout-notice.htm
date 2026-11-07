@@ -1,0 +1,81 @@
+{# Итог и статусы оплаты для /checkout и /stay-checkout.
+   Параметры: record (заказ или бронь), status, bank_status ('success' | 'error' | null), kind ('order' | 'stay') #}
+{% set cur = record.currency|default('USD')|upper %}
+{% set sym = cur == 'USD' ? '$' : (cur == 'EUR' ? '€' : cur ~ ' ') %}
+{% set canPay = record.payment_url and (status == 'approved' or status == 'payment_pending') %}
+
+<hr class="checkout__divider" />
+
+<div class="checkout__total">
+  <span class="checkout__total-label">Total Amount:</span>
+  {% if not record.total_price or record.total_price == 0 %}
+    <span class="checkout__total-price">On request</span>
+  {% else %}
+    <span class="checkout__total-price">{{ sym }}{{ record.total_price | number_format(2, '.', ',') }}</span>
+  {% endif %}
+</div>
+
+{# Итоговые уведомления и статусы оплаты #}
+{% if bank_status == 'success' and status != 'paid' and status != 'canceled' %}
+
+  <div class="checkout__notice checkout__notice_pending" style="background: #e6fffa; color: #234e52; border-left: 4px solid #319795; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
+    <strong>Payment submitted for verification!</strong> We received response from the bank and are waiting for confirmation. Please refresh the page in a few seconds.
+  </div>
+
+{% elseif bank_status == 'error' and status != 'paid' %}
+
+  <div class="checkout__notice checkout__notice_error" style="background: #fff5f5; color: #c53030; border-left: 4px solid #e53e3e; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
+    <strong>Payment error.</strong> The bank declined the transaction or session expired. Please try again or contact support.
+  </div>
+  {% if canPay %}
+    <div style="margin-top: 20px; text-align: center;">
+      <a class="btn" href="{{ record.payment_url }}" target="_blank" rel="noopener noreferrer">Try again</a>
+    </div>
+  {% endif %}
+
+{% else %}
+
+  {% if status == 'new' %}
+    <div class="checkout__notice checkout__notice_pending">
+      {% if kind == 'stay' %}
+        Your request has been registered. Our manager will check availability and contact you with the price and payment details.
+      {% else %}
+        Your request has been registered in our system and is pending manager verification. Payment instructions will be provided once details are verified.
+      {% endif %}
+    </div>
+  {% elseif status == 'approved' %}
+    <div class="checkout__notice checkout__notice_pending">
+      {% if kind == 'stay' %}
+        Your stay is approved. Please proceed with payment according to the instructions from our manager.
+      {% else %}
+        Your booking is approved. Please proceed with payment according to the instructions provided by our manager.
+      {% endif %}
+    </div>
+    {% if record.payment_url %}
+      <div style="margin-top: 20px; text-align: center;">
+        <a class="btn" href="{{ record.payment_url }}" target="_blank" rel="noopener noreferrer">Pay online</a>
+      </div>
+    {% endif %}
+  {% elseif status == 'payment_pending' %}
+    <div class="checkout__notice checkout__notice_pending">
+      Your payment is currently being processed by the bank. Please wait a few moments.
+    </div>
+  {% elseif status == 'paid' %}
+    <div class="checkout__notice checkout__notice_success">
+      {% if kind == 'stay' %}
+        Payment confirmed. Thank you! Your stay is fully secured.
+      {% else %}
+        Payment confirmed. Thank you! Your booking is fully secured and active.
+      {% endif %}
+    </div>
+  {% elseif status == 'canceled' %}
+    <div class="checkout__notice checkout__notice_error" style="background: #fff5f5; color: #c53030; border-left: 4px solid #e53e3e; padding: 12px 15px; border-radius: 4px; margin-top: 20px;">
+      {% if kind == 'stay' %}
+        This request has been cancelled. If you have any questions, please contact us.
+      {% else %}
+        This booking request has been cancelled. If you have any questions, please contact support.
+      {% endif %}
+    </div>
+  {% endif %}
+
+{% endif %}

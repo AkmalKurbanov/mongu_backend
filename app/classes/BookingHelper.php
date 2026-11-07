@@ -9,9 +9,97 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\RateLimiter;
 
 class BookingHelper
 {
+    /**
+     * Цена из строки: "$1,200", "from 80", "50-80" → берётся ПЕРВОЕ число (50), нет числа → 0.
+     * Раньше preg_replace склеивал диапазон "50-80" в 5080.
+     */
+    public static function parsePrice($value): float
+    {
+        if (is_int($value) || is_float($value)) {
+            return max(0.0, (float) $value);
+        }
+
+        $s = str_replace([' ', "\xC2\xA0"], '', (string) $value);
+        if (!preg_match('/\d[\d,]*(?:\.\d+)?|\.\d+/', $s, $m)) {
+            return 0.0;
+        }
+
+        return max(0.0, (float) str_replace(',', '', $m[0]));
+    }
+
+    /** Дата из строки (Y-m-d или любой формат, понятный DateTime). Не распознана → null */
+    public static function parseDate(string $value): ?\DateTime
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        $dt = \DateTime::createFromFormat('!Y-m-d', $value);
+        $errors = \DateTime::getLastErrors();
+        if ($dt && (!$errors || ($errors['warning_count'] === 0 && $errors['error_count'] === 0))) {
+            return $dt;
+        }
+
+        try {
+            $dt = new \DateTime($value);
+        } catch (\Throwable $e) {
+            return null;
+        }
+        $dt->setTime(0, 0);
+
+        return $dt;
+    }
+
+    /**
+     * Ночи в отеле считаем на сервере по диапазону "дата to дата".
+     * Число от клиента — только запасной вариант, если даты не распознаны (и с потолком).
+     */
+    public static function hotelNights(string $dates, int $clientNights = 0): int
+    {
+        $parts = array_map('trim', explode(' to ', $dates));
+        $start = self::parseDate($parts[0] ?? '');
+        $end   = self::parseDate($parts[1] ?? '');
+
+        if ($start && $end && $end > $start) {
+            return min(90, max(1, (int) $start->diff($end)->days));
+        }
+
+        return min(30, max(1, $clientNights));
+    }
+
+    /** Honeypot: человек это поле не видит и не заполняет, боты — заполняют */
+    public static function isHoneypotTripped(array $data): bool
+    {
+        return !empty($data['website']);
+    }
+
+    /**
+     * Ограничение частоты отправки форм: не более 5 заявок за 10 минут с одного IP
+     * и не более 3 в час на один email (защита от рассылки писем на чужие адреса).
+     * Вызывать ПОСЛЕ успешной валидации.
+     */
+    public static function throttle(string $bucket, string $email = ''): void
+    {
+        $ipKey   = "form:{$bucket}:ip:" . request()->ip();
+        $mailKey = $email !== '' ? "form:{$bucket}:mail:" . sha1(strtolower(trim($email))) : null;
+
+        if (RateLimiter::tooManyAttempts($ipKey, 5) || ($mailKey && RateLimiter::tooManyAttempts($mailKey, 3))) {
+            throw ValidationException::withMessages([
+                'form' => ['Too many requests. Please try again in a few minutes or contact us on WhatsApp.'],
+            ]);
+        }
+
+        RateLimiter::hit($ipKey, 600);
+        if ($mailKey) {
+            RateLimiter::hit($mailKey, 3600);
+        }
+    }
+
   public static function getCategoryOptions(): array
     {
         return EntryRecord::inSection('Categories')
@@ -50,17 +138,28 @@ class BookingHelper
     {
         $data = post();
 
+        // Honeypot: бот получает «успех» и уходит, ничего не сохраняется и письма не отправляются
+        if (self::isHoneypotTripped($data)) {
+            return Redirect::to('/');
+        }
+
         $rules = [
             'full_name'    => 'required|string|min:2|max:100',
             'email'        => 'required|email:rfc',
             'phone'        => 'required|min:7|regex:/^[\+\d\s\-\(\)]+$/',
-            'booking_type' => 'required',
+            'booking_type' => 'required|string',
+            'tour_id'      => 'nullable|string',
+            'guests'       => 'nullable|integer|min:1|max:100',
+            'comments'     => 'nullable|string|max:2000',
+            'notes'        => 'nullable|string|max:2000',
         ];
 
         $validator = Validator::make($data, $rules);
         if ($validator->fails()) {
             throw new ValidationException($validator);
         }
+
+        self::throttle('booking', (string) $data['email']);
 
         $globalSettings = GlobalRecord::findForGlobal('GlobalSettings');
         $addonsConfig = $globalSettings->addons ?? [];
@@ -86,25 +185,26 @@ class BookingHelper
                 $tourTitle = $selectedTour->title;
                 $tourDuration = $selectedTour->tour_duration ?? null;
                 if ($selectedTour->program_price) {
-                    $basePricePerPerson = floatval(preg_replace('/[^0-9.]/', '', $selectedTour->program_price));
+                    $basePricePerPerson = self::parsePrice($selectedTour->program_price);
                     $totalPrice += $basePricePerPerson * $guestsCount;
                 }
             }
         }
 
-        $addonsInput = $data['addons'] ?? [];
+        $addonsInput = is_array($data['addons'] ?? null) ? $data['addons'] : [];
         $addonsTextArray = [];
         $addonsHtmlRows = '';
         $selectedAddonsRepeater = [];
 
         // 3. Доп. услуга: проживание в Mongu Hotel до/после тура
-        $hotelPrice = floatval($globalSettings->hotel_price_per_night ?? 50);
+        $hotelPrice = self::parsePrice($globalSettings->hotel_price_per_night ?? 50);
         if ($hotelPrice <= 0) $hotelPrice = 50.00;
 
         $hotelPax = min($guestsCount, max(0, intval($addonsInput['mongu_hotel_pax'] ?? 0)));
-        $hotelDates = trim($addonsInput['mongu_hotel_dates'] ?? '');
-        $hotelNights = max(0, intval($addonsInput['mongu_hotel_nights'] ?? 0));
-        $hotelNotes = trim($addonsInput['mongu_hotel_notes'] ?? '');
+        $hotelDates = trim((string) ($addonsInput['mongu_hotel_dates'] ?? ''));
+        $hotelNotes = trim((string) ($addonsInput['mongu_hotel_notes'] ?? ''));
+        // Ночи считаем по датам на сервере; число от клиента — только запасной вариант
+        $hotelNights = self::hotelNights($hotelDates, intval($addonsInput['mongu_hotel_nights'] ?? 0));
 
         if ($hotelPax > 0) {
             $hotelTotal = $hotelPrice * $hotelPax * max(1, $hotelNights);
@@ -154,7 +254,7 @@ class BookingHelper
                     }
 
                     $addonTitle = is_array($cfgAddon) ? ($cfgAddon['title'] ?? $targetCode) : ($cfgAddon->title ?? $targetCode);
-                    $addonPrice = floatval(is_array($cfgAddon) ? ($cfgAddon['price'] ?? 0) : ($cfgAddon->price ?? 0));
+                    $addonPrice = self::parsePrice(is_array($cfgAddon) ? ($cfgAddon['price'] ?? 0) : ($cfgAddon->price ?? 0));
                     $inputType = is_array($cfgAddon) ? ($cfgAddon['input_type'] ?? '') : ($cfgAddon->input_type ?? '');
 
                     if ($inputType === 'counter') {
@@ -217,8 +317,10 @@ class BookingHelper
         $dateStart = trim($data['booking_date'] ?? '') ?: null;
 
         $hDates = array_map('trim', explode(' to ', $hotelDates));
-        $hotelStart = !empty($hDates[0]) ? $hDates[0] : null;
-        $hotelEnd = !empty($hDates[1]) ? $hDates[1] : $hotelStart;
+        $hotelStartDt = self::parseDate($hDates[0] ?? '');
+        $hotelEndDt = self::parseDate($hDates[1] ?? '') ?: $hotelStartDt;
+        $hotelStart = $hotelStartDt ? $hotelStartDt->format('Y-m-d') : null;
+        $hotelEnd = $hotelEndDt ? $hotelEndDt->format('Y-m-d') : null;
 
         // 5. Сохранение заказа в Tailor Orders без лишнего e()
         $order = EntryRecord::inSection('Orders');
@@ -242,15 +344,14 @@ class BookingHelper
         $order->hotel_stay_start = $hotelStart;
         $order->hotel_stay_end = $hotelEnd;
         $order->hotel_stay_notes = $hotelNotes;
+        $order->hotel_stay_nights = $hotelPax > 0 ? $hotelNights : null;
 
         $order->total_price = $totalPrice;
         $order->secure_token = $secureToken;
         $order->status = 'new';
         
-        // Если у модели Orders есть поле для комментариев, сохраняем его корректно
-        if (isset($order->comments)) {
-            $order->comments = $clientComment;
-        }
+        // Поле comments добавлено в orders.yaml (раньше его не было, и комментарий клиента терялся)
+        $order->comments = $clientComment;
         
         $order->save();
 
@@ -593,70 +694,29 @@ class BookingHelper
 
     public static function getPaymentPayload($order): array
     {
-        $items = [];
+        $total = floatval($order->total_price);
 
-        if ($order->tour) {
-            $tourPrice = floatval($order->tour_snapshot_price ?? 0);
-            if ($tourPrice <= 0) {
-                // Фоллбек на случай старых заказов без снимка
-                $tour = \Tailor\Models\EntryRecord::inSection('Tours')->find($order->tour);
-                $tourPrice = floatval(preg_replace('/[^0-9.]/', '', $tour->program_price ?? '0'));
-            }
-
-            if ($tourPrice > 0) {
-                $tourObj = \Tailor\Models\EntryRecord::inSection('Tours')->find($order->tour);
-                $items[] = [
-                    'name'     => 'Тур: ' . ($tourObj->title ?? 'Основная программа'),
-                    'price'    => $tourPrice,
-                    'quantity' => $order->guests,
-                    'total'    => $tourPrice * $order->guests,
-                ];
-            }
-        }
-
-        if ($order->hotel_stay_pax > 0) {
-            $globalSettings = GlobalRecord::findForGlobal('GlobalSettings');
-            $hotelPrice = floatval($globalSettings->hotel_price_per_night ?? 50);
-            if ($hotelPrice <= 0) {
-                $hotelPrice = 50.00;
-            }
-
-            $hotelNights = 1;
-            if (!empty($order->hotel_stay_start) && !empty($order->hotel_stay_end)) {
-                $nightsDiff = (new \DateTime($order->hotel_stay_start))->diff(new \DateTime($order->hotel_stay_end))->days;
-                $hotelNights = max(1, $nightsDiff);
-            }
-
-            $hotelTotal = $hotelPrice * $order->hotel_stay_pax * $hotelNights;
-
-            $items[] = [
-                'name'     => "Проживание в Mongu Hotel ({$hotelNights} ноч.)",
-                'price'    => $hotelPrice,
-                'quantity' => $order->hotel_stay_pax * $hotelNights,
-                'total'    => $hotelTotal,
-            ];
-        }
-
-        foreach ($order->selected_addons as $addon) {
-            $items[] = [
-                'name'     => $addon->title,
-                'price'    => floatval($addon->total_price / max(1, $addon->quantity)),
-                'quantity' => intval($addon->quantity),
-                'total'    => floatval($addon->total_price),
-            ];
-        }
+        // Менеджер может вручную поменять итог (orders.yaml), поэтому банку отправляем одну позицию
+        // ровно на total_price — так сумма и состав платежа никогда не разойдутся.
+        $name = Str::limit('Заказ #' . $order->id . ($order->title ? ' — ' . $order->title : ''), 120, '');
 
         return [
-            'order_id'       => $order->id,
+            // O-<id>: id у Orders и StayBookings пересекаются, см. PaymentService::makeReference
+            'order_id'       => PaymentService::makeReference('Orders', $order->id),
             'order_number'   => $order->title,
             'secure_token'   => $order->secure_token,
-            'amount'         => floatval($order->total_price),
-            'currency'       => $order->currency ?? 'USD',
+            'amount'         => $total,
+            'currency'       => $order->currency ?: 'USD',
             'client_name'    => $order->client_name,
             'client_email'   => $order->email,
             'client_phone'   => $order->phone,
             'description'    => "Оплата заказа #{$order->id} - {$order->client_name}",
-            'items'          => $items,
+            'items'          => [[
+                'name'     => $name,
+                'price'    => $total,
+                'quantity' => 1,
+                'total'    => $total,
+            ]],
             'success_url'    => url('/checkout/' . $order->secure_token . '?status=success'),
             'failure_url'    => url('/checkout/' . $order->secure_token . '?status=error'),
         ];
